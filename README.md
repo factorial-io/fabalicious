@@ -1,6 +1,6 @@
 # fabalicious -- huber's deployment scripts
 
-this fabfile is a special crafted deployment script to help deploy drupal installations acrooss different servers.
+this fabfile is a special crafted deployment script to help deploy drupal installations across different servers.
 It reads a yaml-file called "fabfile.yaml" where all hosts are stored.
 
 ##Prerequisites
