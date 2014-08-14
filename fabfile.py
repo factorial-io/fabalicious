@@ -19,7 +19,7 @@ def get_configuration(name):
     settings['currentConfig'] = name
 
     host_config = config['hosts'][name]
-    keys = ("host", "rootFolder", "filesFolder", "siteFolder", "branch")
+    keys = ("host", "rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
     validated = True
     for key in keys:
       if key not in host_config:
@@ -63,6 +63,13 @@ def check_config():
   exit()
 
 
+def run_custom(config, key):
+  if key in config:
+    with cd(config['rootFolder']):
+      for line in config[key]:
+        run(line)
+
+
 def header():
  print(green("Huber\'s Deployment Scripts\n"))
 
@@ -72,8 +79,8 @@ def header():
 def list():
   header()
   config = get_all_configurations()
-  print("Found configurations:")
-  for key, value in config.items():
+  print("Found configurations for: "+ config['name']+"\n")
+  for key, value in config['hosts'].items():
     print '- ' + key
 
 
@@ -116,13 +123,27 @@ def reset():
       run('drush -y updb')
       run('drush  cc all')
 
-  if 'reset' in env.config:
-    with cd(env.config['rootFolder']):
-      for line in env.config['reset']:
-        run(line)
+  run_custom(env.config, 'reset')
 
 @task
-def deploy(config_name='local'):
+def backup():
+  check_config()
+  if(env.config['hasDrush']):
+
+    i = datetime.datetime.now()
+
+    backup_file_name = i.strftime('%Y-%m-%d--%H-%M-%S')
+
+    with cd(env.config['rootFolder']):
+      run('mkdir -p ' + enc.config['backupFolder'])
+      run('drush sql-dump > '+env.config['backupFolder'] + "/" + backup_file_name + '.sql')
+      run('tar -cxf ' + backup_file_name + '.tgz ' + env.config['filesFolder'])
+
+
+  run_custom(env.config, 'backup')
+
+@task
+def deploy():
 
   check_config()
   branch = env.config['branch']
