@@ -125,6 +125,8 @@ def reset():
 
   run_custom(env.config, 'reset')
 
+
+
 @task
 def backup():
   check_config()
@@ -132,12 +134,12 @@ def backup():
 
     i = datetime.datetime.now()
 
-    backup_file_name = i.strftime('%Y-%m-%d--%H-%M-%S')
+    backup_file_name = env.config['backupFolder'] + "/" + settings['currentConfig']+ "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
 
     with cd(env.config['rootFolder']):
-      run('mkdir -p ' + enc.config['backupFolder'])
-      run('drush sql-dump > '+env.config['backupFolder'] + "/" + backup_file_name + '.sql')
-      run('tar -cxf ' + backup_file_name + '.tgz ' + env.config['filesFolder'])
+      run('mkdir -p ' + env.config['backupFolder'])
+      run('drush sql-dump > ' + backup_file_name + '.sql')
+      run('tar -czPf ' + backup_file_name + '.tgz ' + env.config['filesFolder']+"/*")
 
 
   run_custom(env.config, 'backup')
