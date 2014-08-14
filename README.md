@@ -5,9 +5,15 @@ It reads a yaml-file called "fabfile.yaml" where all hosts are stored.
 
 ##Prerequisites
 
-on mac os x:
+on Mac OS X:
 
     brew install python
+    pip install fabric
+    pip install pyyaml
+
+on Debian/Ubuntu
+
+    apt-get install python-pip
     pip install fabric
     pip install pyyaml
 
