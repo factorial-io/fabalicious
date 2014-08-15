@@ -4,6 +4,9 @@ import datetime
 import yaml
 
 settings = 0
+current_config = 'unknown'
+
+env.forward_agent = True
 
 
 def get_all_configurations():
@@ -16,7 +19,6 @@ def get_configuration(name):
   if name in config['hosts']:
     global settings
     settings = config
-    settings['currentConfig'] = name
 
     host_config = config['hosts'][name]
     keys = ("host", "rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
@@ -43,7 +45,7 @@ def get_configuration(name):
   print(red('Configuraton '+name+' not found'))
   exit()
 
-def apply_config(config):
+def apply_config(config, name):
 
   if 'port' in config:
     env.port = config['port']
@@ -53,6 +55,9 @@ def apply_config(config):
   env.user = config['user']
   env.hosts = [ config['host'] ]
   env.config = config
+
+  global current_config
+  current_config = name
 
 
 def check_config():
@@ -105,7 +110,7 @@ def about(config_name='local'):
 @task
 def config(config_name='local'):
   config = get_configuration(config_name)
-  apply_config(config)
+  apply_config(config, config_name)
 
 
 @task
@@ -117,8 +122,7 @@ def uname():
 @task
 def reset():
   check_config()
-  print 'Resetting '+ settings['name'] + "@" + settings['currentConfig']
-  print 'working in ' + env.config['siteFolder']
+  print green('Resetting '+ settings['name'] + "@" + current_config)
 
   if env.config['hasDrush'] == True:
     with cd(env.config['siteFolder']):
@@ -126,9 +130,9 @@ def reset():
         run('drush user-password admin --password="admin"')
         run('chmod -R 777 ' + env.config['filesFolder'])
 
-      run('drush -y en ' + settings['deploymentModule'])
-      run('drush -y fra')
-      run('drush -y updb')
+      run('drush en -y ' + settings['deploymentModule'])
+      run('drush fra -y')
+      run('drush updb -y')
       run('drush  cc all')
 
   run_custom(env.config, 'reset')
@@ -138,6 +142,9 @@ def reset():
 @task
 def backup():
   check_config()
+
+  print green('backing up files and database of ' + settings['name'] + "@" + current_config)
+
   if(env.config['hasDrush']):
 
     i = datetime.datetime.now()
@@ -146,7 +153,7 @@ def backup():
     if exclude_files_setting:
       exclude_files_str = ' --exclude="' + '" --exclude="'.join(exclude_files_setting) + '"'
 
-    backup_file_name = env.config['backupFolder'] + "/" + settings['currentConfig']+ "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
+    backup_file_name = env.config['backupFolder'] + "/" + current_config+ "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
 
     with cd(env.config['siteFolder']):
       run('mkdir -p ' + env.config['backupFolder'])
@@ -163,7 +170,7 @@ def deploy():
   check_config()
   branch = env.config['branch']
 
-  print 'Deploying branch '+ branch + " to " + settings['name'] + "@" + settings['currentConfig']
+  print green('Deploying branch '+ branch + " to " + settings['name'] + "@" + current_config)
 
   with cd(env.config['rootFolder']):
     run('git pull origin '+branch)
@@ -171,3 +178,49 @@ def deploy():
 
   reset()
 
+
+def check_source_config(config_name = False):
+  check_config()
+
+  if not config_name:
+    print(red('copyFrom needs a configuration as a source to copy from'))
+    exit()
+
+  source_config = get_configuration(config_name)
+  if not source_config:
+    print(red('can\'t find source config '+config_name))
+    exit();
+
+  return source_config
+
+@task
+def copyFilesFrom(config_name = False):
+  source_config = check_source_config(config_name)
+  print(settings)
+  print green('Copying files from '+ config_name + " to " + current_config)
+
+  source_ssh_port = '22'
+  if 'port' in source_config:
+    source_ssh_port = source_config['port']
+
+  with cd(env.config['rootFolder']):
+    rsync = 'rsync -rav ';
+    rsync += ' -e "ssh -p '+str(source_ssh_port)+'"'
+    rsync += ' ' + source_config['user']+'@'+source_config['host']
+    rsync += ':' + source_config['filesFolder']+'/*'
+    rsync += ' '
+    rsync += env.config['filesFolder']
+    run(rsync)
+
+@task
+def copyDbFrom(config_name):
+  source_config = check_source_config(config_name)
+  print green('Copying database from '+ config_name + " to " + current_config)
+
+
+
+@task
+def copyFrom(config_name = False):
+  copyFilesFrom(config_name)
+  copyDbFrom(config_name)
+  reset()
