@@ -69,6 +69,14 @@ def run_custom(config, key):
       for line in config[key]:
         run(line)
 
+def get_settings(key, subkey):
+  if key in settings:
+    if subkey in settings[key]:
+      return settings[key][subkey]
+
+  return False
+
+
 
 def header():
  print(green("Huber\'s Deployment Scripts\n"))
@@ -133,13 +141,18 @@ def backup():
   if(env.config['hasDrush']):
 
     i = datetime.datetime.now()
+    exclude_files_setting = get_settings('excludeFiles', 'backup')
+    exclude_files_str = ''
+    if exclude_files_setting:
+      exclude_files_str = ' --exclude="' + '" --exclude="'.join(exclude_files_setting) + '"'
 
     backup_file_name = env.config['backupFolder'] + "/" + settings['currentConfig']+ "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
 
-    with cd(env.config['filesFolder']):
+    with cd(env.config['siteFolder']):
       run('mkdir -p ' + env.config['backupFolder'])
       run('drush sql-dump > ' + backup_file_name + '.sql')
-      run('tar -czPf ' + backup_file_name + '.tgz *')
+    with cd(env.config['filesFolder']):
+      run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *')
 
 
   run_custom(env.config, 'backup')
