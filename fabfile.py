@@ -136,10 +136,10 @@ def backup():
 
     backup_file_name = env.config['backupFolder'] + "/" + settings['currentConfig']+ "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
 
-    with cd(env.config['rootFolder']):
+    with cd(env.config['filesFolder']):
       run('mkdir -p ' + env.config['backupFolder'])
       run('drush sql-dump > ' + backup_file_name + '.sql')
-      run('tar -czPf ' + backup_file_name + '.tgz ' + env.config['filesFolder']+"/*")
+      run('tar -czPf ' + backup_file_name + '.tgz *')
 
 
   run_custom(env.config, 'backup')
