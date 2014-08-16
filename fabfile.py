@@ -4,6 +4,9 @@ import datetime
 import yaml
 
 settings = 0
+current_config = 'unknown'
+
+env.forward_agent = True
 
 
 def get_all_configurations():
@@ -16,7 +19,6 @@ def get_configuration(name):
   if name in config['hosts']:
     global settings
     settings = config
-    settings['currentConfig'] = name
 
     host_config = config['hosts'][name]
     keys = ("host", "rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
@@ -43,7 +45,7 @@ def get_configuration(name):
   print(red('Configuraton '+name+' not found'))
   exit()
 
-def apply_config(config):
+def apply_config(config, name):
 
   if 'port' in config:
     env.port = config['port']
@@ -53,6 +55,9 @@ def apply_config(config):
   env.user = config['user']
   env.hosts = [ config['host'] ]
   env.config = config
+
+  global current_config
+  current_config = name
 
 
 def check_config():
@@ -69,11 +74,39 @@ def run_custom(config, key):
       for line in config[key]:
         run(line)
 
+def get_settings(key, subkey):
+  if key in settings:
+    if subkey in settings[key]:
+      return settings[key][subkey]
+
+  return False
+
+
 
 def header():
  print(green("Huber\'s Deployment Scripts\n"))
 
+def check_source_config(config_name = False):
+  check_config()
 
+  if not config_name:
+    print(red('copyFrom needs a configuration as a source to copy from'))
+    exit()
+
+  source_config = get_configuration(config_name)
+  if not source_config:
+    print(red('can\'t find source config '+config_name))
+    exit();
+
+  return source_config
+
+
+def get_version():
+  with cd(env.config['rootFolder']):
+    with hide('output'):
+      output = run('git describe')
+
+      return output.stdout.strip().replace('/','-')
 
 @task
 def list():
@@ -97,7 +130,7 @@ def about(config_name='local'):
 @task
 def config(config_name='local'):
   config = get_configuration(config_name)
-  apply_config(config)
+  apply_config(config, config_name)
 
 
 @task
@@ -109,8 +142,7 @@ def uname():
 @task
 def reset():
   check_config()
-  print 'Resetting '+ settings['name'] + "@" + settings['currentConfig']
-  print 'working in ' + env.config['siteFolder']
+  print green('Resetting '+ settings['name'] + "@" + current_config)
 
   if env.config['hasDrush'] == True:
     with cd(env.config['siteFolder']):
@@ -118,31 +150,47 @@ def reset():
         run('drush user-password admin --password="admin"')
         run('chmod -R 777 ' + env.config['filesFolder'])
 
-      run('drush -y en ' + settings['deploymentModule'])
-      run('drush -y fra')
-      run('drush -y updb')
+      run('drush en -y ' + settings['deploymentModule'])
+      run('drush fra -y')
+      run('drush updb -y')
       run('drush  cc all')
 
   run_custom(env.config, 'reset')
 
 
 
+def backup_sql(backup_file_name, config):
+  with cd(config['siteFolder']):
+    run('mkdir -p ' + config['backupFolder'])
+    run('drush sql-dump > ' + backup_file_name)
+
+
+
 @task
 def backup():
   check_config()
+
+  print green('backing up files and database of ' + settings['name'] + "@" + current_config)
+
   if(env.config['hasDrush']):
 
     i = datetime.datetime.now()
+    exclude_files_setting = get_settings('excludeFiles', 'backup')
+    exclude_files_str = ''
+    if exclude_files_setting:
+      exclude_files_str = ' --exclude="' + '" --exclude="'.join(exclude_files_setting) + '"'
 
-    backup_file_name = env.config['backupFolder'] + "/" + settings['currentConfig']+ "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
+    backup_file_name = env.config['backupFolder'] + "/" +get_version()+ '--' + current_config + "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
 
-    with cd(env.config['rootFolder']):
-      run('mkdir -p ' + env.config['backupFolder'])
-      run('drush sql-dump > ' + backup_file_name + '.sql')
-      run('tar -czPf ' + backup_file_name + '.tgz ' + env.config['filesFolder']+"/*")
+    backup_sql(backup_file_name+'.sql', env.config)
+
+    with cd(env.config['filesFolder']):
+      run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *')
 
 
   run_custom(env.config, 'backup')
+
+
 
 @task
 def deploy():
@@ -150,7 +198,7 @@ def deploy():
   check_config()
   branch = env.config['branch']
 
-  print 'Deploying branch '+ branch + " to " + settings['name'] + "@" + settings['currentConfig']
+  print green('Deploying branch '+ branch + " to " + settings['name'] + "@" + current_config)
 
   with cd(env.config['rootFolder']):
     run('git pull origin '+branch)
@@ -158,3 +206,71 @@ def deploy():
 
   reset()
 
+
+
+
+
+@task
+def version():
+  print green(settings['name'] + ' @ ' + current_config+' tagged with: ' + get_version())
+
+@task
+def copyFilesFrom(config_name = False):
+  source_config = check_source_config(config_name)
+  print(settings)
+  print green('Copying files from '+ config_name + " to " + current_config)
+
+  source_ssh_port = '22'
+  if 'port' in source_config:
+    source_ssh_port = source_config['port']
+
+  with cd(env.config['rootFolder']):
+    exclude_files_setting = get_settings('excludeFiles', 'copyFrom')
+    exclude_files_str = ''
+    if exclude_files_setting:
+      exclude_files_str = ' --exclude "' + '" --exclude "'.join(exclude_files_setting) + '"'
+
+
+    rsync = 'rsync -rav ';
+    rsync += ' -e "ssh -p '+str(source_ssh_port)+'"'
+    rsync += ' ' + exclude_files_str
+    rsync += ' ' + source_config['user']+'@'+source_config['host']
+    rsync += ':' + source_config['filesFolder']+'/*'
+    rsync += ' '
+    rsync += env.config['filesFolder']
+    run(rsync)
+
+
+@task
+def copyDbFrom(config_name):
+  source_config = check_source_config(config_name)
+  print green('Copying database from '+ config_name + " to " + current_config)
+
+  if(env.config['hasDrush']):
+
+    source_ssh_port = '22'
+    if 'port' in source_config:
+      source_ssh_port = source_config['port']
+
+    ssh_args = ' ' + source_config['user']+'@'+source_config['host']
+
+    sql_name = '/tmp/' + config_name + '.sql'
+
+    # create sql-dump on source
+    execute(backup_sql, sql_name, source_config, host=source_config['user']+'@'+source_config['host']+':'+str(source_ssh_port))
+
+    # copy sql to target
+    run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name+' '+sql_name+ ' >>/dev/null')
+    run('ssh -p '+str(source_ssh_port)+' '+ssh_args+' rm ' + sql_name)
+
+    # import sql into target
+    with cd(env.config['siteFolder']):
+      run('$(drush sql-connect) < ' + sql_name)
+      run('rm '+sql_name)
+
+
+@task
+def copyFrom(config_name = False):
+  copyFilesFrom(config_name)
+  copyDbFrom(config_name)
+  reset()
