@@ -160,9 +160,10 @@ def reset():
 
 
 def backup_sql(backup_file_name, config):
-  with cd(config['siteFolder']):
-    run('mkdir -p ' + config['backupFolder'])
-    run('drush sql-dump > ' + backup_file_name)
+  if(env.config['hasDrush']):
+    with cd(config['siteFolder']):
+      run('mkdir -p ' + config['backupFolder'])
+      run('drush sql-dump > ' + backup_file_name)
 
 
 
@@ -172,20 +173,20 @@ def backup():
 
   print green('backing up files and database of ' + settings['name'] + "@" + current_config)
 
-  if(env.config['hasDrush']):
+  
 
-    i = datetime.datetime.now()
-    exclude_files_setting = get_settings('excludeFiles', 'backup')
-    exclude_files_str = ''
-    if exclude_files_setting:
-      exclude_files_str = ' --exclude="' + '" --exclude="'.join(exclude_files_setting) + '"'
+  i = datetime.datetime.now()
+  exclude_files_setting = get_settings('excludeFiles', 'backup')
+  exclude_files_str = ''
+  if exclude_files_setting:
+    exclude_files_str = ' --exclude="' + '" --exclude="'.join(exclude_files_setting) + '"'
 
-    backup_file_name = env.config['backupFolder'] + "/" +get_version()+ '--' + current_config + "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
+  backup_file_name = env.config['backupFolder'] + "/" +get_version()+ '--' + current_config + "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
 
-    backup_sql(backup_file_name+'.sql', env.config)
+  backup_sql(backup_file_name+'.sql', env.config)
 
-    with cd(env.config['filesFolder']):
-      run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *')
+  with cd(env.config['filesFolder']):
+    run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *')
 
 
   run_custom(env.config, 'backup')
@@ -201,6 +202,7 @@ def deploy():
   print green('Deploying branch '+ branch + " to " + settings['name'] + "@" + current_config)
 
   with cd(env.config['rootFolder']):
+    run('git fetch --tags')
     run('git pull origin '+branch)
     run('git submodule update')
 
