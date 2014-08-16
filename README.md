@@ -62,11 +62,11 @@ run a task
 
 ##Available tasks:
 
-* version: get the current version of the source (= git describe)
-* reset: reset the drupal-installation, clear the caches, run update, reset all features, enable deploy-module and its dependencies
-* backup: tar all files, dump the database and copy them to the backup-directory
-* deploy: update the installation by pulling the newest source from git and running the reset-task afterwards
-* copyFrom:<source-host>: copies all files from filesFolder at source-host to target host, and imports a sql-dump from source-host.
+* `version`: get the current version of the source (= git describe)
+* `reset`: reset the drupal-installation, clear the caches, run update, reset all features, enable deploy-module and its dependencies
+* `backup`: tar all files, dump the database and copy them to the backup-directory
+* `deploy`: update the installation by pulling the newest source from git and running the reset-task afterwards
+* `copyFrom:<source-host>`: copies all files from filesFolder at source-host to target host, and imports a sql-dump from source-host.
 
 
 
