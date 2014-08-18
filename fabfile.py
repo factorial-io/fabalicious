@@ -233,7 +233,6 @@ def version():
 @task
 def copyFilesFrom(config_name = False):
   source_config = check_source_config(config_name)
-  print(settings)
   print green('Copying files from '+ config_name + " to " + current_config)
 
   source_ssh_port = '22'

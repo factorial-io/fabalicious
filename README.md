@@ -33,9 +33,13 @@ on Debian/Ubuntu
         backupFolder: <absolute-path-where-backup-should-be-stored>
         hasDrush: <boolean>
         useForDevelopment: <boolean>
+        ignoreSubmodules: <boolean>
         reset:
-          - "first reset command"
-          - "second reset command"
+          - "first custom reset command"
+          - "second custom reset command"
+        deploy:
+          - "first custom deploy command"
+          - "second custom deploy command"
       hostB:
         ...
 ## Usage
@@ -67,7 +71,7 @@ run a task
 * `backup`: tar all files, dump the database and copy them to the backup-directory
 * `deploy`: update the installation by pulling the newest source from git and running the reset-task afterwards
 * `copyFrom:<source-host>`: copies all files from filesFolder at source-host to target host, and imports a sql-dump from source-host.
-
+* `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
 
 
 
