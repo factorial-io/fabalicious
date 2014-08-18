@@ -39,6 +39,8 @@ def get_configuration(name):
       host_config['useForDevelopment'] = False
     if 'hasDrush' not in host_config:
       host_config['hasDrush'] = False
+    if 'ignoreSubmodules' not in host_config:
+      host_config['ignoreSubmodules'] = False
 
     return host_config
 
@@ -211,7 +213,10 @@ def deploy():
   with cd(env.config['rootFolder']):
     run('git fetch --tags')
     run('git pull origin '+branch)
-    run('git submodule update')
+    if not env.config['ignoreSubmodules']:
+      run('git submodule update')
+
+  run_custom(env.config, 'deploy')
 
   reset()
 
@@ -283,3 +288,9 @@ def copyFrom(config_name = False):
   copyFilesFrom(config_name)
   copyDbFrom(config_name)
   reset()
+
+@task
+def drush(drush_command):
+  check_config()
+  with cd(env.config['siteFolder']):
+    run('drush '+drush_command)
