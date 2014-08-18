@@ -39,6 +39,8 @@ def get_configuration(name):
       host_config['useForDevelopment'] = False
     if 'hasDrush' not in host_config:
       host_config['hasDrush'] = False
+    if 'ignoreSubmodules' not in host_config:
+      host_config['ignoreSubmodules'] = False
 
     return host_config
 
@@ -151,14 +153,15 @@ def reset():
 
   if env.config['hasDrush'] == True:
     with cd(env.config['siteFolder']):
-      if env.config['useForDevelopment'] == True:
-        run('drush user-password admin --password="admin"')
-        run('chmod -R 777 ' + env.config['filesFolder'])
+      with shell_env(COLUMNS='72'):
+        if env.config['useForDevelopment'] == True:
+          run('drush user-password admin --password="admin"')
+          run('chmod -R 777 ' + env.config['filesFolder'])
 
-      run('drush en -y ' + settings['deploymentModule'])
-      run('drush fra -y')
-      run('drush updb -y')
-      run('drush  cc all')
+        run('drush en -y ' + settings['deploymentModule'])
+        run('drush fra -y')
+        run('drush updb -y')
+        run('drush  cc all')
 
   run_custom(env.config, 'reset')
 
@@ -167,8 +170,9 @@ def reset():
 def backup_sql(backup_file_name, config):
   if(env.config['hasDrush']):
     with cd(config['siteFolder']):
-      run('mkdir -p ' + config['backupFolder'])
-      run('drush sql-dump > ' + backup_file_name)
+      with shell_env(COLUMNS='72'):
+        run('mkdir -p ' + config['backupFolder'])
+        run('drush sql-dump > ' + backup_file_name)
 
 
 
@@ -211,7 +215,10 @@ def deploy():
   with cd(env.config['rootFolder']):
     run('git fetch --tags')
     run('git pull origin '+branch)
-    run('git submodule update')
+    if not env.config['ignoreSubmodules']:
+      run('git submodule update')
+
+  run_custom(env.config, 'deploy')
 
   reset()
 
@@ -274,8 +281,9 @@ def copyDbFrom(config_name):
 
     # import sql into target
     with cd(env.config['siteFolder']):
-      run('$(drush sql-connect) < ' + sql_name)
-      run('rm '+sql_name)
+      with shell_env(COLUMNS='72'):
+        run('$(drush sql-connect) < ' + sql_name)
+        run('rm '+sql_name)
 
 
 @task
@@ -283,3 +291,11 @@ def copyFrom(config_name = False):
   copyFilesFrom(config_name)
   copyDbFrom(config_name)
   reset()
+
+@task
+def drush(drush_command):
+  check_config()
+  if (env.config['hasDrush']):
+    with cd(env.config['siteFolder']):
+      with shell_env(COLUMNS='72'):
+        run('drush '+drush_command)
