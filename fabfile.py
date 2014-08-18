@@ -104,9 +104,14 @@ def check_source_config(config_name = False):
 def get_version():
   with cd(env.config['rootFolder']):
     with hide('output'):
-      output = run('git describe')
+      output = run('git describe --always')
 
       return output.stdout.strip().replace('/','-')
+
+
+def get_backup_file_name(config, config_name):
+  i = datetime.datetime.now()
+  return config['backupFolder'] + "/" +get_version()+ '--' + config_name + "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
 
 @task
 def list():
@@ -173,16 +178,13 @@ def backup():
 
   print green('backing up files and database of ' + settings['name'] + "@" + current_config)
 
-  
 
-  i = datetime.datetime.now()
   exclude_files_setting = get_settings('excludeFiles', 'backup')
   exclude_files_str = ''
   if exclude_files_setting:
     exclude_files_str = ' --exclude="' + '" --exclude="'.join(exclude_files_setting) + '"'
 
-  backup_file_name = env.config['backupFolder'] + "/" +get_version()+ '--' + current_config + "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
-
+  backup_file_name = get_backup_file_name(env.config, current_config)
   backup_sql(backup_file_name+'.sql', env.config)
 
   with cd(env.config['filesFolder']):
@@ -198,6 +200,11 @@ def deploy():
 
   check_config()
   branch = env.config['branch']
+
+  if not env.config['useForDevelopment']:
+    backup_file_name = get_backup_file_name(env.config, current_config)
+    print green('backing up DB of ' + settings['name'] + '@' + current_config+ ' to '+backup_file_name+'.sql')
+    backup_sql(backup_file_name+'.sql', env.config)
 
   print green('Deploying branch '+ branch + " to " + settings['name'] + "@" + current_config)
 
