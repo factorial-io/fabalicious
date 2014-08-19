@@ -212,6 +212,8 @@ def deploy():
 
   print green('Deploying branch '+ branch + " to " + settings['name'] + "@" + current_config)
 
+  run_custom(env.config, 'deployPrepare')
+  
   with cd(env.config['rootFolder']):
     run('git fetch --tags')
     run('git pull origin '+branch)
