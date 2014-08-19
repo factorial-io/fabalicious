@@ -177,7 +177,7 @@ def backup_sql(backup_file_name, config):
 
 
 @task
-def backup():
+def backup(withFiles=True):
   check_config()
 
   print green('backing up files and database of ' + settings['name'] + "@" + current_config)
@@ -191,9 +191,11 @@ def backup():
   backup_file_name = get_backup_file_name(env.config, current_config)
   backup_sql(backup_file_name+'.sql', env.config)
 
-  with cd(env.config['filesFolder']):
-    run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *')
-
+  if withFiles and withFiles != '0':
+    with cd(env.config['filesFolder']):
+      run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *')
+  else:
+    print "Backup of files skipped per request..."
 
   run_custom(env.config, 'backup')
 
