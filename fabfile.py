@@ -42,6 +42,12 @@ def get_configuration(name):
     if 'ignoreSubmodules' not in host_config:
       host_config['ignoreSubmodules'] = False
 
+    if 'supportsBackups' not in host_config:
+      host_config['supportsBackups'] = True
+
+    if 'supportsCopyFrom' not in host_config:
+      host_config['supportsCopyFrom'] = True
+
     return host_config
 
   print(red('Configuraton '+name+' not found'))
@@ -179,6 +185,9 @@ def backup_sql(backup_file_name, config):
 @task
 def backup(withFiles=True):
   check_config()
+  print(env.config)
+  if not env.config['supportsBackups']:
+    return
 
   print green('backing up files and database of ' + settings['name'] + "@" + current_config)
 
@@ -207,7 +216,7 @@ def deploy():
   check_config()
   branch = env.config['branch']
 
-  if not env.config['useForDevelopment']:
+  if not env.config['useForDevelopment'] and env.config['supportsBackups']:
     backup_file_name = get_backup_file_name(env.config, current_config)
     print green('backing up DB of ' + settings['name'] + '@' + current_config+ ' to '+backup_file_name+'.sql')
     backup_sql(backup_file_name+'.sql', env.config)
@@ -237,6 +246,10 @@ def version():
 @task
 def copyFilesFrom(config_name = False):
   source_config = check_source_config(config_name)
+
+  if not env.config['supportsCopyFrom']:
+    return
+
   print green('Copying files from '+ config_name + " to " + current_config)
 
   source_ssh_port = '22'
@@ -263,6 +276,10 @@ def copyFilesFrom(config_name = False):
 @task
 def copyDbFrom(config_name):
   source_config = check_source_config(config_name)
+  
+  if not env.config['supportsCopyFrom']:
+    return
+  
   print green('Copying database from '+ config_name + " to " + current_config)
 
   if(env.config['hasDrush']):
