@@ -137,7 +137,7 @@ def about(config_name='local'):
   if configuration:
     print("Configuration for " + config_name)
     for key, value in configuration.items():
-      print(key.ljust(15) + ': '+ value)
+      print(key.ljust(25) + ': '+ str(value))
 
 
 @task
@@ -224,7 +224,7 @@ def deploy():
   print green('Deploying branch '+ branch + " to " + settings['name'] + "@" + current_config)
 
   run_custom(env.config, 'deployPrepare')
-  
+
   with cd(env.config['rootFolder']):
     run('git fetch --tags')
     run('git pull origin '+branch)
@@ -276,10 +276,10 @@ def copyFilesFrom(config_name = False):
 @task
 def copyDbFrom(config_name):
   source_config = check_source_config(config_name)
-  
+
   if not env.config['supportsCopyFrom']:
     return
-  
+
   print green('Copying database from '+ config_name + " to " + current_config)
 
   if(env.config['hasDrush']):
