@@ -34,9 +34,14 @@ on Debian/Ubuntu
         hasDrush: <boolean>
         useForDevelopment: <boolean>
         ignoreSubmodules: <boolean>
+        supportsBackups: <boolean>
+        supportsCopyFrom: <boolean>
         reset:
           - "first custom reset command"
           - "second custom reset command"
+        deployPrepare:
+          - "first custom command run before doing a deploy"
+          - "second custom command run before doing a deploy"
         deploy:
           - "first custom deploy command"
           - "second custom deploy command"
@@ -68,7 +73,7 @@ run a task
 
 * `version`: get the current version of the source (= git describe)
 * `reset`: reset the drupal-installation, clear the caches, run update, reset all features, enable deploy-module and its dependencies
-* `backup`: tar all files, dump the database and copy them to the backup-directory
+* `backup`: tar all files, dump the database and copy them to the backup-directory. optional parameter: `withFiles=0`, backup db only, w/o files
 * `deploy`: update the installation by pulling the newest source from git and running the reset-task afterwards
 * `copyFrom:<source-host>`: copies all files from filesFolder at source-host to target host, and imports a sql-dump from source-host.
 * `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
