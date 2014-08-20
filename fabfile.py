@@ -185,7 +185,6 @@ def backup_sql(backup_file_name, config):
 @task
 def backup(withFiles=True):
   check_config()
-  print(env.config)
   if not env.config['supportsBackups']:
     return
 
