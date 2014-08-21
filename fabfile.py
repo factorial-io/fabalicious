@@ -48,6 +48,9 @@ def get_configuration(name):
     if 'supportsCopyFrom' not in host_config:
       host_config['supportsCopyFrom'] = True
 
+    if 'supportsInstalls' not in host_config:
+      host_config['supportsInstalls'] = True
+
     return host_config
 
   print(red('Configuraton '+name+' not found'))
@@ -269,7 +272,9 @@ def copyFilesFrom(config_name = False):
     rsync += ':' + source_config['filesFolder']+'/*'
     rsync += ' '
     rsync += env.config['filesFolder']
-    run(rsync)
+
+    with warn_only():
+      run(rsync)
 
 
 @task
@@ -318,3 +323,27 @@ def drush(drush_command):
     with cd(env.config['siteFolder']):
       with shell_env(COLUMNS='72'):
         run('drush '+drush_command)
+
+@task
+def install():
+  check_config()
+  if env.config['useForDevelopment'] and env.config['supportsInstalls']:
+    if 'databaseName' not in env.config:
+      print red('missing databaseName in config '+current_config)
+      exit()
+
+    print green('Installing fresh database for '+ current_config)
+
+    databaseName = env.config['databaseName']
+    with cd(env.config['siteFolder']):
+      with shell_env(COLUMNS='72'):
+        run('mysql -u root --password=vagrant -e "create database if not exists '+databaseName+'";')
+        with warn_only():
+          run('chmod u+w '+env.config['siteFolder'])
+          run('chmod u+w '+env.config['siteFolder']+'/settings.php')
+          run('rm '+env.config['siteFolder']+'/settings.php')
+
+          run('drush site-install minimal  --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://root:vagrant@localhost/'+databaseName)
+
+        if 'deploymentModule' in settings:
+          run('drush en '+settings['deploymentModule'])
