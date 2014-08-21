@@ -36,6 +36,7 @@ on Debian/Ubuntu
         ignoreSubmodules: <boolean>
         supportsBackups: <boolean>
         supportsCopyFrom: <boolean>
+        supportsInstalls: <boolean>
         reset:
           - "first custom reset command"
           - "second custom reset command"
@@ -77,7 +78,7 @@ run a task
 * `deploy`: update the installation by pulling the newest source from git and running the reset-task afterwards
 * `copyFrom:<source-host>`: copies all files from filesFolder at source-host to target host, and imports a sql-dump from source-host.
 * `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
-
+* `install`: will install drupal with profile minimal. Works currently only wehn supportsInstall=true, hasDrush=true and useForDevelopment=true. Needs an additional host-setting 'databaseName'. This task will overwrite your settings.php-file and databases, so be prepared!
 
 
 
