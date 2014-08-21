@@ -327,7 +327,7 @@ def drush(drush_command):
 @task
 def install():
   check_config()
-  if env.config['useForDevelopment'] and env.config['supportsInstalls']:
+  if env.config['hasDrush'] and env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'databaseName' not in env.config:
       print red('missing databaseName in config '+current_config)
       exit()
@@ -341,7 +341,8 @@ def install():
         with warn_only():
           run('chmod u+w '+env.config['siteFolder'])
           run('chmod u+w '+env.config['siteFolder']+'/settings.php')
-          run('rm '+env.config['siteFolder']+'/settings.php')
+          run('rm '+env.config['siteFolder']+'/settings.php.old')
+          run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old')
 
           run('drush site-install minimal  --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://root:vagrant@localhost/'+databaseName)
 
