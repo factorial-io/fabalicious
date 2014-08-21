@@ -166,8 +166,8 @@ def reset():
         if env.config['useForDevelopment'] == True:
           run('drush user-password admin --password="admin"')
           run('chmod -R 777 ' + env.config['filesFolder'])
-
-        run('drush en -y ' + settings['deploymentModule'])
+        if 'deploymentModule' in settings:
+          run('drush en -y ' + settings['deploymentModule'])
         run('drush fra -y')
         run('drush updb -y')
         run('drush  cc all')
