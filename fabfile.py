@@ -180,8 +180,9 @@ def backup_sql(backup_file_name, config):
   if(env.config['hasDrush']):
     with cd(config['siteFolder']):
       with shell_env(COLUMNS='72'):
-        run('mkdir -p ' + config['backupFolder'])
-        run('drush sql-dump > ' + backup_file_name)
+        with warn_only():
+          run('mkdir -p ' + config['backupFolder'])
+          run('drush sql-dump --result-file=' + backup_file_name)
 
 
 
