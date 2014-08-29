@@ -51,6 +51,9 @@ def get_configuration(name):
     if 'supportsInstalls' not in host_config:
       host_config['supportsInstalls'] = True
 
+    if 'supportsZippedBackups' not in host_config:
+      host_config['supportsZippedBackups'] = True
+
     return host_config
 
   print(red('Configuraton '+name+' not found'))
@@ -182,7 +185,10 @@ def backup_sql(backup_file_name, config):
       with shell_env(COLUMNS='72'):
         with warn_only():
           run('mkdir -p ' + config['backupFolder'])
-          run('drush sql-dump --result-file=' + backup_file_name)
+          if config['supportsZippedBackups']:
+            run('drush sql-dump --gzip --result-file=' + backup_file_name)
+          else:
+            run('drush sql-dump --result-file=' + backup_file_name)
 
 
 
@@ -297,8 +303,13 @@ def copyDbFrom(config_name):
 
     sql_name = '/tmp/' + config_name + '.sql'
 
+
     # create sql-dump on source
     execute(backup_sql, sql_name, source_config, host=source_config['user']+'@'+source_config['host']+':'+str(source_ssh_port))
+
+    if source_config['supportsZippedBackups']:
+      sql_name += '.gz'
+
 
     # copy sql to target
     run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name+' '+sql_name+ ' >>/dev/null')
@@ -307,7 +318,11 @@ def copyDbFrom(config_name):
     # import sql into target
     with cd(env.config['siteFolder']):
       with shell_env(COLUMNS='72'):
-        run('$(drush sql-connect) < ' + sql_name)
+        if source_config['supportsZippedBackups']:
+          run('zcat '+ sql_name + ' | $(drush sql-connect)')
+        else:
+          run('$(drush sql-connect) < ' + sql_name)
+
         run('rm '+sql_name)
 
 

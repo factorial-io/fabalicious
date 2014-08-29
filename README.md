@@ -37,6 +37,7 @@ on Debian/Ubuntu
         supportsBackups: <boolean>
         supportsCopyFrom: <boolean>
         supportsInstalls: <boolean>
+        supportsZippedBackups: <boolean>
         reset:
           - "first custom reset command"
           - "second custom reset command"
