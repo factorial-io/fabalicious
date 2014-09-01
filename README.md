@@ -22,6 +22,15 @@ on Debian/Ubuntu
 
     name: The name of your project
     deploymentModule: the name of your drupal deployment-module
+    # common commands are executed when resetting/deploying an installation,
+    # for all hosts. if 'useForDevelopment' is set, then 'development' is used
+    common:
+      development:
+        # custom commands to run for development-installations, e.g:
+        - "drush vset -y --exact devel_rebuild_theme_registry TRUE"
+      deployment:
+        # custom commands to run for all other installations, e.g:
+        - "drush dis -y devel"
     hosts:
       hostA:
         host: <host>
