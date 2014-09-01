@@ -19,6 +19,8 @@ def get_configuration(name):
   if name in config['hosts']:
     global settings
     settings = config
+    if not 'common' in settings:
+      settings['common'] = { }
 
     host_config = config['hosts'][name]
     keys = ("host", "rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
@@ -127,6 +129,14 @@ def get_backup_file_name(config, config_name):
   i = datetime.datetime.now()
   return config['backupFolder'] + "/" +get_version()+ '--' + config_name + "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
 
+
+def runCommonCommands():
+  key = 'development' if env.config['useForDevelopment'] else 'deployment'
+  if key in settings['common']:
+    for line in settings['common'][key]:
+      run(line)
+
+
 @task
 def list():
   header()
@@ -173,6 +183,7 @@ def reset():
           run('drush en -y ' + settings['deploymentModule'])
         run('drush fra -y')
         run('drush updb -y')
+        runCommonCommands()
         run('drush  cc all')
 
   run_custom(env.config, 'reset')
