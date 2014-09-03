@@ -75,6 +75,14 @@ def get_configuration(name):
   print(red('Configuraton '+name+' not found'))
   exit()
 
+def find_between( s, first, last ):
+    try:
+        start = s.index( first ) + len( first )
+        end = s.index( last, start )
+        return s[start:end]
+    except ValueError:
+        return ""
+
 def apply_config(config, name):
 
   if 'port' in config:
@@ -91,6 +99,15 @@ def apply_config(config, name):
 
   if 'sshTunnel' in config:
     o = config['sshTunnel']
+    if 'destHostFromDockerContainer' in o:
+      cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (o['bridgePort'], o['bridgeUser'], o['bridgeHost'], o['destHostFromDockerContainer'])
+
+      output = local(cmd, capture=True)
+      ip_address = find_between(output.stdout, '"IPAddress": "', '"')
+      print "Docker container " + o['destHostFromDockerContainer'] + " uses IP " + ip_address
+
+      o['destHost'] = ip_address
+
     tunnel = SSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'])
 
 
