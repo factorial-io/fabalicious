@@ -36,6 +36,20 @@ on Debian/Ubuntu
         host: <host>
         port: <port>
         user: <your-ssh-user>
+        # if you can't reacht your host directly, you can use a ssh-tunnel,
+        # please note that your host should be localhost and port the localPort of
+        # your sshTunnel-configuration
+        sshTunnel:
+          bridgeUser: <bridgeUser>
+          bridgeHost: <bridgeHost>
+          bridgePort: <bridgePort>
+          destHost: <destHost>
+          # if you want to deploy into docker container you can use a docker-
+          # container-name, the script will use docker inspect to get the container's
+          # ip-address
+          destHostFromDockerContainer: <docker-container-name>
+          destPort: <destPort>
+          localPort: <localPort>
         rootFolder: <absolute-path-to-your-webroot>
         sitesFolder: <relative-path-to-your-sites-folder>
         filesFolder: <relative-path-to-yout-files-folder>
