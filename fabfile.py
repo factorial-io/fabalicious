@@ -204,7 +204,7 @@ def uname():
 
 
 @task
-def reset():
+def reset(withPasswordReset=False):
   check_config()
   print green('Resetting '+ settings['name'] + "@" + current_config)
 
@@ -212,7 +212,8 @@ def reset():
     with cd(env.config['siteFolder']):
       with shell_env(COLUMNS='72'):
         if env.config['useForDevelopment'] == True:
-          run('drush user-password admin --password="admin"')
+          if withPasswordReset in [True, 'True', '1']:
+            run('drush user-password admin --password="admin"')
           run('chmod -R 777 ' + env.config['filesFolder'])
         if 'deploymentModule' in settings:
           run('drush en -y ' + settings['deploymentModule'])
@@ -376,7 +377,7 @@ def copyDbFrom(config_name):
 def copyFrom(config_name = False):
   copyFilesFrom(config_name)
   copyDbFrom(config_name)
-  reset()
+  reset(withPasswordReset=True)
 
 @task
 def drush(drush_command):
