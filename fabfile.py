@@ -2,11 +2,25 @@ from fabric.api import *
 from fabric.colors import green, red
 import datetime
 import yaml
+import subprocess, shlex, atexit, time
 
 settings = 0
 current_config = 'unknown'
 
 env.forward_agent = True
+
+class SSHTunnel:
+  def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, timeout=15):
+    self.local_port = local_port
+    cmd = 'ssh -vAN -L %d:%s:%d %s@%s' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
+    self.p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    start_time = time.time()
+    atexit.register(self.p.kill)
+    while not 'Entering interactive session' in self.p.stderr.readline():
+      if time.time() > start_time + timeout:
+        raise "SSH tunnel timed out"
+  def entrance(self):
+    return 'localhost:%d' % self.local_port
 
 
 def get_all_configurations():
@@ -61,6 +75,14 @@ def get_configuration(name):
   print(red('Configuraton '+name+' not found'))
   exit()
 
+def find_between( s, first, last ):
+    try:
+        start = s.index( first ) + len( first )
+        end = s.index( last, start )
+        return s[start:end]
+    except ValueError:
+        return ""
+
 def apply_config(config, name):
 
   if 'port' in config:
@@ -74,6 +96,19 @@ def apply_config(config, name):
 
   global current_config
   current_config = name
+
+  if 'sshTunnel' in config:
+    o = config['sshTunnel']
+    if 'destHostFromDockerContainer' in o:
+      cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (o['bridgePort'], o['bridgeUser'], o['bridgeHost'], o['destHostFromDockerContainer'])
+
+      output = local(cmd, capture=True)
+      ip_address = find_between(output.stdout, '"IPAddress": "', '"')
+      print "Docker container " + o['destHostFromDockerContainer'] + " uses IP " + ip_address
+
+      o['destHost'] = ip_address
+
+    tunnel = SSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'])
 
 
 def check_config():
