@@ -59,7 +59,6 @@ on Debian/Ubuntu
         ignoreSubmodules: <boolean>
         supportsBackups: <boolean>
         supportsCopyFrom: <boolean>
-        supportsInstalls: <boolean>
         supportsZippedBackups: <boolean>
         reset:
           - "first custom reset command"
@@ -70,6 +69,14 @@ on Debian/Ubuntu
         deploy:
           - "first custom deploy command"
           - "second custom deploy command"
+
+        #configuration needed for the install-task:
+        supportsInstalls: <boolean>
+        database:
+          user: <database-user>
+          pass: <database-password>
+          name: <name-of-database>
+
       hostB:
         ...
 ## Usage
