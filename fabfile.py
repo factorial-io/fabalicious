@@ -391,23 +391,26 @@ def drush(drush_command):
 def install():
   check_config()
   if env.config['hasDrush'] and env.config['useForDevelopment'] and env.config['supportsInstalls']:
-    if 'databaseName' not in env.config:
-      print red('missing databaseName in config '+current_config)
+    if 'database' not in env.config:
+      print red('missing database-dictionary in config '+current_config)
       exit()
 
     print green('Installing fresh database for '+ current_config)
 
-    databaseName = env.config['databaseName']
+    o = env.config['database']
     with cd(env.config['siteFolder']):
       with shell_env(COLUMNS='72'):
-        run('mysql -u root --password=vagrant -e "create database if not exists '+databaseName+'";')
+        mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
+        mysql_cmd += 'GRANT ALL PRIVILEGES ON drupal.* TO drupal@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
+
+        run('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"')
         with warn_only():
           run('chmod u+w '+env.config['siteFolder'])
           run('chmod u+w '+env.config['siteFolder']+'/settings.php')
           run('rm '+env.config['siteFolder']+'/settings.php.old')
           run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old')
 
-          run('drush site-install minimal  --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://root:vagrant@localhost/'+databaseName)
+          run('drush site-install minimal  --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
 
         if 'deploymentModule' in settings:
-          run('drush en '+settings['deploymentModule'])
+          run('drush en -y '+settings['deploymentModule'])
