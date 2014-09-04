@@ -23,6 +23,25 @@ class SSHTunnel:
     return 'localhost:%d' % self.local_port
 
 
+class RemoteSSHTunnel:
+  def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, timeout=15):
+    self.local_port = local_port
+    self.bridge_host = bridge_host
+    self.bridge_user = bridge_user
+
+    cmd = 'ssh -L %d:%s:%d %s@%s -f -N -M -S ~/.ssh-tunnel-from-fabric' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
+    run(cmd)
+
+    start_time = time.time()
+
+  def entrance(self):
+    return 'localhost:%d' % self.local_port
+
+  def kill(self):
+    print "killing remote ssh-tunnel"
+    cmd = 'ssh -S ~/.ssh-tunnel-from-fabric -O exit %s@%s' % (self.bridge_user, self.bridge_host)
+    run(cmd)
+
 def get_all_configurations():
   stream = open("fabfile.yaml", 'r')
   return yaml.load(stream)
@@ -69,6 +88,8 @@ def get_configuration(name):
 
     if 'supportsZippedBackups' not in host_config:
       host_config['supportsZippedBackups'] = True
+    if 'gitRootFolder' not in host_config:
+      host_config['gitRootFolder'] = host_config['rootFolder']
 
     return host_config
 
@@ -82,6 +103,23 @@ def find_between( s, first, last ):
         return s[start:end]
     except ValueError:
         return ""
+
+
+def create_ssh_tunnel(o, remote=False):
+  if 'destHostFromDockerContainer' in o:
+    cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (o['bridgePort'], o['bridgeUser'], o['bridgeHost'], o['destHostFromDockerContainer'])
+
+    output = local(cmd, capture=True)
+    ip_address = find_between(output.stdout, '"IPAddress": "', '"')
+    print "Docker container " + o['destHostFromDockerContainer'] + " uses IP " + ip_address
+
+    o['destHost'] = ip_address
+  if remote:
+    tunnel = RemoteSSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'])
+  else:
+    tunnel = SSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'])
+
+  return tunnel
 
 def apply_config(config, name):
 
@@ -98,17 +136,7 @@ def apply_config(config, name):
   current_config = name
 
   if 'sshTunnel' in config:
-    o = config['sshTunnel']
-    if 'destHostFromDockerContainer' in o:
-      cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (o['bridgePort'], o['bridgeUser'], o['bridgeHost'], o['destHostFromDockerContainer'])
-
-      output = local(cmd, capture=True)
-      ip_address = find_between(output.stdout, '"IPAddress": "', '"')
-      print "Docker container " + o['destHostFromDockerContainer'] + " uses IP " + ip_address
-
-      o['destHost'] = ip_address
-
-    tunnel = SSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'])
+    create_ssh_tunnel(config['sshTunnel'])
 
 
 def check_config():
@@ -153,7 +181,7 @@ def check_source_config(config_name = False):
 
 
 def get_version():
-  with cd(env.config['rootFolder']):
+  with cd(env.config['gitRootFolder']):
     with hide('output'):
       output = run('git describe --always')
 
@@ -227,7 +255,8 @@ def reset(withPasswordReset=False):
 
 
 def backup_sql(backup_file_name, config):
-  if(env.config['hasDrush']):
+  print env.host
+  if(config['hasDrush']):
     with cd(config['siteFolder']):
       with shell_env(COLUMNS='72'):
         with warn_only():
@@ -281,7 +310,7 @@ def deploy():
 
   run_custom(env.config, 'deployPrepare')
 
-  with cd(env.config['rootFolder']):
+  with cd(env.config['gitRootFolder']):
     run('git fetch --tags')
     run('git pull origin '+branch)
     if not env.config['ignoreSubmodules']:
@@ -319,7 +348,7 @@ def copyFilesFrom(config_name = False):
       exclude_files_str = ' --exclude "' + '" --exclude "'.join(exclude_files_setting) + '"'
 
 
-    rsync = 'rsync -rav ';
+    rsync = 'rsync -rav --no-o --no-g ';
     rsync += ' -e "ssh -p '+str(source_ssh_port)+'"'
     rsync += ' ' + exclude_files_str
     rsync += ' ' + source_config['user']+'@'+source_config['host']
@@ -375,9 +404,23 @@ def copyDbFrom(config_name):
 
 @task
 def copyFrom(config_name = False):
-  copyFilesFrom(config_name)
-  copyDbFrom(config_name)
+  source_config = check_source_config(config_name)
+  if 'sshTunnel' in source_config:
+    remote_tunnel = create_ssh_tunnel(source_config['sshTunnel'], True)
+    tunnel = create_ssh_tunnel(source_config['sshTunnel'], False)
+
+    run('ssh-copy-id -i $HOME/.ssh/id_rsa "-p %d %s@%s"' % (source_config['port'], source_config['user'], source_config['host']))
+
+  try:
+    copyFilesFrom(config_name)
+    copyDbFrom(config_name)
+
+  finally:
+    if remote_tunnel:
+      remote_tunnel.kill()
+
   reset(withPasswordReset=True)
+
 
 @task
 def drush(drush_command):
