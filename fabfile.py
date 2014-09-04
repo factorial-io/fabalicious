@@ -88,6 +88,8 @@ def get_configuration(name):
 
     if 'supportsZippedBackups' not in host_config:
       host_config['supportsZippedBackups'] = True
+    if 'gitRootFolder' not in host_config:
+      host_config['gitRootFolder'] = host_config['rootFolder']
 
     return host_config
 
@@ -179,7 +181,7 @@ def check_source_config(config_name = False):
 
 
 def get_version():
-  with cd(env.config['rootFolder']):
+  with cd(env.config['gitRootFolder']):
     with hide('output'):
       output = run('git describe --always')
 
@@ -308,7 +310,7 @@ def deploy():
 
   run_custom(env.config, 'deployPrepare')
 
-  with cd(env.config['rootFolder']):
+  with cd(env.config['gitRootFolder']):
     run('git fetch --tags')
     run('git pull origin '+branch)
     if not env.config['ignoreSubmodules']:
