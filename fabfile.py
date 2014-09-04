@@ -407,6 +407,8 @@ def copyFrom(config_name = False):
     remote_tunnel = create_ssh_tunnel(source_config['sshTunnel'], True)
     tunnel = create_ssh_tunnel(source_config['sshTunnel'], False)
 
+    run('ssh-copy-id -i $HOME/.ssh/id_rsa "-p %d %s@%s"' % (source_config['port'], source_config['user'], source_config['host']))
+
   try:
     copyFilesFrom(config_name)
     copyDbFrom(config_name)
