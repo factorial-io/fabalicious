@@ -22,11 +22,34 @@ on Debian/Ubuntu
 
     name: The name of your project
     deploymentModule: the name of your drupal deployment-module
+    # common commands are executed when resetting/deploying an installation,
+    # for all hosts. if 'useForDevelopment' is set, then 'development' is used
+    common:
+      development:
+        # custom commands to run for development-installations, e.g:
+        - "drush vset -y --exact devel_rebuild_theme_registry TRUE"
+      deployment:
+        # custom commands to run for all other installations, e.g:
+        - "drush dis -y devel"
     hosts:
       hostA:
         host: <host>
         port: <port>
         user: <your-ssh-user>
+        # if you can't reacht your host directly, you can use a ssh-tunnel,
+        # please note that your host should be localhost and port the localPort of
+        # your sshTunnel-configuration
+        sshTunnel:
+          bridgeUser: <bridgeUser>
+          bridgeHost: <bridgeHost>
+          bridgePort: <bridgePort>
+          destHost: <destHost>
+          # if you want to deploy into docker container you can use a docker-
+          # container-name, the script will use docker inspect to get the container's
+          # ip-address
+          destHostFromDockerContainer: <docker-container-name>
+          destPort: <destPort>
+          localPort: <localPort>
         rootFolder: <absolute-path-to-your-webroot>
         sitesFolder: <relative-path-to-your-sites-folder>
         filesFolder: <relative-path-to-yout-files-folder>
