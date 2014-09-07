@@ -407,6 +407,7 @@ def copyDbFrom(config_name):
 @task
 def copyFrom(config_name = False):
   source_config = check_source_config(config_name)
+  remote_tunnel = False
   if 'sshTunnel' in source_config:
     remote_tunnel = create_ssh_tunnel(source_config['sshTunnel'], True)
     tunnel = create_ssh_tunnel(source_config['sshTunnel'], False)
