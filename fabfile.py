@@ -93,7 +93,8 @@ def get_configuration(name):
 
     return host_config
 
-  print(red('Configuraton '+name+' not found'))
+  print(red('Configuraton '+name+' not found \n'))
+  list()
   exit()
 
 def find_between( s, first, last ):
@@ -160,10 +161,11 @@ def get_settings(key, subkey):
 
   return False
 
-
-
 def header():
- print(green("Huber\'s Deployment Scripts\n"))
+  if header.sended not in locals() and header.sended != 1:
+    print(green("Huber\'s Deployment Scripts\n"))
+    header.sended = 1
+header.sended = 0
 
 def check_source_config(config_name = False):
   check_config()
