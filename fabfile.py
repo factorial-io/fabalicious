@@ -443,6 +443,7 @@ def install():
     print green('Installing fresh database for '+ current_config)
 
     o = env.config['database']
+    run('mkdir -p '+env.config['siteFolder'])
     with cd(env.config['siteFolder']):
       with shell_env(COLUMNS='72'):
         mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
@@ -454,8 +455,8 @@ def install():
           run('chmod u+w '+env.config['siteFolder']+'/settings.php')
           run('rm '+env.config['siteFolder']+'/settings.php.old')
           run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old')
-
-          run('drush site-install minimal  --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
+          sites_folder = os.path.basename(env.config['siteFolder'])
+          run('drush site-install minimal  --sites-subdir='+sites_folder+' --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
 
         if 'deploymentModule' in settings:
           run('drush en -y '+settings['deploymentModule'])
