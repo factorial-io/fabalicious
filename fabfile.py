@@ -3,6 +3,7 @@ from fabric.colors import green, red
 import datetime
 import yaml
 import subprocess, shlex, atexit, time
+import os.path
 
 settings = 0
 current_config = 'unknown'
@@ -458,3 +459,20 @@ def install():
 
         if 'deploymentModule' in settings:
           run('drush en -y '+settings['deploymentModule'])
+
+@task
+def copySSHKeyToDocker():
+  check_config()
+  if not 'dockerKeyFile' in settings:
+    print(red('missing dockerKeyFile in fabfile.yaml'))
+
+  key_file = settings['dockerKeyFile']
+  run('mkdir -p /root/.ssh')
+  put(key_file, '/root/.ssh/id_rsa')
+  put(key_file+'.pub', '/root/.ssh/id_rsa.pub')
+  run('chmod 600 /root/.ssh/id_rsa')
+  run('chmod 644 /root/.ssh/id_rsa.pub')
+  run('chmod 700 /root/.ssh')
+  put(key_file+'.pub', '/tmp')
+  run('cat /tmp/'+os.path.basename(key_file)+'.pub >> /root/.ssh/authorized_keys')
+  run('rm /tmp/'+os.path.basename(key_file)+'.pub')
