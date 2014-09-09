@@ -331,8 +331,9 @@ def deploy():
 def version():
   print green(settings['name'] + ' @ ' + current_config+' tagged with: ' + get_version())
 
-@task
-def copyFilesFrom(config_name = False):
+
+def rsync(config_name, files_type = 'filesFolder'):
+
   source_config = check_source_config(config_name)
 
   if not env.config['supportsCopyFrom']:
@@ -355,16 +356,23 @@ def copyFilesFrom(config_name = False):
     rsync += ' -e "ssh -p '+str(source_ssh_port)+'"'
     rsync += ' ' + exclude_files_str
     rsync += ' ' + source_config['user']+'@'+source_config['host']
-    rsync += ':' + source_config['filesFolder']+'/*'
+    rsync += ':' + source_config[files_type]+'/*'
     rsync += ' '
-    rsync += env.config['filesFolder']
+    rsync += env.config[files_type]
 
     with warn_only():
       run(rsync)
 
+@task
+def copyFilesFrom(config_name = False):
+  rsync(config_name)
+  source_config = check_source_config(config_name)
+  if 'privateFilesFolder' in env.config and 'privateFilesFolder' in source_config:
+    rsync(source_config, 'privateFilesFolder')
+
 
 @task
-def copyDbFrom(config_name):
+def copyDbFrom(config_name = False):
   source_config = check_source_config(config_name)
 
   if not env.config['supportsCopyFrom']:
