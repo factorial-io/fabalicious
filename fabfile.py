@@ -291,6 +291,9 @@ def backup(withFiles=True):
   if withFiles and withFiles != '0':
     with cd(env.config['filesFolder']):
       run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *')
+    if 'privateFilesFolder' in env.config:
+      with cd(env.config['privateFilesFolder']):
+        run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '_private.tgz *')
   else:
     print "Backup of files skipped per request..."
 
