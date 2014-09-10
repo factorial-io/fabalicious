@@ -85,7 +85,7 @@ def get_configuration(name):
       host_config['supportsCopyFrom'] = True
 
     if 'supportsInstalls' not in host_config:
-      host_config['supportsInstalls'] = True
+      host_config['supportsInstalls'] = False
 
     if 'supportsZippedBackups' not in host_config:
       host_config['supportsZippedBackups'] = True
