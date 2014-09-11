@@ -91,6 +91,8 @@ def get_configuration(name):
       host_config['supportsZippedBackups'] = True
     if 'gitRootFolder' not in host_config:
       host_config['gitRootFolder'] = host_config['rootFolder']
+    if 'supportsEnvVars' not in host_config:
+      host_config['supportsEnvVars'] = True
 
     return host_config
 
@@ -196,11 +198,21 @@ def get_backup_file_name(config, config_name):
   return config['backupFolder'] + "/" +get_version()+ '--' + config_name + "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
 
 
-def runCommonCommands():
+def run_common_commands():
   key = 'development' if env.config['useForDevelopment'] else 'deployment'
   if key in settings['common']:
     for line in settings['common'][key]:
       run(line)
+
+
+def run_drush(cmd, dontExpandCommand = False):
+  if not dontExpandCommand:
+    cmd = 'drush ' + cmd
+  if env.config['supportsEnvVars']:
+    with shell_env(COLUMNS='72'):
+      run(cmd)
+  else:
+    run(cmd)
 
 
 @task
@@ -241,17 +253,16 @@ def reset(withPasswordReset=False):
 
   if env.config['hasDrush'] == True:
     with cd(env.config['siteFolder']):
-      with shell_env(COLUMNS='72'):
         if env.config['useForDevelopment'] == True:
           if withPasswordReset in [True, 'True', '1']:
-            run('drush user-password admin --password="admin"')
+            run_drush('user-password admin --password="admin"')
           run('chmod -R 777 ' + env.config['filesFolder'])
         if 'deploymentModule' in settings:
-          run('drush en -y ' + settings['deploymentModule'])
-        run('drush fra -y')
-        run('drush updb -y')
-        runCommonCommands()
-        run('drush  cc all')
+          run_drush('en -y ' + settings['deploymentModule'])
+        run_drush('fra -y')
+        run_drush('updb -y')
+        run_common_commands()
+        run_drush(' cc all')
 
   run_custom(env.config, 'reset')
 
@@ -261,13 +272,12 @@ def backup_sql(backup_file_name, config):
   print env.host
   if(config['hasDrush']):
     with cd(config['siteFolder']):
-      with shell_env(COLUMNS='72'):
-        with warn_only():
-          run('mkdir -p ' + config['backupFolder'])
-          if config['supportsZippedBackups']:
-            run('drush sql-dump --gzip --result-file=' + backup_file_name)
-          else:
-            run('drush sql-dump --result-file=' + backup_file_name)
+      with warn_only():
+        run('mkdir -p ' + config['backupFolder'])
+        if config['supportsZippedBackups']:
+          run_drush('sql-dump --gzip --result-file=' + backup_file_name)
+        else:
+          run_drush('sql-dump --result-file=' + backup_file_name)
 
 
 
@@ -407,13 +417,12 @@ def copyDbFrom(config_name = False):
 
     # import sql into target
     with cd(env.config['siteFolder']):
-      with shell_env(COLUMNS='72'):
-        if source_config['supportsZippedBackups']:
-          run('zcat '+ sql_name + ' | $(drush sql-connect)')
-        else:
-          run('$(drush sql-connect) < ' + sql_name)
+      if source_config['supportsZippedBackups']:
+        run_drush('zcat '+ sql_name + ' | $(drush sql-connect)', True)
+      else:
+        run_drush('$(drush sql-connect) < ' + sql_name, True)
 
-        run('rm '+sql_name)
+      run('rm '+sql_name)
 
 
 @task
@@ -440,8 +449,7 @@ def drush(drush_command):
   check_config()
   if (env.config['hasDrush']):
     with cd(env.config['siteFolder']):
-      with shell_env(COLUMNS='72'):
-        run('drush '+drush_command)
+      run_drush(drush_command)
 
 @task
 def install():
@@ -456,21 +464,20 @@ def install():
     o = env.config['database']
     run('mkdir -p '+env.config['siteFolder'])
     with cd(env.config['siteFolder']):
-      with shell_env(COLUMNS='72'):
-        mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
-        mysql_cmd += 'GRANT ALL PRIVILEGES ON drupal.* TO drupal@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
+      mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
+      mysql_cmd += 'GRANT ALL PRIVILEGES ON drupal.* TO drupal@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
 
-        run('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"')
-        with warn_only():
-          run('chmod u+w '+env.config['siteFolder'])
-          run('chmod u+w '+env.config['siteFolder']+'/settings.php')
-          run('rm '+env.config['siteFolder']+'/settings.php.old')
-          run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old')
-          sites_folder = os.path.basename(env.config['siteFolder'])
-          run('drush site-install minimal  --sites-subdir='+sites_folder+' --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
+      run('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"')
+      with warn_only():
+        run('chmod u+w '+env.config['siteFolder'])
+        run('chmod u+w '+env.config['siteFolder']+'/settings.php')
+        run('rm '+env.config['siteFolder']+'/settings.php.old')
+        run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old')
+        sites_folder = os.path.basename(env.config['siteFolder'])
+        run_drush('site-install minimal  --sites-subdir='+sites_folder+' --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
 
-        if 'deploymentModule' in settings:
-          run('drush en -y '+settings['deploymentModule'])
+      if 'deploymentModule' in settings:
+        run_drush('en -y '+settings['deploymentModule'])
 
 @task
 def copySSHKeyToDocker():
