@@ -204,9 +204,9 @@ def run_common_commands():
       run(line)
 
 
-def run_drush(cmd, dontExpandCommand = False):
+def run_drush(cmd, expand_command = True):
   env.output_prefix = False
-  if not dontExpandCommand:
+  if expand_command:
     cmd = 'drush ' + cmd
   run(cmd)
   env.output_prefix = True
@@ -415,9 +415,9 @@ def copyDbFrom(config_name = False):
     # import sql into target
     with cd(env.config['siteFolder']):
       if source_config['supportsZippedBackups']:
-        run_drush('zcat '+ sql_name + ' | $(drush sql-connect)', True)
+        run_drush('zcat '+ sql_name + ' | $(drush sql-connect)', False)
       else:
-        run_drush('$(drush sql-connect) < ' + sql_name, True)
+        run_drush('$(drush sql-connect) < ' + sql_name, False)
 
       run('rm '+sql_name)
 
