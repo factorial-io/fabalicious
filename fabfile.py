@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from fabric.api import *
 from fabric.colors import green, red
 import datetime
