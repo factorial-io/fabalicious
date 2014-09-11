@@ -91,8 +91,7 @@ def get_configuration(name):
       host_config['supportsZippedBackups'] = True
     if 'gitRootFolder' not in host_config:
       host_config['gitRootFolder'] = host_config['rootFolder']
-    if 'supportsEnvVars' not in host_config:
-      host_config['supportsEnvVars'] = True
+
 
     return host_config
 
@@ -206,13 +205,11 @@ def run_common_commands():
 
 
 def run_drush(cmd, dontExpandCommand = False):
+  env.output_prefix = False
   if not dontExpandCommand:
     cmd = 'drush ' + cmd
-  if env.config['supportsEnvVars']:
-    with shell_env(COLUMNS='72'):
-      run(cmd)
-  else:
-    run(cmd)
+  run(cmd)
+  env.output_prefix = True
 
 
 @task
