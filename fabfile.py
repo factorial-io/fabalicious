@@ -44,7 +44,24 @@ class RemoteSSHTunnel:
     run(cmd)
 
 def get_all_configurations():
-  stream = open("fabfile.yaml", 'r')
+
+  start_folder = os.path.dirname(os.path.realpath(__file__))
+  found = False
+  max_levels = 3
+  stream = False
+  while not found and max_levels >= 0:
+    try:
+      stream = open(start_folder + "/fabfile.yaml", 'r')
+      found = True
+    except IOError:
+      max_levels = max_levels - 1
+      found = False
+      start_folder = os.path.dirname(start_folder)
+
+  if not stream:
+    print(red('could not find fabfile.yaml'))
+    exit()
+
   return yaml.load(stream)
 
 
@@ -126,6 +143,8 @@ def create_ssh_tunnel(o, remote=False):
 
 def apply_config(config, name):
 
+  header()
+
   if 'port' in config:
     env.port = config['port']
   if 'password' in config:
@@ -168,6 +187,7 @@ def header():
     print(green("Huber\'s Deployment Scripts\n"))
     header.sended = 1
 header.sended = 0
+
 
 def check_source_config(config_name = False):
   check_config()
@@ -214,7 +234,6 @@ def run_drush(cmd, expand_command = True):
 
 @task
 def list():
-  header()
   config = get_all_configurations()
   print("Found configurations for: "+ config['name']+"\n")
   for key, value in config['hosts'].items():
@@ -223,7 +242,6 @@ def list():
 
 @task
 def about(config_name='local'):
-  header()
   configuration = get_configuration(config_name)
   if configuration:
     print("Configuration for " + config_name)
