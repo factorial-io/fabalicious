@@ -327,7 +327,7 @@ def backup(withFiles=True):
 
 
 @task
-def deploy():
+def deploy(resetAfterwards=True):
 
   check_config()
   branch = env.config['branch']
@@ -349,7 +349,8 @@ def deploy():
 
   run_custom(env.config, 'deploy')
 
-  reset()
+  if resetAfterwards and resetAfterwards != '0':
+    reset()
 
 
 
