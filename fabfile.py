@@ -3,6 +3,7 @@ from fabric.colors import green, red
 import datetime
 import yaml
 import subprocess, shlex, atexit, time
+import os.path
 
 settings = 0
 current_config = 'unknown'
@@ -43,7 +44,24 @@ class RemoteSSHTunnel:
     run(cmd)
 
 def get_all_configurations():
-  stream = open("fabfile.yaml", 'r')
+
+  start_folder = os.path.dirname(os.path.realpath(__file__))
+  found = False
+  max_levels = 3
+  stream = False
+  while not found and max_levels >= 0:
+    try:
+      stream = open(start_folder + "/fabfile.yaml", 'r')
+      found = True
+    except IOError:
+      max_levels = max_levels - 1
+      found = False
+      start_folder = os.path.dirname(start_folder)
+
+  if not stream:
+    print(red('could not find fabfile.yaml'))
+    exit()
+
   return yaml.load(stream)
 
 
@@ -91,6 +109,7 @@ def get_configuration(name):
     if 'gitRootFolder' not in host_config:
       host_config['gitRootFolder'] = host_config['rootFolder']
 
+
     return host_config
 
   print(red('Configuraton '+name+' not found \n'))
@@ -123,6 +142,8 @@ def create_ssh_tunnel(o, remote=False):
   return tunnel
 
 def apply_config(config, name):
+
+  header()
 
   if 'port' in config:
     env.port = config['port']
@@ -167,6 +188,7 @@ def header():
     header.sended = 1
 header.sended = 0
 
+
 def check_source_config(config_name = False):
   check_config()
 
@@ -195,16 +217,23 @@ def get_backup_file_name(config, config_name):
   return config['backupFolder'] + "/" +get_version()+ '--' + config_name + "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
 
 
-def runCommonCommands():
+def run_common_commands():
   key = 'development' if env.config['useForDevelopment'] else 'deployment'
   if key in settings['common']:
     for line in settings['common'][key]:
       run(line)
 
 
+def run_drush(cmd, expand_command = True):
+  env.output_prefix = False
+  if expand_command:
+    cmd = 'drush ' + cmd
+  run(cmd)
+  env.output_prefix = True
+
+
 @task
 def list():
-  header()
   config = get_all_configurations()
   print("Found configurations for: "+ config['name']+"\n")
   for key, value in config['hosts'].items():
@@ -213,7 +242,6 @@ def list():
 
 @task
 def about(config_name='local'):
-  header()
   configuration = get_configuration(config_name)
   if configuration:
     print("Configuration for " + config_name)
@@ -240,17 +268,16 @@ def reset(withPasswordReset=False):
 
   if env.config['hasDrush'] == True:
     with cd(env.config['siteFolder']):
-      with shell_env(COLUMNS='72'):
         if env.config['useForDevelopment'] == True:
           if withPasswordReset in [True, 'True', '1']:
-            run('drush user-password admin --password="admin"')
+            run_drush('user-password admin --password="admin"')
           run('chmod -R 777 ' + env.config['filesFolder'])
         if 'deploymentModule' in settings:
-          run('drush en -y ' + settings['deploymentModule'])
-        run('drush fra -y')
-        run('drush updb -y')
-        runCommonCommands()
-        run('drush  cc all')
+          run_drush('en -y ' + settings['deploymentModule'])
+        run_drush('fra -y')
+        run_drush('updb -y')
+        run_common_commands()
+        run_drush(' cc all')
 
   run_custom(env.config, 'reset')
 
@@ -260,13 +287,12 @@ def backup_sql(backup_file_name, config):
   print env.host
   if(config['hasDrush']):
     with cd(config['siteFolder']):
-      with shell_env(COLUMNS='72'):
-        with warn_only():
-          run('mkdir -p ' + config['backupFolder'])
-          if config['supportsZippedBackups']:
-            run('drush sql-dump --gzip --result-file=' + backup_file_name)
-          else:
-            run('drush sql-dump --result-file=' + backup_file_name)
+      with warn_only():
+        run('mkdir -p ' + config['backupFolder'])
+        if config['supportsZippedBackups']:
+          run_drush('sql-dump --gzip --result-file=' + backup_file_name)
+        else:
+          run_drush('sql-dump --result-file=' + backup_file_name)
 
 
 
@@ -290,6 +316,9 @@ def backup(withFiles=True):
   if withFiles and withFiles != '0':
     with cd(env.config['filesFolder']):
       run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *')
+    if 'privateFilesFolder' in env.config:
+      with cd(env.config['privateFilesFolder']):
+        run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '_private.tgz *')
   else:
     print "Backup of files skipped per request..."
 
@@ -330,8 +359,9 @@ def deploy():
 def version():
   print green(settings['name'] + ' @ ' + current_config+' tagged with: ' + get_version())
 
-@task
-def copyFilesFrom(config_name = False):
+
+def rsync(config_name, files_type = 'filesFolder'):
+
   source_config = check_source_config(config_name)
 
   if not env.config['supportsCopyFrom']:
@@ -354,16 +384,23 @@ def copyFilesFrom(config_name = False):
     rsync += ' -e "ssh -p '+str(source_ssh_port)+'"'
     rsync += ' ' + exclude_files_str
     rsync += ' ' + source_config['user']+'@'+source_config['host']
-    rsync += ':' + source_config['filesFolder']+'/*'
+    rsync += ':' + source_config[files_type]+'/*'
     rsync += ' '
-    rsync += env.config['filesFolder']
+    rsync += env.config[files_type]
 
     with warn_only():
       run(rsync)
 
+@task
+def copyFilesFrom(config_name = False):
+  rsync(config_name)
+  source_config = check_source_config(config_name)
+  if 'privateFilesFolder' in env.config and 'privateFilesFolder' in source_config:
+    rsync(source_config, 'privateFilesFolder')
+
 
 @task
-def copyDbFrom(config_name):
+def copyDbFrom(config_name = False):
   source_config = check_source_config(config_name)
 
   if not env.config['supportsCopyFrom']:
@@ -395,13 +432,12 @@ def copyDbFrom(config_name):
 
     # import sql into target
     with cd(env.config['siteFolder']):
-      with shell_env(COLUMNS='72'):
-        if source_config['supportsZippedBackups']:
-          run('zcat '+ sql_name + ' | $(drush sql-connect)')
-        else:
-          run('$(drush sql-connect) < ' + sql_name)
+      if source_config['supportsZippedBackups']:
+        run_drush('zcat '+ sql_name + ' | $(drush sql-connect)', False)
+      else:
+        run_drush('$(drush sql-connect) < ' + sql_name, False)
 
-        run('rm '+sql_name)
+      run('rm '+sql_name)
 
 
 @task
@@ -428,8 +464,7 @@ def drush(drush_command):
   check_config()
   if (env.config['hasDrush']):
     with cd(env.config['siteFolder']):
-      with shell_env(COLUMNS='72'):
-        run('drush '+drush_command)
+      run_drush(drush_command)
 
 @task
 def install():
@@ -442,19 +477,36 @@ def install():
     print green('Installing fresh database for '+ current_config)
 
     o = env.config['database']
+    run('mkdir -p '+env.config['siteFolder'])
     with cd(env.config['siteFolder']):
-      with shell_env(COLUMNS='72'):
-        mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
-        mysql_cmd += 'GRANT ALL PRIVILEGES ON drupal.* TO drupal@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
+      mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
+      mysql_cmd += 'GRANT ALL PRIVILEGES ON drupal.* TO drupal@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
 
-        run('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"')
-        with warn_only():
-          run('chmod u+w '+env.config['siteFolder'])
-          run('chmod u+w '+env.config['siteFolder']+'/settings.php')
-          run('rm '+env.config['siteFolder']+'/settings.php.old')
-          run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old')
+      run('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"')
+      with warn_only():
+        run('chmod u+w '+env.config['siteFolder'])
+        run('chmod u+w '+env.config['siteFolder']+'/settings.php')
+        run('rm '+env.config['siteFolder']+'/settings.php.old')
+        run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old')
+        sites_folder = os.path.basename(env.config['siteFolder'])
+        run_drush('site-install minimal  --sites-subdir='+sites_folder+' --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
 
-          run('drush site-install minimal  --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
+      if 'deploymentModule' in settings:
+        run_drush('en -y '+settings['deploymentModule'])
 
-        if 'deploymentModule' in settings:
-          run('drush en -y '+settings['deploymentModule'])
+@task
+def copySSHKeyToDocker():
+  check_config()
+  if not 'dockerKeyFile' in settings:
+    print(red('missing dockerKeyFile in fabfile.yaml'))
+
+  key_file = settings['dockerKeyFile']
+  run('mkdir -p /root/.ssh')
+  put(key_file, '/root/.ssh/id_rsa')
+  put(key_file+'.pub', '/root/.ssh/id_rsa.pub')
+  run('chmod 600 /root/.ssh/id_rsa')
+  run('chmod 644 /root/.ssh/id_rsa.pub')
+  run('chmod 700 /root/.ssh')
+  put(key_file+'.pub', '/tmp')
+  run('cat /tmp/'+os.path.basename(key_file)+'.pub >> /root/.ssh/authorized_keys')
+  run('rm /tmp/'+os.path.basename(key_file)+'.pub')
