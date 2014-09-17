@@ -342,6 +342,7 @@ def deploy(resetAfterwards=True):
   run_custom(env.config, 'deployPrepare')
 
   with cd(env.config['gitRootFolder']):
+    run('git checkout '+branch)
     run('git fetch --tags')
     run('git pull origin '+branch)
     if not env.config['ignoreSubmodules']:
