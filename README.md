@@ -17,6 +17,7 @@ on Debian/Ubuntu
     pip install fabric
     pip install pyyaml
 
+On systems with a non-bash environment like lshell try adding the "--no-pty" parameter to all fabric commands to remove Fabric’s allocation of a pseudo-tty.
 
 ##fabfile.yaml
 
