@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from fabric.api import *
 from fabric.colors import green, red
 import datetime
@@ -9,6 +11,7 @@ settings = 0
 current_config = 'unknown'
 
 env.forward_agent = True
+env.use_shell = False
 
 class SSHTunnel:
   def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, timeout=15):
