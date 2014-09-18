@@ -76,6 +76,14 @@ def get_configuration(name):
     if not 'common' in settings:
       settings['common'] = { }
 
+    if not "usePty" in settings:
+      settings['usePty'] = True
+
+    if not "useShell" in settings:
+      settings['useShell'] = True
+
+
+
     host_config = config['hosts'][name]
     keys = ("host", "rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
     validated = True
@@ -166,8 +174,13 @@ def apply_config(config, name):
   global current_config
   current_config = name
 
+  env.use_shell = settings['useShell']
+  env.always_use_pty = settings['usePty']
+
   if 'sshTunnel' in config:
     create_ssh_tunnel(config['sshTunnel'])
+
+
 
 
 def check_config():
