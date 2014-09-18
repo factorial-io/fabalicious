@@ -450,7 +450,7 @@ def copyDbFrom(config_name = False):
       if source_config['supportsZippedBackups']:
         run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
       else:
-        run_drush('$(drush sql-connect) < ' + sql_name, False)
+        run_drush('drush sql-cli < ' + sql_name, False)
 
       run('rm '+sql_name_target)
 
