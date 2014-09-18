@@ -17,6 +17,11 @@ on Debian/Ubuntu
     pip install fabric
     pip install pyyaml
 
+On systems with a non-bash environment like lshell try the following settings in your fabfile.yaml
+
+    useShell: false
+    usePty: false
+
 
 ##fabfile.yaml
 
@@ -31,11 +36,18 @@ on Debian/Ubuntu
       deployment:
         # custom commands to run for all other installations, e.g:
         - "drush dis -y devel"
+
+    # optional, defaults to true
+    useShell: <boolean>
+    # optional, defaults to true
+    usePty: <boolean>
+
     hosts:
       hostA:
         host: <host>
         port: <port>
         user: <your-ssh-user>
+
         # if you can't reacht your host directly, you can use a ssh-tunnel,
         # please note that your host should be localhost and port the localPort of
         # your sshTunnel-configuration
@@ -50,16 +62,29 @@ on Debian/Ubuntu
           destHostFromDockerContainer: <docker-container-name>
           destPort: <destPort>
           localPort: <localPort>
+
         rootFolder: <absolute-path-to-your-webroot>
+        # optional and defaults to rootFolder
+        gitRootFolder: <absolute-path-to-your-gitroot>
+        # optional and defaults to /tmp/
+        tmpFolder: <absolute-path-to-your-tmp>
         sitesFolder: <relative-path-to-your-sites-folder>
         filesFolder: <relative-path-to-yout-files-folder>
         backupFolder: <absolute-path-where-backup-should-be-stored>
+
+        # optional and defaults to true
         hasDrush: <boolean>
+        # optional and defaults to false
         useForDevelopment: <boolean>
+        # optional and defaults to false
         ignoreSubmodules: <boolean>
+        # optional and defaults to true
         supportsBackups: <boolean>
+        # optional and defaults to true
         supportsCopyFrom: <boolean>
+        # optional and defaults to true
         supportsZippedBackups: <boolean>
+
         reset:
           - "first custom reset command"
           - "second custom reset command"
@@ -71,6 +96,7 @@ on Debian/Ubuntu
           - "second custom deploy command"
 
         #configuration needed for the install-task:
+        # optional and defaults to false
         supportsInstalls: <boolean>
         database:
           user: <database-user>
