@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from fabric.api import *
 from fabric.colors import green, red
 import datetime
@@ -9,6 +11,7 @@ settings = 0
 current_config = 'unknown'
 
 env.forward_agent = True
+env.use_shell = False
 
 class SSHTunnel:
   def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, timeout=15):
@@ -73,6 +76,14 @@ def get_configuration(name):
     if not 'common' in settings:
       settings['common'] = { }
 
+    if not "usePty" in settings:
+      settings['usePty'] = True
+
+    if not "useShell" in settings:
+      settings['useShell'] = True
+
+
+
     host_config = config['hosts'][name]
     keys = ("host", "rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
     validated = True
@@ -90,8 +101,10 @@ def get_configuration(name):
 
     if 'useForDevelopment' not in host_config:
       host_config['useForDevelopment'] = False
+
     if 'hasDrush' not in host_config:
       host_config['hasDrush'] = False
+
     if 'ignoreSubmodules' not in host_config:
       host_config['ignoreSubmodules'] = False
 
@@ -106,8 +119,12 @@ def get_configuration(name):
 
     if 'supportsZippedBackups' not in host_config:
       host_config['supportsZippedBackups'] = True
+
     if 'gitRootFolder' not in host_config:
       host_config['gitRootFolder'] = host_config['rootFolder']
+
+    if 'tmpFolder' not in host_config:
+      host_config['tmpFolder'] = '/tmp/'
 
 
     return host_config
@@ -157,8 +174,13 @@ def apply_config(config, name):
   global current_config
   current_config = name
 
+  env.use_shell = settings['useShell']
+  env.always_use_pty = settings['usePty']
+
   if 'sshTunnel' in config:
     create_ssh_tunnel(config['sshTunnel'])
+
+
 
 
 def check_config():
@@ -404,6 +426,7 @@ def copyFilesFrom(config_name = False):
 @task
 def copyDbFrom(config_name = False):
   source_config = check_source_config(config_name)
+  target_config = check_source_config(current_config)
 
   if not env.config['supportsCopyFrom']:
     return
@@ -417,29 +440,34 @@ def copyDbFrom(config_name = False):
       source_ssh_port = source_config['port']
 
     ssh_args = ' ' + source_config['user']+'@'+source_config['host']
+    if settings['usePty'] == False:
+      ssh_args = "-o StrictHostKeyChecking=no" + ssh_args
 
-    sql_name = '/tmp/' + config_name + '.sql'
+    sql_name_source = source_config['tmpFolder'] + config_name + '.sql'
+    sql_name_target = target_config['tmpFolder'] + config_name + '.sql'
 
+    # drush has no predictable behaviour
+    if source_config['supportsZippedBackups']:
+      sql_name_source += '.gz'
+      sql_name_target += '.gz'
 
     # create sql-dump on source
-    execute(backup_sql, sql_name, source_config, host=source_config['user']+'@'+source_config['host']+':'+str(source_ssh_port))
-
-    if source_config['supportsZippedBackups']:
-      sql_name += '.gz'
+    execute(backup_sql, sql_name_source, source_config, host=source_config['user']+'@'+source_config['host']+':'+str(source_ssh_port))
 
 
     # copy sql to target
-    run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name+' '+sql_name+ ' >>/dev/null')
-    run('ssh -p '+str(source_ssh_port)+' '+ssh_args+' rm ' + sql_name)
+    run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name_source+' '+sql_name_target+ ' >>/dev/null')
+    # cleanup and remove file from source
+    run('ssh -p '+str(source_ssh_port)+' '+ssh_args+' rm ' + sql_name_source)
 
     # import sql into target
     with cd(env.config['siteFolder']):
       if source_config['supportsZippedBackups']:
-        run_drush('zcat '+ sql_name + ' | $(drush sql-connect)', False)
+        run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
       else:
-        run_drush('$(drush sql-connect) < ' + sql_name, False)
+        run_drush('drush sql-cli < ' + sql_name, False)
 
-      run('rm '+sql_name)
+      run('rm '+sql_name_target)
 
 
 @task
