@@ -17,6 +17,7 @@ on Debian/Ubuntu
     pip install fabric
     pip install pyyaml
 
+On systems with a non-bash environment like lshell try adding the "--no-pty" parameter to all fabric commands to remove Fabric’s allocation of a pseudo-tty.
 
 ##fabfile.yaml
 
@@ -51,13 +52,21 @@ on Debian/Ubuntu
           destPort: <destPort>
           localPort: <localPort>
         rootFolder: <absolute-path-to-your-webroot>
+        # optional and optional and defaults to rootFolder
+        gitRootFolder: <absolute-path-to-your-gitroot>
+        # optional and optional and defaults to /tmp/
+        tmpFolder: <absolute-path-to-your-tmp>
         sitesFolder: <relative-path-to-your-sites-folder>
         filesFolder: <relative-path-to-yout-files-folder>
         backupFolder: <absolute-path-where-backup-should-be-stored>
         hasDrush: <boolean>
+        # optional and defaults to false
         useForDevelopment: <boolean>
+        # optional and defaults to false
         ignoreSubmodules: <boolean>
+        # optional and defaults to true
         supportsBackups: <boolean>
+        # optional and defaults to true
         supportsCopyFrom: <boolean>
         supportsZippedBackups: <boolean>
         reset:
@@ -71,6 +80,7 @@ on Debian/Ubuntu
           - "second custom deploy command"
 
         #configuration needed for the install-task:
+        # optional and defaults to false
         supportsInstalls: <boolean>
         database:
           user: <database-user>
