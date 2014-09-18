@@ -93,8 +93,10 @@ def get_configuration(name):
 
     if 'useForDevelopment' not in host_config:
       host_config['useForDevelopment'] = False
+
     if 'hasDrush' not in host_config:
       host_config['hasDrush'] = False
+
     if 'ignoreSubmodules' not in host_config:
       host_config['ignoreSubmodules'] = False
 
@@ -109,8 +111,12 @@ def get_configuration(name):
 
     if 'supportsZippedBackups' not in host_config:
       host_config['supportsZippedBackups'] = True
+
     if 'gitRootFolder' not in host_config:
       host_config['gitRootFolder'] = host_config['rootFolder']
+
+    if 'tmpFolder' not in host_config:
+      host_config['tmpFolder'] = '/tmp/'
 
 
     return host_config
@@ -407,6 +413,7 @@ def copyFilesFrom(config_name = False):
 @task
 def copyDbFrom(config_name = False):
   source_config = check_source_config(config_name)
+  target_config = check_source_config(current_config)
 
   if not env.config['supportsCopyFrom']:
     return
@@ -421,28 +428,31 @@ def copyDbFrom(config_name = False):
 
     ssh_args = ' ' + source_config['user']+'@'+source_config['host']
 
-    sql_name = '/tmp/' + config_name + '.sql'
+    sql_name_source = source_config['tmpFolder'] + config_name + '.sql'
+    sql_name_target = target_config['tmpFolder'] + config_name + '.sql'
 
+    # drush has no predictable behaviour
+    if source_config['supportsZippedBackups']:
+      sql_name_source += '.gz'
+      sql_name_target += '.gz'
 
     # create sql-dump on source
-    execute(backup_sql, sql_name, source_config, host=source_config['user']+'@'+source_config['host']+':'+str(source_ssh_port))
-
-    if source_config['supportsZippedBackups']:
-      sql_name += '.gz'
+    execute(backup_sql, sql_name_source, source_config, host=source_config['user']+'@'+source_config['host']+':'+str(source_ssh_port))
 
 
     # copy sql to target
-    run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name+' '+sql_name+ ' >>/dev/null')
-    run('ssh -p '+str(source_ssh_port)+' '+ssh_args+' rm ' + sql_name)
+    run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name_source+' '+sql_name_target+ ' >>/dev/null')
+    # cleanup and remove file from source
+    run('ssh -p '+str(source_ssh_port)+' '+ssh_args+' rm ' + sql_name_source)
 
     # import sql into target
     with cd(env.config['siteFolder']):
       if source_config['supportsZippedBackups']:
-        run_drush('zcat '+ sql_name + ' | $(drush sql-connect)', False)
+        run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
       else:
         run_drush('$(drush sql-connect) < ' + sql_name, False)
 
-      run('rm '+sql_name)
+      run('rm '+sql_name_target)
 
 
 @task
