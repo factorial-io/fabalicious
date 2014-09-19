@@ -440,6 +440,8 @@ def copyDbFrom(config_name = False):
       source_ssh_port = source_config['port']
 
     ssh_args = ' ' + source_config['user']+'@'+source_config['host']
+    if settings['usePty'] == False:
+      ssh_args = "-o StrictHostKeyChecking=no" + ssh_args
 
     sql_name_source = source_config['tmpFolder'] + config_name + '.sql'
     sql_name_target = target_config['tmpFolder'] + config_name + '.sql'
