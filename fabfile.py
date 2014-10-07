@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from fabric.api import *
 from fabric.colors import green, red
 import datetime
@@ -545,3 +546,14 @@ def copySSHKeyToDocker():
   put(key_file+'.pub', '/tmp')
   run('cat /tmp/'+os.path.basename(key_file)+'.pub >> /root/.ssh/authorized_keys')
   run('rm /tmp/'+os.path.basename(key_file)+'.pub')
+
+@task
+def behat():
+  check_config()
+  print env.config['behatPath']
+  if not 'behatPath' in env.config:
+    print(red('missing behatPath in fabfile.yaml'))
+    exit()
+
+  with cd(env.config['gitRootFolder']):
+    run(env.config['behatPath'])
