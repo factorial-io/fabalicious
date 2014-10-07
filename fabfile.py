@@ -550,10 +550,10 @@ def copySSHKeyToDocker():
 @task
 def behat():
   check_config()
-  print env.config['behatPath']
+
   if not 'behatPath' in env.config:
     print(red('missing behatPath in fabfile.yaml'))
     exit()
-
+  print env.config['behatPath']
   with cd(env.config['gitRootFolder']):
     run(env.config['behatPath'])
