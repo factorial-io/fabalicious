@@ -448,12 +448,13 @@ def copyDbFrom(config_name = False):
 
     # drush has no predictable behaviour
     if source_config['supportsZippedBackups']:
-      sql_name_source += '.gz'
       sql_name_target += '.gz'
 
     # create sql-dump on source
     execute(backup_sql, sql_name_source, source_config, host=source_config['user']+'@'+source_config['host']+':'+str(source_ssh_port))
 
+    if source_config['supportsZippedBackups']:
+      sql_name_source += '.gz'
 
     # copy sql to target
     run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name_source+' '+sql_name_target+ ' >>/dev/null')
