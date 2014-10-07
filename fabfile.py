@@ -510,19 +510,21 @@ def install():
     run('mkdir -p '+env.config['siteFolder'])
     with cd(env.config['siteFolder']):
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
-      mysql_cmd += 'GRANT ALL PRIVILEGES ON drupal.* TO drupal@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
+      mysql_cmd += 'GRANT ALL PRIVILEGES ON '+o['name']+'.* TO '+o['user']+'@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
 
       run('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"')
       with warn_only():
         run('chmod u+w '+env.config['siteFolder'])
         run('chmod u+w '+env.config['siteFolder']+'/settings.php')
-        run('rm '+env.config['siteFolder']+'/settings.php.old')
+        run('rm -f '+env.config['siteFolder']+'/settings.php.old')
         run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old')
         sites_folder = os.path.basename(env.config['siteFolder'])
         run_drush('site-install minimal  --sites-subdir='+sites_folder+' --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
 
       if 'deploymentModule' in settings:
         run_drush('en -y '+settings['deploymentModule'])
+  else:
+    print red('Aborting; missing hasDrush, useForDevelopment or supportsInstalls in  '+current_config)
 
 @task
 def copySSHKeyToDocker():
