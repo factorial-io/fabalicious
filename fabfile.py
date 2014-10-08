@@ -36,35 +36,45 @@ class SSHTunnel:
 
 
 class RemoteSSHTunnel:
-  def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=15):
+  def __init__(self, config, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=15):
     self.local_port = local_port
     self.bridge_host = bridge_host
     self.bridge_user = bridge_user
     if not strictHostKeyChecking:
+      remote_cmd = 'ssh -o StrictHostKeyChecking=no'
       cmd = 'ssh -o StrictHostKeyChecking=no'
     else:
+      remote_cmd = 'ssh'
       cmd = 'ssh'
-    cmd = cmd + ' -v -L %d:%s:%d %s@%s -f -A -N -M -S ~/.ssh-tunnel-from-fabric' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
+    remote_cmd = remote_cmd + ' -v -L %d:%s:%d %s@%s -A -N -M ' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
     run('rm -f ~/.ssh-tunnel-from-fabric')
-    run(cmd)
+
+    ssh_port = 22
+    if 'port' in config:
+      ssh_port = config['port']
+
+    cmd = cmd + ' -vA -p %d %s@%s' % (ssh_port, config['user'], config['host'])
+    cmd = cmd + " '" + remote_cmd + "'"
+
+    print("running remote tunnel")
+    print(cmd);
+
+    self.p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     start_time = time.time()
-    self.tunnelOpened = True
 
-    # atexit.register(self.p.kill)
+    start_time = time.time()
+    atexit.register(self.p.kill)
+    while not 'Entering interactive session' in self.p.stderr.readline():
+      if time.time() > start_time + timeout:
+        raise "SSH tunnel timed out"
+
 
   def entrance(self):
     return 'localhost:%d' % self.local_port
 
-  def kill(self):
-    if not self.tunnelOpened:
-      return
 
-    print "killing remote ssh-tunnel"
-    cmd = 'ssh -S ~/.ssh-tunnel-from-fabric -O exit %s@%s' % (self.bridge_user, self.bridge_host)
-    run(cmd)
-    run('rm -f ~/.ssh-tunnel-from-fabric')
-    self.tunnelOpened = False
+
 
 def get_all_configurations():
 
@@ -162,7 +172,9 @@ def find_between( s, first, last ):
         return ""
 
 
-def create_ssh_tunnel(o, remote=False):
+def create_ssh_tunnel(config, tunnel_config, remote=False):
+  o = tunnel_config
+
   if 'destHostFromDockerContainer' in o:
     cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (o['bridgePort'], o['bridgeUser'], o['bridgeHost'], o['destHostFromDockerContainer'])
 
@@ -177,7 +189,7 @@ def create_ssh_tunnel(o, remote=False):
     strictHostKeyChecking = o['strictHostKeyChecking']
 
   if remote:
-    tunnel = RemoteSSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'], strictHostKeyChecking)
+    tunnel = RemoteSSHTunnel(config, o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'], strictHostKeyChecking)
   else:
     tunnel = SSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'], strictHostKeyChecking)
 
@@ -203,7 +215,7 @@ def apply_config(config, name):
   env.always_use_pty = settings['usePty']
 
   if 'sshTunnel' in config:
-    create_ssh_tunnel(config['sshTunnel'])
+    create_ssh_tunnel(config, config['sshTunnel'])
 
 
 
@@ -337,6 +349,7 @@ def backup_sql(backup_file_name, config):
       with warn_only():
         run('mkdir -p ' + config['backupFolder'])
         if config['supportsZippedBackups']:
+          run('rm -f '+backup_file_name)
           run_drush('sql-dump --gzip --result-file=' + backup_file_name)
         else:
           run_drush('sql-dump --result-file=' + backup_file_name)
@@ -430,7 +443,7 @@ def rsync(config_name, files_type = 'filesFolder'):
 
 
     rsync = 'rsync -rav --no-o --no-g ';
-    rsync += ' -e "ssh -p '+str(source_ssh_port)+'"'
+    rsync += ' -e "ssh  -o StrictHostKeyChecking=no -p '+str(source_ssh_port)+'"'
     rsync += ' ' + exclude_files_str
     rsync += ' ' + source_config['user']+'@'+source_config['host']
     rsync += ':' + source_config[files_type]+'/*'
@@ -501,18 +514,14 @@ def copyFrom(config_name = False, copyFiles = True, copyDB = True):
   source_config = check_source_config(config_name)
   remote_tunnel = False
   if 'sshTunnel' in source_config:
-    remote_tunnel = create_ssh_tunnel(source_config['sshTunnel'], True)
-    tunnel = create_ssh_tunnel(source_config['sshTunnel'], False)
+    remote_tunnel = create_ssh_tunnel(env.config, source_config['sshTunnel'], True)
+    tunnel = create_ssh_tunnel(env.config, source_config['sshTunnel'], False)
 
-  try:
-    if copyFiles:
-      _copyFilesFrom(config_name)
-    if copyDB:
-      _copyDBFrom(config_name)
 
-  finally:
-    if remote_tunnel:
-      remote_tunnel.kill()
+  if copyFiles:
+    _copyFilesFrom(config_name)
+  if copyDB:
+    _copyDBFrom(config_name)
 
   if copyDB:
     reset(withPasswordReset=True)
