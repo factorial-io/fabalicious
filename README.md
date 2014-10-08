@@ -48,6 +48,10 @@ On systems with a non-bash environment like lshell try the following settings in
         port: <port>
         user: <your-ssh-user>
 
+        # if you are using basebox for setting up a vagrant-setup, specify the ip here
+        # see https://github.com/MuschPusch/basebox
+        ip: <your-ip-address, optional>
+
         # if you can't reacht your host directly, you can use a ssh-tunnel,
         # please note that your host should be localhost and port the localPort of
         # your sshTunnel-configuration
@@ -56,12 +60,20 @@ On systems with a non-bash environment like lshell try the following settings in
           bridgeHost: <bridgeHost>
           bridgePort: <bridgePort>
           destHost: <destHost>
+          destPort: <destPort>
+
+          # if you have multiple ssh-tunnel-configurations make sure your local-port is unique accross the file!
+          localPort: <localPort>
+
           # if you want to deploy into docker container you can use a docker-
           # container-name, the script will use docker inspect to get the container's
           # ip-address
           destHostFromDockerContainer: <docker-container-name>
-          destPort: <destPort>
-          localPort: <localPort>
+
+          # when accessing docker-container via tunnels and ssh it may be necessary
+          # to disable strictHostKeyChecking over the tunnel
+          strictHostKeyChecking: <boolean, optional defaults to true
+
 
         rootFolder: <absolute-path-to-your-webroot>
         # optional and defaults to rootFolder

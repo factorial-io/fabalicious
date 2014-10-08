@@ -15,9 +15,16 @@ env.forward_agent = True
 env.use_shell = False
 
 class SSHTunnel:
-  def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, timeout=15):
+  def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=15):
     self.local_port = local_port
-    cmd = 'ssh -vAN -L %d:%s:%d %s@%s' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
+
+    if not strictHostKeyChecking:
+      cmd = 'ssh -o StrictHostKeyChecking=no'
+    else:
+      cmd = 'ssh'
+
+    cmd = cmd + ' -vAN -L %d:%s:%d %s@%s' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
+
     self.p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     start_time = time.time()
     atexit.register(self.p.kill)
@@ -29,23 +36,34 @@ class SSHTunnel:
 
 
 class RemoteSSHTunnel:
-  def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, timeout=15):
+  def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=15):
     self.local_port = local_port
     self.bridge_host = bridge_host
     self.bridge_user = bridge_user
-
-    cmd = 'ssh -L %d:%s:%d %s@%s -f -N -M -S ~/.ssh-tunnel-from-fabric' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
+    if not strictHostKeyChecking:
+      cmd = 'ssh -o StrictHostKeyChecking=no'
+    else:
+      cmd = 'ssh'
+    cmd = cmd + ' -L %d:%s:%d %s@%s -f -N -M -S ~/.ssh-tunnel-from-fabric' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
     run(cmd)
 
     start_time = time.time()
+    self.tunnelOpened = True
+
+    # atexit.register(self.p.kill)
 
   def entrance(self):
     return 'localhost:%d' % self.local_port
 
   def kill(self):
+    if not self.tunnelOpened:
+      return
+
     print "killing remote ssh-tunnel"
     cmd = 'ssh -S ~/.ssh-tunnel-from-fabric -O exit %s@%s' % (self.bridge_user, self.bridge_host)
     run(cmd)
+    run('rm -f ~/.ssh-tunnel-from-fabric')
+    self.tunnelOpened = False
 
 def get_all_configurations():
 
@@ -152,10 +170,15 @@ def create_ssh_tunnel(o, remote=False):
     print "Docker container " + o['destHostFromDockerContainer'] + " uses IP " + ip_address
 
     o['destHost'] = ip_address
+
+  strictHostKeyChecking = True
+  if 'strictHostKeyChecking' in o:
+    strictHostKeyChecking = o['strictHostKeyChecking']
+
   if remote:
-    tunnel = RemoteSSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'])
+    tunnel = RemoteSSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'], strictHostKeyChecking)
   else:
-    tunnel = SSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'])
+    tunnel = SSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'], strictHostKeyChecking)
 
   return tunnel
 
@@ -416,16 +439,16 @@ def rsync(config_name, files_type = 'filesFolder'):
     with warn_only():
       run(rsync)
 
-@task
-def copyFilesFrom(config_name = False):
+
+def _copyFilesFrom(config_name = False):
   rsync(config_name)
   source_config = check_source_config(config_name)
   if 'privateFilesFolder' in env.config and 'privateFilesFolder' in source_config:
     rsync(source_config, 'privateFilesFolder')
 
 
-@task
-def copyDbFrom(config_name = False):
+
+def _copyDBFrom(config_name = False):
   source_config = check_source_config(config_name)
   target_config = check_source_config(current_config)
 
@@ -473,7 +496,7 @@ def copyDbFrom(config_name = False):
 
 
 @task
-def copyFrom(config_name = False):
+def copyFrom(config_name = False, copyFiles = True, copyDB = True):
   source_config = check_source_config(config_name)
   remote_tunnel = False
   if 'sshTunnel' in source_config:
@@ -481,15 +504,27 @@ def copyFrom(config_name = False):
     tunnel = create_ssh_tunnel(source_config['sshTunnel'], False)
 
   try:
-    copyFilesFrom(config_name)
-    copyDbFrom(config_name)
+    if copyFiles:
+      _copyFilesFrom(config_name)
+    if copyDB:
+      _copyDBFrom(config_name)
 
   finally:
     if remote_tunnel:
       remote_tunnel.kill()
 
-  reset(withPasswordReset=True)
+  if copyDB:
+    reset(withPasswordReset=True)
 
+
+@task
+def copyFilesFrom(config_name = False):
+  copyFrom(config_name, True, False)
+
+
+@task
+def copyDBFrom(config_name = False):
+  copyFrom(config_name, False, True)
 
 @task
 def drush(drush_command):
