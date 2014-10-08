@@ -44,7 +44,8 @@ class RemoteSSHTunnel:
       cmd = 'ssh -o StrictHostKeyChecking=no'
     else:
       cmd = 'ssh'
-    cmd = cmd + ' -L %d:%s:%d %s@%s -f -N -M -S ~/.ssh-tunnel-from-fabric' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
+    cmd = cmd + ' -v -L %d:%s:%d %s@%s -f -A -N -M -S ~/.ssh-tunnel-from-fabric' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
+    run('rm -f ~/.ssh-tunnel-from-fabric')
     run(cmd)
 
     start_time = time.time()
