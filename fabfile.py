@@ -593,12 +593,13 @@ def copySSHKeyToDocker():
   run('rm /tmp/'+os.path.basename(key_file)+'.pub')
 
 @task
-def behat():
+def behat(options=''):
   check_config()
 
   if not 'behatPath' in env.config:
     print(red('missing behatPath in fabfile.yaml'))
     exit()
-  print env.config['behatPath']
+  env.output_prefix = False
   with cd(env.config['gitRootFolder']):
-    run(env.config['behatPath'])
+    run(env.config['behatPath'] + ' ' + options)
+  env.output_prefix = True
