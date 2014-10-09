@@ -678,6 +678,10 @@ def docker(subtask='info'):
 
   docker_configuration = all_docker_hosts[config_name]
 
+  if 'inheritsFrom' in docker_configuration and docker_configuration['inheritsFrom'] in all_docker_hosts:
+    base_configuration = all_docker_hosts[docker_configuration['inheritsFrom']]
+    docker_configuration = data_merge(base_configuration, docker_configuration)
+
   keys = ("host", "port", "user", "tasks", "rootFolder")
   validate_dict(keys, docker_configuration, 'dockerHosts-Configuraton '+config_name+' has missing key')
 
