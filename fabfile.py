@@ -663,7 +663,11 @@ def docker(subtask='info'):
     result = pattern.sub(lambda x: replacements[x.group()], line)
     parsed_commands.append(result)
 
-  host_str = docker_configuration['user']+'@'+docker_configuration['host']+':'+str(docker_configuration['port'])
+  host_str = docker_configuration['user'] + '@'+docker_configuration['host']+':'+str(docker_configuration['port'])
+
+  if 'password' in docker_configuration:
+    env.passwords[host_str]= docker_configuration['password']
+
   execute(run_script, docker_configuration['rootFolder'], parsed_commands, host=host_str)
 
 @task
