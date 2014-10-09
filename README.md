@@ -51,18 +51,36 @@ On systems with a non-bash environment like lshell try the following settings in
         user: <user>
         port: <port>
         rootFolder: <path-where-your-docker-stuff-resides>
-        # you can add as many subtasks you want to control your docker instances
+
+        # you can add as many subtasks you want to control your docker instances.
         # you can use the configuration of your hosts-part with %varname% as pattern,
-        # e.g. %name%.
+        # e.g. %name%. You can even reference some variables of the docker-guest-
+        # configuration via %guest.<name>%, e.g. %guest.branch%
         tasks:
           start:
             - docker start %name%
           stop:
             - docker stop %name%
-          recreate:
-            - rm -rf %folder%
+          create:
             - git clone https://github.com/test/test.git %folder%
-            - docker build -t %name%/latest %folder%
+            - cd %folder% && git checkout %guest.branch%
+            - docker build  -t %name%/%tag% %folder%
+            - docker run --name %name% %name%/%tag%
+
+          destroy:
+            # you can even run other docker-tasks via run_task(<task_name>)
+            - run_task(stop)
+            - docker rm %name%
+            - docker rmi %name/%tag%
+            - rm -rf %folder%
+
+
+      hostB:
+        # you can "include" the configuration of another host via inheritsFrom
+        # and overwrite only differing parameters
+        inheritsFrom: <key>
+        host: <another-host>
+
 
 
     hosts:
@@ -147,7 +165,11 @@ On systems with a non-bash environment like lshell try the following settings in
 
 
       hostB:
+        # you can "include" the configuration of another host via inheritsFrom
+        # and overwrite only differing parameters
+        inheritsFrom: <key>
         ...
+
 ## Usage
 
 list all configurations:
