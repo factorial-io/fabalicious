@@ -109,6 +109,18 @@ def validate_dict(keys, dict, message):
   if not validated:
     exit()
 
+def data_merge(dictionary1, dictionary2):
+  output = {}
+  for item, value in dictionary1.iteritems():
+    if dictionary2.has_key(item):
+      if isinstance(dictionary2[item], dict):
+        output[item] = data_merge(value, dictionary2.pop(item))
+    else:
+      output[item] = value
+  for item, value in dictionary2.iteritems():
+    output[item] = value
+  return output
+
 def get_configuration(name):
   config = get_all_configurations()
   if name in config['hosts']:
@@ -126,6 +138,10 @@ def get_configuration(name):
 
 
     host_config = config['hosts'][name]
+    if 'inheritsFrom' in host_config and host_config['inheritsFrom'] in config['hosts']:
+      base_config = config['hosts'][host_config['inheritsFrom']]
+      host_config = data_merge(base_config, host_config)
+
     keys = ("host", "rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
     validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
 
