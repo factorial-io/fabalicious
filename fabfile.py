@@ -414,6 +414,8 @@ def deploy(resetAfterwards=True):
     run('git fetch --tags')
     run('git pull origin '+branch)
     if not env.config['ignoreSubmodules']:
+      run('git submodule init')
+      run('git submodule sync')
       run('git submodule update')
 
   run_custom(env.config, 'deploy')
@@ -599,6 +601,8 @@ def copySSHKeyToDocker():
   put(key_file+'.pub', '/tmp')
   run('cat /tmp/'+os.path.basename(key_file)+'.pub >> /root/.ssh/authorized_keys')
   run('rm /tmp/'+os.path.basename(key_file)+'.pub')
+
+
 
 @task
 def behat(options='', name=False):
