@@ -7,6 +7,7 @@ import datetime
 import yaml
 import subprocess, shlex, atexit, time
 import os.path
+import re
 
 settings = 0
 current_config = 'unknown'
@@ -98,6 +99,16 @@ def get_all_configurations():
   return yaml.load(stream)
 
 
+def validate_dict(keys, dict, message):
+  validated = True
+  for key in keys:
+    if key not in dict:
+      print(red(message + ' ' + key))
+      validated = False
+
+  if not validated:
+    exit()
+
 def get_configuration(name):
   config = get_all_configurations()
   if name in config['hosts']:
@@ -116,15 +127,7 @@ def get_configuration(name):
 
     host_config = config['hosts'][name]
     keys = ("host", "rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
-    validated = True
-    for key in keys:
-      if key not in host_config:
-        print(red('Configuraton '+name+' has missing key '+key))
-        validated = False
-
-    if not validated:
-      exit()
-
+    validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
 
     host_config['siteFolder'] = host_config['rootFolder'] + host_config['siteFolder']
     host_config['filesFolder'] = host_config['rootFolder'] + host_config['filesFolder']
@@ -178,7 +181,12 @@ def create_ssh_tunnel(config, tunnel_config, remote=False):
   if 'destHostFromDockerContainer' in o:
     cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (o['bridgePort'], o['bridgeUser'], o['bridgeHost'], o['destHostFromDockerContainer'])
 
-    output = local(cmd, capture=True)
+    try:
+      output = local(cmd, capture=True)
+    except SystemExit:
+      print red('Docker not running, can\'t establish tunnel')
+      return
+
     ip_address = find_between(output.stdout, '"IPAddress": "', '"')
     print "Docker container " + o['destHostFromDockerContainer'] + " uses IP " + ip_address
 
@@ -603,3 +611,65 @@ def behat(options=''):
   with cd(env.config['gitRootFolder']):
     run(env.config['behatPath'] + ' ' + options)
   env.output_prefix = True
+
+
+
+
+@task
+def docker(subtask='info'):
+  check_config()
+  if not 'docker' in env.config:
+    print red('no docker configuration found.')
+
+  # validate host-configuration
+  keys = ("name", "configuration")
+  validate_dict(keys, env.config['docker'], 'Docker-configuraton '+current_config+' has missing key')
+
+
+  if not 'dockerHosts' in settings:
+    print(red('No dockerHosts-configuration found'))
+    exit()
+
+  all_docker_hosts = settings['dockerHosts']
+  config_name = env.config['docker']['configuration']
+  if not config_name in all_docker_hosts:
+    print(red('Could not find docker-configuration %s in dockerHosts' % (config_name)))
+    exit()
+
+  docker_configuration = all_docker_hosts[config_name]
+
+  keys = ("host", "port", "user", "tasks", "rootFolder")
+  validate_dict(keys, docker_configuration, 'dockerHosts-Configuraton '+config_name+' has missing key')
+
+  if subtask not in docker_configuration['tasks']:
+    print(red('Could not find subtask %s in dockerHosts-configuration %s' % (subtask, config_name)))
+    exit()
+
+  commands = docker_configuration['tasks'][subtask]
+
+
+
+  parsed_commands = []
+
+  replacements = {}
+  for key in ('user', 'host', 'port', 'rootFolder'):
+    replacements['%'+key+'%'] = str(docker_configuration[key])
+  for key in env.config['docker']:
+    replacements['%'+key+'%'] = str(env.config['docker'][key])
+
+  pattern = re.compile('|'.join(re.escape(key) for key in replacements.keys()))
+
+  for line in commands:
+    result = pattern.sub(lambda x: replacements[x.group()], line)
+    parsed_commands.append(result)
+
+  host_str = docker_configuration['user']+'@'+docker_configuration['host']+':'+str(docker_configuration['port'])
+  execute(run_script, docker_configuration['rootFolder'], parsed_commands, host=host_str)
+
+@task
+def run_script(rootFolder, commands):
+
+  with cd(rootFolder):
+    for line in commands:
+      run(line)
+
