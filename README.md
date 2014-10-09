@@ -42,6 +42,29 @@ On systems with a non-bash environment like lshell try the following settings in
     # optional, defaults to true
     usePty: <boolean>
 
+    # dockerHosts is a list of hosts which hosts docker-installations
+    # hosts can reference one of this configurations via docker/configuration
+
+    dockerHosts:
+      hostA:
+        host: <host>
+        user: <user>
+        port: <port>
+        rootFolder: <path-where-your-docker-stuff-resides>
+        # you can add as many subtasks you want to control your docker instances
+        # you can use the configuration of your hosts-part with %varname% as pattern,
+        # e.g. %name%.
+        tasks:
+          start:
+            - docker start %name%
+          stop:
+            - docker stop %name%
+          recreate:
+            - rm -rf %folder%
+            - git clone https://github.com/test/test.git %folder%
+            - docker build -t %name%/latest %folder%
+
+
     hosts:
       hostA:
         host: <host>
@@ -107,13 +130,21 @@ On systems with a non-bash environment like lshell try the following settings in
           - "first custom deploy command"
           - "second custom deploy command"
 
-        #configuration needed for the install-task:
+        # configuration needed for the install-task:
         # optional and defaults to false
         supportsInstalls: <boolean>
         database:
           user: <database-user>
           pass: <database-password>
           name: <name-of-database>
+
+        # docker-specific vars
+        # you can add any vars to this section, you can use it in your
+        # docker-scripts with %varname%, e.g. %name%
+        docker:
+          name: <docker-name, required>
+          configuration: <name-of-configuration, required>
+
 
       hostB:
         ...
@@ -148,6 +179,6 @@ run a task
 * `copyFrom:<source-host>`: copies all files from filesFolder at source-host to target host, and imports a sql-dump from source-host.
 * `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
 * `install`: will install drupal with profile minimal. Works currently only wehn supportsInstall=true, hasDrush=true and useForDevelopment=true. Needs an additional host-setting 'databaseName'. This task will overwrite your settings.php-file and databases, so be prepared!
-
+* `docker:<subtask>`: runs a set of scripts on the host-machine to control docker-instances.
 
 
