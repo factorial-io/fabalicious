@@ -621,6 +621,24 @@ def behat(options='', name=False):
 
 
 
+def expand_subtasks(tasks, task_name):
+  commands = []
+
+  for line in tasks[task_name]:
+    result = re.match(r'run_task\((.*)\)', line)
+    if result:
+      sub_task_name = result.group(1)
+      if sub_task_name in tasks:
+        for cmd in expand_subtasks(tasks, sub_task_name):
+          commands.append(cmd)
+      else:
+        print red("subtask not found in tasks: "+sub_task_name)
+        exit()
+    else:
+      commands.append(line)
+
+  return commands
+
 @task
 def docker(subtask='info'):
   check_config()
@@ -651,15 +669,16 @@ def docker(subtask='info'):
     print(red('Could not find subtask %s in dockerHosts-configuration %s' % (subtask, config_name)))
     exit()
 
-  commands = docker_configuration['tasks'][subtask]
-
-
+  commands = expand_subtasks(docker_configuration['tasks'], subtask)
 
   parsed_commands = []
 
   replacements = {}
+  for key in ('user', 'host', 'port', 'branch'):
+    replacements['%guest.'+key+'%'] = str(env.config[key])
   for key in ('user', 'host', 'port', 'rootFolder'):
     replacements['%'+key+'%'] = str(docker_configuration[key])
+
   for key in env.config['docker']:
     replacements['%'+key+'%'] = str(env.config['docker'][key])
 
@@ -679,7 +698,7 @@ def docker(subtask='info'):
 @task
 def run_script(rootFolder, commands):
 
-  with cd(rootFolder):
+  with cd(rootFolder), warn_only():
     for line in commands:
       run(line)
 
