@@ -121,6 +121,15 @@ def data_merge(dictionary1, dictionary2):
     output[item] = value
   return output
 
+
+def resolve_inheritance(config, all_configs):
+  if 'inheritsFrom' in config and config['inheritsFrom'] in all_configs:
+    key = config['inheritsFrom']
+    base_configuration = resolve_inheritance(all_configs[key], all_configs)
+    config = data_merge(base_configuration, config)
+
+  return config
+
 def get_configuration(name):
   config = get_all_configurations()
   if name in config['hosts']:
@@ -138,9 +147,7 @@ def get_configuration(name):
 
 
     host_config = config['hosts'][name]
-    if 'inheritsFrom' in host_config and host_config['inheritsFrom'] in config['hosts']:
-      base_config = config['hosts'][host_config['inheritsFrom']]
-      host_config = data_merge(base_config, host_config)
+    host_config = resolve_inheritance(host_config, config['hosts'])
 
     keys = ("host", "rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
     validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
@@ -660,6 +667,7 @@ def docker(subtask='info'):
   check_config()
   if not 'docker' in env.config:
     print red('no docker configuration found.')
+    exit()
 
   # validate host-configuration
   keys = ("name", "configuration")
@@ -678,9 +686,7 @@ def docker(subtask='info'):
 
   docker_configuration = all_docker_hosts[config_name]
 
-  if 'inheritsFrom' in docker_configuration and docker_configuration['inheritsFrom'] in all_docker_hosts:
-    base_configuration = all_docker_hosts[docker_configuration['inheritsFrom']]
-    docker_configuration = data_merge(base_configuration, docker_configuration)
+  docker_configuration = resolve_inheritance(docker_configuration, all_docker_hosts)
 
   keys = ("host", "port", "user", "tasks", "rootFolder")
   validate_dict(keys, docker_configuration, 'dockerHosts-Configuraton '+config_name+' has missing key')
@@ -688,6 +694,8 @@ def docker(subtask='info'):
   if subtask not in docker_configuration['tasks']:
     print(red('Could not find subtask %s in dockerHosts-configuration %s' % (subtask, config_name)))
     exit()
+
+  print(green("Running task '{subtask}' on guest-host '{docker_host}' for container '{container}'".format(subtask=subtask, docker_host=config_name, container=env.config['docker']['name']) ))
 
   commands = expand_subtasks(docker_configuration['tasks'], subtask)
 
