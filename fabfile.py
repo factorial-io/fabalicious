@@ -476,7 +476,7 @@ def rsync(config_name, files_type = 'filesFolder'):
 
 
     rsync = 'rsync -rav --no-o --no-g ';
-    rsync += ' -e "ssh  -o StrictHostKeyChecking=no -p '+str(source_ssh_port)+'"'
+    rsync += ' -e "ssh -o StrictHostKeyChecking=no -p '+str(source_ssh_port)+'"'
     rsync += ' ' + exclude_files_str
     rsync += ' ' + source_config['user']+'@'+source_config['host']
     rsync += ':' + source_config[files_type]+'/*'
@@ -615,9 +615,13 @@ def copySSHKeyToDocker():
     print(red('missing dockerKeyFile in fabfile.yaml'))
 
   key_file = settings['dockerKeyFile']
+
   run('mkdir -p /root/.ssh')
   put(key_file, '/root/.ssh/id_rsa')
   put(key_file+'.pub', '/root/.ssh/id_rsa.pub')
+  if 'dockerAuthorizedKeyFile' in settings:
+    authorized_keys_file = settings['dockerAuthorizedKeyFile']
+    put(authorized_keys_file, '/root/.ssh/authorized_keys')
   run('chmod 600 /root/.ssh/id_rsa')
   run('chmod 644 /root/.ssh/id_rsa.pub')
   run('chmod 700 /root/.ssh')
