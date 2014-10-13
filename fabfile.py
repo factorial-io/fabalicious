@@ -738,24 +738,27 @@ def run_script(rootFolder, commands):
 
 def get_backups_list():
   result = []
-  with cd(env.config['backupFolder']), hide('output'):
-    output = run('ls -tlr *.gz *.tgz')
-    lines = output.stdout.splitlines()
-    for line in lines:
-      tokens = line.split()
+  with cd(env.config['backupFolder']), hide('output'), warn_only():
+    for ext in ('*.gz', '*.tgz', '*.sql'):
+      output = run('ls -l ' + ext + ' 2>/dev/null')
+      lines = output.stdout.splitlines()
+      for line in lines:
+        tokens = line.split()
 
-      if(len(tokens) >= 9):
-        line = tokens[8]
-        filename, file_ext = os.path.splitext(line)
-        if(file_ext == '.gz'):
-          filename, file_ext = os.path.splitext(filename)
-        tokens = filename.split('--')
-        if file_ext == '.sql':
-          type = 'sql'
-        else:
-          type = 'files'
-        if(len(tokens) >= 4) and (tokens[1] == current_config):
-          result.append({ 'commit': tokens[0], 'date': tokens[2], 'time': tokens[3], 'file': line, 'type': type})
+        if(len(tokens) >= 9):
+          line = tokens[8]
+          filename, file_ext = os.path.splitext(line)
+          if(file_ext == '.gz'):
+            filename, file_ext = os.path.splitext(filename)
+          tokens = filename.split('--')
+          if file_ext == '.sql':
+            type = 'sql'
+          else:
+            type = 'files'
+          if(len(tokens) >= 4) and (tokens[1] == current_config):
+            result.append({ 'commit': tokens[0], 'date': tokens[2], 'time': tokens[3], 'file': line, 'type': type})
+
+  result = sorted(result, key=lambda k: k['commit'])
 
   return result
 
