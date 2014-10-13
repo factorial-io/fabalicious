@@ -205,13 +205,14 @@ def create_ssh_tunnel(config, tunnel_config, remote=False):
     cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (o['bridgePort'], o['bridgeUser'], o['bridgeHost'], o['destHostFromDockerContainer'])
 
     try:
-      output = local(cmd, capture=True)
+      with hide('output'):
+        output = local(cmd, capture=True)
     except SystemExit:
       print red('Docker not running, can\'t establish tunnel')
       return
 
     ip_address = find_between(output.stdout, '"IPAddress": "', '"')
-    print "Docker container " + o['destHostFromDockerContainer'] + " uses IP " + ip_address
+    print(green("Docker container " + o['destHostFromDockerContainer'] + " uses IP " + ip_address))
 
     o['destHost'] = ip_address
 
@@ -537,7 +538,7 @@ def _copyDBFrom(config_name = False):
       if source_config['supportsZippedBackups']:
         run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
       else:
-        run_drush('drush sql-cli < ' + sql_name, False)
+        run_drush('drush sql-cli < ' + sql_name_target, False)
 
       run('rm '+sql_name_target)
 
@@ -733,4 +734,101 @@ def run_script(rootFolder, commands):
   with cd(rootFolder), warn_only():
     for line in commands:
       run(line)
+
+
+def get_backups_list():
+  result = []
+  with cd(env.config['backupFolder']), hide('output'):
+    output = run('ls -tlr *.gz *.tgz')
+    lines = output.stdout.splitlines()
+    for line in lines:
+      tokens = line.split()
+
+      if(len(tokens) >= 9):
+        line = tokens[8]
+        filename, file_ext = os.path.splitext(line)
+        if(file_ext == '.gz'):
+          filename, file_ext = os.path.splitext(filename)
+        tokens = filename.split('--')
+        if file_ext == '.sql':
+          type = 'sql'
+        else:
+          type = 'files'
+        if(len(tokens) >= 4) and (tokens[1] == current_config):
+          result.append({ 'commit': tokens[0], 'date': tokens[2], 'time': tokens[3], 'file': line, 'type': type})
+
+  return result
+
+@task
+def list_backups():
+  check_config()
+  results = get_backups_list()
+
+  print "\nFound backups for "+ current_config + ":"
+  for result in results:
+
+    print "{date} {time}  |  {commit:<30}  |  {file}".format(**result)
+
+
+@task
+def restore(commit, drop=0):
+  check_config()
+
+  results = get_backups_list()
+  files = { 'sql': False, 'files': False, 'commit': False }
+  found = False
+
+  for result in results:
+    if result['commit'] == commit:
+      files[result['type']] = result['file']
+      files['commit'] = result['commit']
+      found = True
+
+  if not found:
+    print red('Could not find requested backup ' + commit+'!')
+    list_backups();
+    exit()
+
+
+  # restore sql
+  if files['sql']:
+    with cd(env.config['siteFolder']):
+
+      if drop:
+        run_drush('sql-drop')
+
+      sql_name_target = env.config['backupFolder'] + '/' + files['sql']
+      if env.config['supportsZippedBackups']:
+        run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
+      else:
+        run_drush('drush sql-cli < ' + sql_name_target, False)
+
+      print(green('SQL restored ' + files['sql']))
+
+
+  # restore files
+  if files['files']:
+    # move current files folder to backup
+    ts = datetime.datetime.now().strftime('%Y%m%d.%H%M%S')
+    old_files_folder = env.config['filesFolder'] + '.' + ts + '.old'
+    with warn_only():
+      run('chmod -R u+x '+env.config['filesFolder'])
+      run('rm -rf '+ old_files_folder)
+      run('mv ' + env.config['filesFolder'] + ' '+old_files_folder)
+
+    tar_file = env.config['backupFolder'] + '/' + files['files']
+    run('mkdir -p ' + env.config['filesFolder'])
+    with cd(env.config['filesFolder']):
+      run('tar -xzvf ' + tar_file)
+
+    print(green('files restored ' + files['files']))
+
+  # restore git
+  with cd(env.config['gitRootFolder']):
+
+    run('git checkout ' + result['commit'])
+
+    print(green('source restored to ' + files['commit']))
+
+  reset()
 
