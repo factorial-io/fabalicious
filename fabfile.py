@@ -793,10 +793,17 @@ def restore(commit, drop=0):
       found = True
 
   if not found:
+    print 'Could not find requested commit, trying by file-name ...'
+    for result in results:
+      if result['file'].find(commit) >= 0:
+        files[result['type']] = result['file']
+        files['commit'] = result['commit']
+        found = True
+
+  if not found:
     print red('Could not find requested backup ' + commit+'!')
     list_backups();
     exit()
-
 
   # restore sql
   if files['sql']:
@@ -811,7 +818,7 @@ def restore(commit, drop=0):
       else:
         run_drush('drush sql-cli < ' + sql_name_target, False)
 
-      print(green('SQL restored ' + files['sql']))
+      print(green('SQL restored from ' + files['sql']))
 
 
   # restore files
@@ -829,7 +836,7 @@ def restore(commit, drop=0):
     with cd(env.config['filesFolder']):
       run('tar -xzvf ' + tar_file)
 
-    print(green('files restored ' + files['files']))
+    print(green('files restored from ' + files['files']))
 
   # restore git
   with cd(env.config['gitRootFolder']):
