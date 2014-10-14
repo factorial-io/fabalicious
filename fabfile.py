@@ -768,7 +768,7 @@ def get_backups_list():
   return result
 
 @task
-def list_backups():
+def listBackups():
   check_config()
   results = get_backups_list()
 
