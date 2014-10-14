@@ -39,8 +39,16 @@ On systems with a non-bash environment like lshell try the following settings in
 
     # optional, defaults to true
     useShell: <boolean>
+
     # optional, defaults to true
     usePty: <boolean>
+
+    #path to a private key which should be used for a docker-image, see task copySSHKeyToDocker
+    dockerKeyFile: _tools/ssh-key/docker-root-key
+
+    # path to a authorized_keys-file which should be used for a docker-image,
+    # see task copySSHKeyToDocker
+    dockerAuthorizedKeyFile: _tools/ssh-key/authorized_keys
 
     # dockerHosts is a list of hosts which hosts docker-installations
     # hosts can reference one of this configurations via docker/configuration
@@ -196,11 +204,17 @@ run a task
 
 * `version`: get the current version of the source (= git describe)
 * `reset`: reset the drupal-installation, clear the caches, run update, reset all features, enable deploy-module and its dependencies
-* `backup`: tar all files, dump the database and copy them to the backup-directory. optional parameter: `withFiles=0`, backup db only, w/o files
+* `backup`: tar all files, dump the database and copy them to the backup-directory.
+* `backupDB`: backup the DB tp the backups-directory only
+* `listBackups`: list all previously made backups
+* `restore:<commit|partial-filename>` will restore files and/or DB from given commit or partial filename and reset git's HEAD to given revision.
 * `deploy`: update the installation by pulling the newest source from git and running the reset-task afterwards
 * `copyFrom:<source-host>`: copies all files from filesFolder at source-host to target host, and imports a sql-dump from source-host.
-* `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
+* `copyDBFrom:<source-host>`: copies only the DB from the source-host
+* `copyFilesFrom:<source-host>`: copies only the files from the source-host
 * `install`: will install drupal with profile minimal. Works currently only wehn supportsInstall=true, hasDrush=true and useForDevelopment=true. Needs an additional host-setting 'databaseName'. This task will overwrite your settings.php-file and databases, so be prepared!
+* `behat:<optional-arguments, name="test to run">`: run behat tests, the configuration needs a setting for `behatPath` which gets called to run the tests.
+* `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
 * `docker:<subtask>`: runs a set of scripts on the host-machine to control docker-instances.
-
+* `copySSHKeysToDocker`: copies stored ssh-keys into a docker-image. You'll need to set `dockerKeyFile`. If there's a setting for `dockerAuthoreizedKeyFile` the authorized_key-file will also copied into the docker. This will help with docker-to-docker-communication via SSH.
 
