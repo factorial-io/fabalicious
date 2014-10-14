@@ -261,10 +261,12 @@ def check_config():
 
 
 def run_custom(config, key):
+  env.output_prefix = False
   if key in config:
     with cd(config['rootFolder']):
       for line in config[key]:
         run(line)
+  env.output_prefix = True
 
 def get_settings(key, subkey):
   if key in settings:
