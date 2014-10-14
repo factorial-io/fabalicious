@@ -763,7 +763,7 @@ def get_backups_list():
           if(len(tokens) >= 4) and (tokens[1] == current_config):
             result.append({ 'commit': tokens[0], 'date': tokens[2], 'time': tokens[3], 'file': line, 'type': type})
 
-  result = sorted(result, key=lambda k: k['commit'])
+  result = sorted(result, key=lambda k: k['file'], reverse=True)
 
   return result
 
