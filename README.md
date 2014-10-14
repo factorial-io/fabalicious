@@ -212,7 +212,7 @@ run a task
 * `copyFrom:<source-host>`: copies all files from filesFolder at source-host to target host, and imports a sql-dump from source-host.
 * `copyDBFrom:<source-host>`: copies only the DB from the source-host
 * `copyFilesFrom:<source-host>`: copies only the files from the source-host
-* `install`: will install drupal with profile minimal. Works currently only wehn supportsInstall=true, hasDrush=true and useForDevelopment=true. Needs an additional host-setting 'databaseName'. This task will overwrite your settings.php-file and databases, so be prepared!
+* `install`: will install drupal with profile minimal. Works currently only when `supportsInstall=true`, `hasDrush=true` and `useForDevelopment=true`. Needs an additional host-setting `database`-dictionary. This task will overwrite your settings.php-file and databases, so be prepared!
 * `behat:<optional-arguments, name="test to run">`: run behat tests, the configuration needs a setting for `behatPath` which gets called to run the tests.
 * `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
 * `docker:<subtask>`: runs a set of scripts on the host-machine to control docker-instances.
