@@ -418,6 +418,9 @@ def backup(withFiles=True):
 
   run_custom(env.config, 'backup')
 
+@task
+def backupDB():
+  backup(False)
 
 
 @task
