@@ -366,7 +366,7 @@ def deploy(resetAfterwards=True):
   with cd(env.config['gitRootFolder']):
     run('git checkout '+branch)
     run('git fetch --tags')
-    run('git pull origin '+branch)
+    run('git pull --no-edit origin '+branch)
     if not env.config['ignoreSubmodules']:
       run('git submodule update')
 
