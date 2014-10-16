@@ -466,6 +466,7 @@ def rsync(config_name, files_type = 'filesFolder'):
   source_config = check_source_config(config_name)
 
   if not env.config['supportsCopyFrom']:
+    print red("The configuration '"+ current_config + "' does not support copyFrom")
     return
 
   print green('Copying files from '+ config_name + " to " + current_config)
@@ -506,6 +507,7 @@ def _copyDBFrom(config_name = False):
   target_config = check_source_config(current_config)
 
   if not env.config['supportsCopyFrom']:
+    print red("The configuration '"+ current_config + "' does not support copyFrom")
     return
 
   print green('Copying database from '+ config_name + " to " + current_config)
