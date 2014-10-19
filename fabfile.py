@@ -714,7 +714,7 @@ def docker(subtask='info'):
   parsed_commands = []
 
   replacements = {}
-  for key in ('user', 'host', 'port', 'branch'):
+  for key in ('user', 'host', 'port', 'branch', 'rootFolder'):
     replacements['%guest.'+key+'%'] = str(env.config[key])
   for key in ('user', 'host', 'port', 'rootFolder'):
     replacements['%'+key+'%'] = str(docker_configuration[key])
