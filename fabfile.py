@@ -144,6 +144,9 @@ def get_configuration(name):
     if not "useShell" in settings:
       settings['useShell'] = True
 
+    if not "gitOptions" in settings:
+      settings['gitOptions'] = { 'pull' : [ '--no-edit', '--rebase'] }
+
 
 
     host_config = config['hosts'][name]
@@ -182,9 +185,10 @@ def get_configuration(name):
     if 'tmpFolder' not in host_config:
       host_config['tmpFolder'] = '/tmp/'
 
-    if 'gitSupportsNoEdit' not in host_config:
-      host_config['gitSupportsNoEdit'] = True
+    if "gitOptions" not in host_config:
+      host_config['gitOptions'] = settings['gitOptions']
 
+    host_config['gitOptions'] = data_merge(settings['gitOptions'], host_config['gitOptions'])
 
     return host_config
 
@@ -444,10 +448,13 @@ def deploy(resetAfterwards=True):
   with cd(env.config['gitRootFolder']):
     run('git checkout '+branch)
     run('git fetch --tags')
-    if env.config['gitSupportsNoEdit']:
-      run('git pull --no-edit origin '+branch)
-    else:
-      run('git pull origin '+branch)
+
+    git_options = ''
+    if 'pull' in env.config['gitOptions']:
+      git_options = ' '.join(env.config['gitOptions']['pull'])
+
+    run('git pull '+ git_options + ' origin ' +branch)
+
     if not env.config['ignoreSubmodules']:
       run('git submodule init')
       run('git submodule sync')
