@@ -182,6 +182,9 @@ def get_configuration(name):
     if 'tmpFolder' not in host_config:
       host_config['tmpFolder'] = '/tmp/'
 
+    if 'gitSupportsNoEdit' not in host_config:
+      host_config['gitSupportsNoEdit'] = True
+
 
     return host_config
 
@@ -441,7 +444,10 @@ def deploy(resetAfterwards=True):
   with cd(env.config['gitRootFolder']):
     run('git checkout '+branch)
     run('git fetch --tags')
-    run('git pull --no-edit origin '+branch)
+    if env.config['gitSupportsNoEdit']:
+      run('git pull --no-edit origin '+branch)
+    else
+      run('git pull origin '+branch)
     if not env.config['ignoreSubmodules']:
       run('git submodule init')
       run('git submodule sync')
