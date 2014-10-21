@@ -267,13 +267,25 @@ def check_config():
   exit()
 
 
-def run_custom(config, key):
+def run_custom(config, run_key):
+
+  replacements = {}
+  for key in config:
+    if type(config[key]) != type({}):
+      replacements['%'+key+'%'] = str(config[key])
+
+  pattern = re.compile('|'.join(re.escape(key) for key in replacements.keys()))
+
   env.output_prefix = False
-  if key in config:
+  if run_key in config:
     with cd(config['rootFolder']):
-      for line in config[key]:
+      for line in config[run_key]:
+        line = pattern.sub(lambda x: replacements[x.group()], line)
         run(line)
+
   env.output_prefix = True
+
+
 
 def get_settings(key, subkey):
   if key in settings:
@@ -318,10 +330,14 @@ def get_backup_file_name(config, config_name):
 
 
 def run_common_commands():
+  env.output_prefix = False
+
   key = 'development' if env.config['useForDevelopment'] else 'deployment'
   if key in settings['common']:
     for line in settings['common'][key]:
       run(line)
+
+  env.output_prefix = True
 
 
 def run_drush(cmd, expand_command = True):
