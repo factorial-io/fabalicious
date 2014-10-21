@@ -43,7 +43,16 @@ On systems with a non-bash environment like lshell try the following settings in
     # optional, defaults to true
     usePty: <boolean>
 
-    #path to a private key which should be used for a docker-image, see task copySSHKeyToDocker
+    # custom parameters for git-commands (currently only pull supported)
+    # if no custom parameters are set '--rebase' and '--no-edit' are used
+    # here you can define the defaults for all configurations
+    # you can overwrite them in the single host-configs, if needed
+    gitConfig:
+      pull:
+        - --rebase
+        - --no-edit
+    # path to a private key which should be used for a docker-image, see task
+    # copySSHKeyToDocker
     dockerKeyFile: _tools/ssh-key/docker-root-key
 
     # path to a authorized_keys-file which should be used for a docker-image,
@@ -97,7 +106,8 @@ On systems with a non-bash environment like lshell try the following settings in
         port: <port>
         user: <your-ssh-user>
 
-        # if you are using basebox for setting up a vagrant-setup, specify the ip here
+        # if you are using basebox for setting up a vagrant-setup, specify the
+        # ip here
         # see https://github.com/MuschPusch/basebox
         ip: <your-ip-address, optional>
 
@@ -111,12 +121,13 @@ On systems with a non-bash environment like lshell try the following settings in
           destHost: <destHost>
           destPort: <destPort>
 
-          # if you have multiple ssh-tunnel-configurations make sure your local-port is unique accross the file!
+          # if you have multiple ssh-tunnel-configurations make sure your
+          # local-port is unique accross the file!
           localPort: <localPort>
 
           # if you want to deploy into docker container you can use a docker-
-          # container-name, the script will use docker inspect to get the container's
-          # ip-address
+          # container-name, the script will use docker inspect to get the
+          # container's ip-address <will be removed in the near future>
           destHostFromDockerContainer: <docker-container-name>
 
           # when accessing docker-container via tunnels and ssh it may be necessary
@@ -146,6 +157,8 @@ On systems with a non-bash environment like lshell try the following settings in
         # optional and defaults to true
         supportsZippedBackups: <boolean>
 
+        # the commands in reset, deplayPrepare and deploy may use the data of
+        # the configuration via the placeholder '%key%', e.g. '%sitesFolder%'
         reset:
           - "first custom reset command"
           - "second custom reset command"
@@ -171,6 +184,11 @@ On systems with a non-bash environment like lshell try the following settings in
           name: <docker-name, required>
           configuration: <name-of-configuration, required>
 
+        # add custom parameters to git-commands:
+        gitConfig:
+          pull:
+            -- <parameter 1>
+            -- <parameter 2>
 
       hostB:
         # you can "include" the configuration of another host via inheritsFrom
