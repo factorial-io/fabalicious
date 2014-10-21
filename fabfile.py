@@ -446,7 +446,7 @@ def deploy(resetAfterwards=True):
     run('git fetch --tags')
     if env.config['gitSupportsNoEdit']:
       run('git pull --no-edit origin '+branch)
-    else
+    else:
       run('git pull origin '+branch)
     if not env.config['ignoreSubmodules']:
       run('git submodule init')
