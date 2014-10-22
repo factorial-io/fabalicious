@@ -387,7 +387,8 @@ def reset(withPasswordReset=False):
         if env.config['useForDevelopment'] == True:
           if withPasswordReset in [True, 'True', '1']:
             run_drush('user-password admin --password="admin"')
-          run('chmod -R 777 ' + env.config['filesFolder'])
+          with warn_only():
+            run('chmod -R 777 ' + env.config['filesFolder'])
         if 'deploymentModule' in settings:
           run_drush('en -y ' + settings['deploymentModule'])
         run_drush('fra -y')
