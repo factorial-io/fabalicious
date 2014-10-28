@@ -320,8 +320,8 @@ def get_version():
   with cd(env.config['gitRootFolder']):
     with hide('output'):
       output = run('git describe --always')
-
-      return output.stdout.strip().replace('/','-')
+      output = output.stdout.splitlines()
+      return output[-1].replace('/', '-')
 
 
 def get_backup_file_name(config, config_name):
