@@ -565,6 +565,10 @@ def _copyDBFrom(config_name = False):
     if source_config['supportsZippedBackups']:
       sql_name_source += '.gz'
 
+    o = source_config['sshTunnel']
+    if 'strictHostKeyChecking' in o:
+      sshArg = ' -o StrictHostKeyChecking=no '
+
     # copy sql to target
     run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name_source+' '+sql_name_target+ ' >>/dev/null')
     # cleanup and remove file from source
