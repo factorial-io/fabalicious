@@ -550,8 +550,17 @@ def _copyDBFrom(config_name = False):
       source_ssh_port = source_config['port']
 
     ssh_args = ' ' + source_config['user']+'@'+source_config['host']
+
+    no_strict_host_key_checking = False
     if settings['usePty'] == False:
-      ssh_args = "-o StrictHostKeyChecking=no" + ssh_args
+      no_strict_host_key_checking = True
+
+    if 'sshTunnel' in source_config:
+      if ('strictHostKeyChecking' in source_config['sshTunnel']) and (source_config['sshTunnel']['strictHostKeyChecking'] == False):
+        no_strict_host_key_checking = True
+
+    if no_strict_host_key_checking:
+      ssh_args = " -o StrictHostKeyChecking=no" + ssh_args
 
     sql_name_source = source_config['tmpFolder'] + config_name + '.sql'
     sql_name_target = target_config['tmpFolder'] + config_name + '.sql'
@@ -566,12 +575,10 @@ def _copyDBFrom(config_name = False):
     if source_config['supportsZippedBackups']:
       sql_name_source += '.gz'
 
-    o = source_config['sshTunnel']
-    if 'strictHostKeyChecking' in o:
-      sshArg = ' -o StrictHostKeyChecking=no '
 
     # copy sql to target
     run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name_source+' '+sql_name_target+ ' >>/dev/null')
+
     # cleanup and remove file from source
     run('ssh -p '+str(source_ssh_port)+' '+ssh_args+' rm ' + sql_name_source)
 
