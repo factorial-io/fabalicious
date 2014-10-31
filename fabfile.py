@@ -408,6 +408,7 @@ def backup_sql(backup_file_name, config):
         run('mkdir -p ' + config['backupFolder'])
         if config['supportsZippedBackups']:
           run('rm -f '+backup_file_name)
+          run('rm -f '+backup_file_name+'.gz')
           run_drush('sql-dump --gzip --result-file=' + backup_file_name)
         else:
           run_drush('sql-dump --result-file=' + backup_file_name)
