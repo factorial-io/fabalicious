@@ -39,14 +39,77 @@ On systems with a non-bash environment like lshell try the following settings in
 
     # optional, defaults to true
     useShell: <boolean>
+
     # optional, defaults to true
     usePty: <boolean>
+
+    # custom parameters for git-commands (currently only pull supported)
+    # if no custom parameters are set '--rebase' and '--no-edit' are used
+    # here you can define the defaults for all configurations
+    # you can overwrite them in the single host-configs, if needed
+    gitConfig:
+      pull:
+        - --rebase
+        - --no-edit
+    # path to a private key which should be used for a docker-image, see task
+    # copySSHKeyToDocker
+    dockerKeyFile: _tools/ssh-key/docker-root-key
+
+    # path to a authorized_keys-file which should be used for a docker-image,
+    # see task copySSHKeyToDocker
+    dockerAuthorizedKeyFile: _tools/ssh-key/authorized_keys
+
+    # dockerHosts is a list of hosts which hosts docker-installations
+    # hosts can reference one of this configurations via docker/configuration
+
+    dockerHosts:
+      hostA:
+        host: <host>
+        user: <user>
+        port: <port>
+        rootFolder: <path-where-your-docker-stuff-resides>
+
+        # you can add as many subtasks you want to control your docker instances.
+        # you can use the configuration of your hosts-part with %varname% as pattern,
+        # e.g. %name%. You can even reference some variables of the docker-guest-
+        # configuration via %guest.<name>%, e.g. %guest.branch%
+        tasks:
+          start:
+            - docker start %name%
+          stop:
+            - docker stop %name%
+          create:
+            - git clone https://github.com/test/test.git %folder%
+            - cd %folder% && git checkout %guest.branch%
+            - docker build  -t %name%/%tag% %folder%
+            - docker run --name %name% %name%/%tag%
+
+          destroy:
+            # you can even run other docker-tasks via run_task(<task_name>)
+            - run_task(stop)
+            - docker rm %name%
+            - docker rmi %name/%tag%
+            - rm -rf %folder%
+
+
+      hostB:
+        # you can "include" the configuration of another host via inheritsFrom
+        # and overwrite only differing parameters
+        inheritsFrom: <key>
+        host: <another-host>
+
+
 
     hosts:
       hostA:
         host: <host>
         port: <port>
         user: <your-ssh-user>
+
+        # if you are using basebox for setting up a vagrant-setup, specify the
+        # ip here
+        # see https://github.com/MuschPusch/basebox
+        ip: <your-ip-address, optional>
 
         # if you can't reacht your host directly, you can use a ssh-tunnel,
         # please note that your host should be localhost and port the localPort of
@@ -56,12 +119,21 @@ On systems with a non-bash environment like lshell try the following settings in
           bridgeHost: <bridgeHost>
           bridgePort: <bridgePort>
           destHost: <destHost>
-          # if you want to deploy into docker container you can use a docker-
-          # container-name, the script will use docker inspect to get the container's
-          # ip-address
-          destHostFromDockerContainer: <docker-container-name>
           destPort: <destPort>
+
+          # if you have multiple ssh-tunnel-configurations make sure your
+          # local-port is unique accross the file!
           localPort: <localPort>
+
+          # if you want to deploy into docker container you can use a docker-
+          # container-name, the script will use docker inspect to get the
+          # container's ip-address <will be removed in the near future>
+          destHostFromDockerContainer: <docker-container-name>
+
+          # when accessing docker-container via tunnels and ssh it may be necessary
+          # to disable strictHostKeyChecking over the tunnel
+          strictHostKeyChecking: <boolean, optional defaults to true
+
 
         rootFolder: <absolute-path-to-your-webroot>
         # optional and defaults to rootFolder
@@ -85,6 +157,8 @@ On systems with a non-bash environment like lshell try the following settings in
         # optional and defaults to true
         supportsZippedBackups: <boolean>
 
+        # the commands in reset, deplayPrepare and deploy may use the data of
+        # the configuration via the placeholder '%key%', e.g. '%sitesFolder%'
         reset:
           - "first custom reset command"
           - "second custom reset command"
@@ -95,7 +169,7 @@ On systems with a non-bash environment like lshell try the following settings in
           - "first custom deploy command"
           - "second custom deploy command"
 
-        #configuration needed for the install-task:
+        # configuration needed for the install-task:
         # optional and defaults to false
         supportsInstalls: <boolean>
         database:
@@ -103,8 +177,25 @@ On systems with a non-bash environment like lshell try the following settings in
           pass: <database-password>
           name: <name-of-database>
 
+        # docker-specific vars
+        # you can add any vars to this section, you can use it in your
+        # docker-scripts with %varname%, e.g. %name%
+        docker:
+          name: <docker-name, required>
+          configuration: <name-of-configuration, required>
+
+        # add custom parameters to git-commands:
+        gitConfig:
+          pull:
+            -- <parameter 1>
+            -- <parameter 2>
+
       hostB:
+        # you can "include" the configuration of another host via inheritsFrom
+        # and overwrite only differing parameters
+        inheritsFrom: <key>
         ...
+
 ## Usage
 
 list all configurations:
@@ -131,11 +222,17 @@ run a task
 
 * `version`: get the current version of the source (= git describe)
 * `reset`: reset the drupal-installation, clear the caches, run update, reset all features, enable deploy-module and its dependencies
-* `backup`: tar all files, dump the database and copy them to the backup-directory. optional parameter: `withFiles=0`, backup db only, w/o files
+* `backup`: tar all files, dump the database and copy them to the backup-directory.
+* `backupDB`: backup the DB tp the backups-directory only
+* `listBackups`: list all previously made backups
+* `restore:<commit|partial-filename>` will restore files and/or DB from given commit or partial filename and reset git's HEAD to given revision.
 * `deploy`: update the installation by pulling the newest source from git and running the reset-task afterwards
 * `copyFrom:<source-host>`: copies all files from filesFolder at source-host to target host, and imports a sql-dump from source-host.
+* `copyDBFrom:<source-host>`: copies only the DB from the source-host
+* `copyFilesFrom:<source-host>`: copies only the files from the source-host
+* `install`: will install drupal with profile minimal. Works currently only when `supportsInstall=true`, `hasDrush=true` and `useForDevelopment=true`. Needs an additional host-setting `database`-dictionary. This task will overwrite your settings.php-file and databases, so be prepared!
+* `behat:<optional-arguments, name="test to run">`: run behat tests, the configuration needs a setting for `behatPath` which gets called to run the tests.
 * `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
-* `install`: will install drupal with profile minimal. Works currently only wehn supportsInstall=true, hasDrush=true and useForDevelopment=true. Needs an additional host-setting 'databaseName'. This task will overwrite your settings.php-file and databases, so be prepared!
-
-
+* `docker:<subtask>`: runs a set of scripts on the host-machine to control docker-instances.
+* `copySSHKeysToDocker`: copies stored ssh-keys into a docker-image. You'll need to set `dockerKeyFile`. If there's a setting for `dockerAuthoreizedKeyFile` the authorized_key-file will also copied into the docker. This will help with docker-to-docker-communication via SSH.
 
