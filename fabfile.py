@@ -408,6 +408,7 @@ def backup_sql(backup_file_name, config):
         run('mkdir -p ' + config['backupFolder'])
         if config['supportsZippedBackups']:
           run('rm -f '+backup_file_name)
+          run('rm -f '+backup_file_name+'.gz')
           run_drush('sql-dump --gzip --result-file=' + backup_file_name)
         else:
           run_drush('sql-dump --result-file=' + backup_file_name)
@@ -564,6 +565,10 @@ def _copyDBFrom(config_name = False):
 
     if source_config['supportsZippedBackups']:
       sql_name_source += '.gz'
+
+    o = source_config['sshTunnel']
+    if 'strictHostKeyChecking' in o:
+      sshArg = ' -o StrictHostKeyChecking=no '
 
     # copy sql to target
     run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name_source+' '+sql_name_target+ ' >>/dev/null')
