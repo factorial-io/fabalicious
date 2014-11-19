@@ -476,7 +476,7 @@ def deploy(resetAfterwards=True):
     if not env.config['ignoreSubmodules']:
       run('git submodule init')
       run('git submodule sync')
-      run('submodule update --init --recursive')
+      run('git submodule update --init --recursive')
 
   run_custom(env.config, 'deploy')
 
