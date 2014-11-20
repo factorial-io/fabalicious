@@ -892,3 +892,36 @@ def restore(commit, drop=0):
 
   reset()
 
+
+@task
+def updateDrupal(version=7):
+  check_config()
+  if not env.config['useForDevelopment']:
+    print red('drupalUpdate not supported for staging/live environments ...')
+    exit
+
+  backupDB()
+
+  # create new branch
+  with cd(env.config['gitRootFolder']):
+    run('git checkout -b "drupal-update"')
+
+  # download drupal
+  with cd(env.config['rootFolder']):
+    run('rm -rf /tmp/drupal-update')
+    run('mkdir -p /tmp/drupal-update')
+    run_drush('dl --destination="/tmp/drupal-update" --default-major="%d" drupal ' % version)
+
+  # copy files to root-folder
+  with(cd('/tmp/drupal-update')):
+    drupal_folder = run('ls').stdout.strip()
+    print drupal_folder
+
+    run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, env.config['rootFolder']) )
+
+  # remove temporary files
+  with cd(env.config['rootFolder']):
+    run('rm -rf /tmp/drupal-update')
+
+  print green("Updated drupal successfully to '%s'. Please review the changes in the new branch drupal-update." % drupal_folder)
+
