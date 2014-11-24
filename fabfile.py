@@ -683,10 +683,13 @@ def copySSHKeyToDocker():
 
 
 @task
-def behat(options='', name=False):
+def behat(options='', name=False, format="pretty", out=False):
   check_config()
   if name:
-    options += '--name="'+name+'"'
+    options += ' --name="' + name + '"'
+  if out:
+    options += ' --out="' + out + '"'
+  options += ' --format="' + format + '"'
 
   if not 'behatPath' in env.config:
     print(red('missing behatPath in fabfile.yaml'))
