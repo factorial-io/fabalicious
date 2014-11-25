@@ -152,6 +152,12 @@ On systems with a non-bash environment like lshell try the following settings in
         # optional and defaults to true
         supportsZippedBackups: <boolean>
 
+        behat:
+          run: <command-line to run behat>
+          install:
+            - <command to install behat>
+            - <command to install behat>
+
         # the commands in reset, deplayPrepare and deploy may use the data of
         # the configuration via the placeholder '%key%', e.g. '%sitesFolder%'
         reset:
@@ -226,7 +232,9 @@ run a task
 * `copyDBFrom:<source-host>`: copies only the DB from the source-host
 * `copyFilesFrom:<source-host>`: copies only the files from the source-host
 * `install`: will install drupal with profile minimal. Works currently only when `supportsInstall=true`, `hasDrush=true` and `useForDevelopment=true`. Needs an additional host-setting: `database`-dictionary. This task will overwrite your settings.php-file and databases, so be prepared!
-* `behat:<name="Name of feature",format="pretty", out="", options="">`: run behat tests, the configuration needs a setting for `behatPath` which gets called to run the tests. You can add command-line-options to the command, the most used (name, format and out) are mirrored by fabalicious, as escaping all the commas is cumbersome.
+* `behat:<name="Name of feature",format="pretty", out="", options="">`: run behat tests, the configuration needs a setting for `behat:run` which gets called to run the tests. You can add command-line-options to the command, the most used (name, format and out) are mirrored by fabalicious, as escaping all the commas is cumbersome.
+* `installBehat`: install behat, the configuration needs a setting for `behat:install` which gets called to install behat
+at.
 * `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
 * `docker:<subtask>`: runs a set of scripts on the host-machine to control docker-instances.
 * `copySSHKeysToDocker`: copies stored ssh-keys into a docker-image. You'll need to set `dockerKeyFile`. If there's a setting for `dockerAuthorizedKeyFile` the authorized_key-file will also copied into the docker. This will help with docker-to-docker-communication via SSH.
