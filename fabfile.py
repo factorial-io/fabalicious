@@ -198,6 +198,12 @@ def get_configuration(name):
       docker_name = host_config["docker"]["name"]
       host_config["sshTunnel"]["destHostFromDockerContainer"] = docker_name
 
+    if "behatPath" in host_config:
+      host_config['behat'] = {}
+      host_config['behat']['run'] = host_config['behatPath']
+
+    if not 'behat' in host_config:
+      host_config['behat'] = {}
 
     return host_config
 
@@ -700,12 +706,28 @@ def behat(options='', name=False, format="pretty", out=False):
     options += ' --out="' + out + '"'
   options += ' --format="' + format + '"'
 
-  if not 'behatPath' in env.config:
-    print(red('missing behatPath in fabfile.yaml'))
+  if not 'run' in env.config['behat']:
+    print(red('missing "run" in "behat"-section in fabfile.yaml'))
     exit()
   env.output_prefix = False
   with cd(env.config['gitRootFolder']):
-    run(env.config['behatPath'] + ' ' + options)
+    run(env.config['behat']['run'] + ' ' + options)
+  env.output_prefix = True
+
+
+
+@task
+def installBehat():
+  check_config()
+
+  if not 'install' in env.config['behat']:
+    print(red('missing "install" in "behat"-section in fabfile.yaml'))
+    exit()
+
+  env.output_prefix = False
+  with cd(env.config['gitRootFolder']):
+    for line in env.config['behat']['install']:
+      run(line)
   env.output_prefix = True
 
 
