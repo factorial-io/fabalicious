@@ -125,11 +125,6 @@ On systems with a non-bash environment like lshell try the following settings in
           # local-port is unique accross the file!
           localPort: <localPort>
 
-          # if you want to deploy into docker container you can use a docker-
-          # container-name, the script will use docker inspect to get the
-          # container's ip-address <will be removed in the near future>
-          destHostFromDockerContainer: <docker-container-name>
-
           # when accessing docker-container via tunnels and ssh it may be necessary
           # to disable strictHostKeyChecking over the tunnel
           strictHostKeyChecking: <boolean, optional defaults to true
@@ -185,7 +180,7 @@ On systems with a non-bash environment like lshell try the following settings in
           configuration: <name-of-configuration, required>
 
         # add custom parameters to git-commands:
-        gitConfig:
+        gitOptions:
           pull:
             -- <parameter 1>
             -- <parameter 2>

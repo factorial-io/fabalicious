@@ -190,6 +190,15 @@ def get_configuration(name):
 
     host_config['gitOptions'] = data_merge(settings['gitOptions'], host_config['gitOptions'])
 
+    if "docker" in host_config:
+      keys = ("name", "configuration")
+      validate_dict(keys, host_config["docker"], 'Configuraton '+name+' has missing key in docker')
+
+    if "sshTunnel" in host_config and "docker" in host_config:
+      docker_name = host_config["docker"]["name"]
+      host_config["sshTunnel"]["destHostFromDockerContainer"] = docker_name
+
+
     return host_config
 
   print(red('Configuraton '+name+' not found \n'))
