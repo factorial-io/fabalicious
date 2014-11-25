@@ -897,7 +897,7 @@ def restore(commit, drop=0):
 
 
 @task
-def updateDrupal(version=7):
+def updateDrupalCore(version=7):
   check_config()
   if not env.config['useForDevelopment']:
     print red('drupalUpdate not supported for staging/live environments ...')
