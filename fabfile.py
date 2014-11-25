@@ -408,6 +408,7 @@ def backup_sql(backup_file_name, config):
         run('mkdir -p ' + config['backupFolder'])
         if config['supportsZippedBackups']:
           run('rm -f '+backup_file_name)
+          run('rm -f '+backup_file_name+'.gz')
           run_drush('sql-dump --gzip --result-file=' + backup_file_name)
         else:
           run_drush('sql-dump --result-file=' + backup_file_name)
@@ -475,7 +476,7 @@ def deploy(resetAfterwards=True):
     if not env.config['ignoreSubmodules']:
       run('git submodule init')
       run('git submodule sync')
-      run('git submodule update')
+      run('git submodule update --init --recursive')
 
   run_custom(env.config, 'deploy')
 
@@ -549,8 +550,17 @@ def _copyDBFrom(config_name = False):
       source_ssh_port = source_config['port']
 
     ssh_args = ' ' + source_config['user']+'@'+source_config['host']
+
+    no_strict_host_key_checking = False
     if settings['usePty'] == False:
-      ssh_args = "-o StrictHostKeyChecking=no" + ssh_args
+      no_strict_host_key_checking = True
+
+    if 'sshTunnel' in source_config:
+      if ('strictHostKeyChecking' in source_config['sshTunnel']) and (source_config['sshTunnel']['strictHostKeyChecking'] == False):
+        no_strict_host_key_checking = True
+
+    if no_strict_host_key_checking:
+      ssh_args = " -o StrictHostKeyChecking=no" + ssh_args
 
     sql_name_source = source_config['tmpFolder'] + config_name + '.sql'
     sql_name_target = target_config['tmpFolder'] + config_name + '.sql'
@@ -565,8 +575,10 @@ def _copyDBFrom(config_name = False):
     if source_config['supportsZippedBackups']:
       sql_name_source += '.gz'
 
+
     # copy sql to target
     run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name_source+' '+sql_name_target+ ' >>/dev/null')
+
     # cleanup and remove file from source
     run('ssh -p '+str(source_ssh_port)+' '+ssh_args+' rm ' + sql_name_source)
 
@@ -671,10 +683,13 @@ def copySSHKeyToDocker():
 
 
 @task
-def behat(options='', name=False):
+def behat(options='', name=False, format="pretty", out=False):
   check_config()
   if name:
-    options += '--name="'+name+'"'
+    options += ' --name="' + name + '"'
+  if out:
+    options += ' --out="' + out + '"'
+  options += ' --format="' + format + '"'
 
   if not 'behatPath' in env.config:
     print(red('missing behatPath in fabfile.yaml'))
@@ -879,4 +894,37 @@ def restore(commit, drop=0):
     print(green('source restored to ' + files['commit']))
 
   reset()
+
+
+@task
+def updateDrupalCore(version=7):
+  check_config()
+  if not env.config['useForDevelopment']:
+    print red('drupalUpdate not supported for staging/live environments ...')
+    exit
+
+  backupDB()
+
+  # create new branch
+  with cd(env.config['gitRootFolder']):
+    run('git checkout -b "drupal-update"')
+
+  # download drupal
+  with cd(env.config['rootFolder']):
+    run('rm -rf /tmp/drupal-update')
+    run('mkdir -p /tmp/drupal-update')
+    run_drush('dl --destination="/tmp/drupal-update" --default-major="%d" drupal ' % version)
+
+  # copy files to root-folder
+  with(cd('/tmp/drupal-update')):
+    drupal_folder = run('ls').stdout.strip()
+    print drupal_folder
+
+    run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, env.config['rootFolder']) )
+
+  # remove temporary files
+  with cd(env.config['rootFolder']):
+    run('rm -rf /tmp/drupal-update')
+
+  print green("Updated drupal successfully to '%s'. Please review the changes in the new branch drupal-update." % drupal_folder)
 
