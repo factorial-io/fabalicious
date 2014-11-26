@@ -8,6 +8,7 @@ import yaml
 import subprocess, shlex, atexit, time
 import os.path
 import re
+import copy
 
 settings = 0
 current_config = 'unknown'
@@ -116,9 +117,9 @@ def data_merge(dictionary1, dictionary2):
       if isinstance(dictionary2[item], dict):
         output[item] = data_merge(value, dictionary2.pop(item))
     else:
-      output[item] = value
+      output[item] = copy.deepcopy(value)
   for item, value in dictionary2.iteritems():
-    output[item] = value
+    output[item] = copy.deepcopy(value)
   return output
 
 
@@ -296,7 +297,12 @@ def run_custom(config, run_key):
     with cd(config['rootFolder']):
       for line in config[run_key]:
         line = pattern.sub(lambda x: replacements[x.group()], line)
-        run(line)
+        result = re.match(r'run_docker_task\((.*)\)', line)
+        if result:
+          docker_task_name = result.group(1)
+          docker(docker_task_name)
+        else:
+          run(line)
 
   env.output_prefix = True
 
@@ -767,7 +773,7 @@ def docker(subtask='info'):
     print(red('No dockerHosts-configuration found'))
     exit()
 
-  all_docker_hosts = settings['dockerHosts']
+  all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
   config_name = env.config['docker']['configuration']
   if not config_name in all_docker_hosts:
     print(red('Could not find docker-configuration %s in dockerHosts' % (config_name)))
@@ -782,6 +788,10 @@ def docker(subtask='info'):
 
   if subtask not in docker_configuration['tasks']:
     print(red('Could not find subtask %s in dockerHosts-configuration %s' % (subtask, config_name)))
+    for task_name in docker_configuration['tasks']:
+      print "- " + task_name
+    print docker_configuration
+    print settings
     exit()
 
   print(green("Running task '{subtask}' on guest-host '{docker_host}' for container '{container}'".format(subtask=subtask, docker_host=config_name, container=env.config['docker']['name']) ))
