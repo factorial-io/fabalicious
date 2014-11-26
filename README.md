@@ -187,8 +187,10 @@ On systems with a non-bash environment like lshell try the following settings in
         # add custom parameters to git-commands:
         gitConfig:
           pull:
-            -- <parameter 1>
-            -- <parameter 2>
+            - <parameter 1>
+            - <parameter 2>
+            # e.g.:
+            - --rebase
 
       hostB:
         # you can "include" the configuration of another host via inheritsFrom
