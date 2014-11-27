@@ -200,11 +200,11 @@ def get_configuration(name):
       host_config["sshTunnel"]["destHostFromDockerContainer"] = docker_name
 
     if "behatPath" in host_config:
-      host_config['behat'] = {}
+      host_config['behat'] = { 'presets': dict() }
       host_config['behat']['run'] = host_config['behatPath']
 
     if not 'behat' in host_config:
-      host_config['behat'] = {}
+      host_config['behat'] = { 'presets': dict() }
 
     return host_config
 
@@ -704,13 +704,29 @@ def copySSHKeyToDocker():
 
 
 @task
-def behat(options='', name=False, format="pretty", out=False):
+def behat(preset=False, options='', name=False, format=False, out=False):
   check_config()
+
+  # use default preset if available
+  if not preset and 'default' in env.config['behat']['presets']:
+    preset = 'default'
+
+  # use given preset and append it to existing options
+  if preset:
+    if not preset in env.config['behat']['presets']:
+      print red('Preset %s is missing from "behat/presets"-configuration' % preset)
+      exit()
+
+    options += env.config['behat']['presets'][preset]
+
   if name:
     options += ' --name="' + name + '"'
   if out:
     options += ' --out="' + out + '"'
-  options += ' --format="' + format + '"'
+  if format:
+    options += ' --format="' + format + '"'
+
+
 
   if not 'run' in env.config['behat']:
     print(red('missing "run" in "behat"-section in fabfile.yaml'))
@@ -777,6 +793,8 @@ def docker(subtask='info'):
   config_name = env.config['docker']['configuration']
   if not config_name in all_docker_hosts:
     print(red('Could not find docker-configuration %s in dockerHosts' % (config_name)))
+    print('Available configurations: ' +  ', '.join(all_docker_hosts.keys()))
+
     exit()
 
   docker_configuration = all_docker_hosts[config_name]
@@ -788,10 +806,7 @@ def docker(subtask='info'):
 
   if subtask not in docker_configuration['tasks']:
     print(red('Could not find subtask %s in dockerHosts-configuration %s' % (subtask, config_name)))
-    for task_name in docker_configuration['tasks']:
-      print "- " + task_name
-    print docker_configuration
-    print settings
+    print('Available subtasks: ' +  ', '.join(docker_configuration.keys()))
     exit()
 
   print(green("Running task '{subtask}' on guest-host '{docker_host}' for container '{container}'".format(subtask=subtask, docker_host=config_name, container=env.config['docker']['name']) ))
