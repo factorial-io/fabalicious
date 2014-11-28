@@ -153,43 +153,44 @@ def get_configuration(name):
     host_config = config['hosts'][name]
     host_config = resolve_inheritance(host_config, config['hosts'])
 
-    keys = ("host", "rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
+    keys = ("host", "rootFolder")
     validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
 
-    host_config['siteFolder'] = host_config['rootFolder'] + host_config['siteFolder']
-    host_config['filesFolder'] = host_config['rootFolder'] + host_config['filesFolder']
+    # add defaults
+    defaults = {
+      'supportsSSH': True,
+      'useForDevelopment': False,
+      'hasDrush': False,
+      'ignoreSubmodules': False,
+      'supportsBackups': True,
+      'supportsCopyFrom': True,
+      'supportsInstalls': False,
+      'supportsZippedBackups': True,
+      'tmpFolder': '/tmp/',
+      'gitRootFolder': host_config,
+      'gitOptions': settings['gitOptions'],
+      'branch': 'master'
+    }
 
-    if 'useForDevelopment' not in host_config:
-      host_config['useForDevelopment'] = False
+    for key in defaults:
+      if key not in host_config:
+        host_config[key] = defaults[key]
 
-    if 'hasDrush' not in host_config:
-      host_config['hasDrush'] = False
+    # check keys again
+    if host_config['supportsSSH']:
+      keys = ("rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
+      validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
 
-    if 'ignoreSubmodules' not in host_config:
-      host_config['ignoreSubmodules'] = False
+      host_config['siteFolder'] = host_config['rootFolder'] + host_config['siteFolder']
+      host_config['filesFolder'] = host_config['rootFolder'] + host_config['filesFolder']
 
-    if 'supportsBackups' not in host_config:
-      host_config['supportsBackups'] = True
+      host_config['gitOptions'] = data_merge(settings['gitOptions'], host_config['gitOptions'])
 
-    if 'supportsCopyFrom' not in host_config:
-      host_config['supportsCopyFrom'] = True
-
-    if 'supportsInstalls' not in host_config:
-      host_config['supportsInstalls'] = False
-
-    if 'supportsZippedBackups' not in host_config:
-      host_config['supportsZippedBackups'] = True
-
-    if 'gitRootFolder' not in host_config:
-      host_config['gitRootFolder'] = host_config['rootFolder']
-
-    if 'tmpFolder' not in host_config:
-      host_config['tmpFolder'] = '/tmp/'
-
-    if "gitOptions" not in host_config:
-      host_config['gitOptions'] = settings['gitOptions']
-
-    host_config['gitOptions'] = data_merge(settings['gitOptions'], host_config['gitOptions'])
+    else:
+      # disable other settings, when supportsSSH is false
+      keys = ( 'useForDevelopment', 'ignoreSubmodules', 'supportsBackups', 'supportsCopyFrom', 'supportsInstalls')
+      for key in keys:
+        host_config[key] = False
 
     if "docker" in host_config:
       keys = ("name", "configuration")
@@ -254,13 +255,6 @@ def apply_config(config, name):
 
   header()
 
-  if 'port' in config:
-    env.port = config['port']
-  if 'password' in config:
-    env.password = config['password']
-
-  env.user = config['user']
-  env.hosts = [ config['host'] ]
   env.config = config
 
   global current_config
@@ -268,6 +262,17 @@ def apply_config(config, name):
 
   env.use_shell = settings['useShell']
   env.always_use_pty = settings['usePty']
+
+  if not config['supportsSSH']:
+    return;
+
+  if 'port' in config:
+    env.port = config['port']
+  if 'password' in config:
+    env.password = config['password']
+
+  env.user = config['user']
+  env.hosts = [ config['host'] ]
 
   if 'sshTunnel' in config:
     create_ssh_tunnel(config, config['sshTunnel'])
@@ -338,6 +343,9 @@ def check_source_config(config_name = False):
 
 
 def get_version():
+  if not env.config['supportsSSH']:
+    return 'unknown';
+
   with cd(env.config['gitRootFolder']):
     with hide('output'):
       output = run('git describe --always')
@@ -391,11 +399,6 @@ def config(config_name='local'):
   config = get_configuration(config_name)
   apply_config(config, config_name)
 
-
-@task
-def uname():
-  check_config()
-  run('uname -a')
 
 
 @task
@@ -484,20 +487,21 @@ def deploy(resetAfterwards=True):
 
   run_custom(env.config, 'deployPrepare')
 
-  with cd(env.config['gitRootFolder']):
-    run('git checkout '+branch)
-    run('git fetch --tags')
+  if env.config['supportsSSH']:
+    with cd(env.config['gitRootFolder']):
+      run('git checkout '+branch)
+      run('git fetch --tags')
 
-    git_options = ''
-    if 'pull' in env.config['gitOptions']:
-      git_options = ' '.join(env.config['gitOptions']['pull'])
+      git_options = ''
+      if 'pull' in env.config['gitOptions']:
+        git_options = ' '.join(env.config['gitOptions']['pull'])
 
-    run('git pull '+ git_options + ' origin ' +branch)
+      run('git pull '+ git_options + ' origin ' +branch)
 
-    if not env.config['ignoreSubmodules']:
-      run('git submodule init')
-      run('git submodule sync')
-      run('git submodule update --init --recursive')
+      if not env.config['ignoreSubmodules']:
+        run('git submodule init')
+        run('git submodule sync')
+        run('git submodule update --init --recursive')
 
   run_custom(env.config, 'deploy')
 
@@ -774,7 +778,11 @@ def expand_subtasks(tasks, task_name):
   return commands
 
 @task
-def docker(subtask='info'):
+def docker(subtask=False):
+  if not subtask:
+    print red('Missing subtask for task docker.')
+    exit()
+
   check_config()
   if not 'docker' in env.config:
     print red('no docker configuration found.')
@@ -817,7 +825,8 @@ def docker(subtask='info'):
 
   replacements = {}
   for key in ('user', 'host', 'port', 'branch', 'rootFolder'):
-    replacements['%guest.'+key+'%'] = str(env.config[key])
+    if key in env.config:
+      replacements['%guest.'+key+'%'] = str(env.config[key])
   for key in ('user', 'host', 'port', 'rootFolder'):
     replacements['%'+key+'%'] = str(docker_configuration[key])
 
@@ -838,7 +847,9 @@ def docker(subtask='info'):
   execute(run_script, docker_configuration['rootFolder'], parsed_commands, host=host_str)
 
 @task
-def run_script(rootFolder, commands):
+def run_script(rootFolder=False, commands=False):
+  if not rootFolder:
+    return;
 
   with cd(rootFolder), warn_only():
     for line in commands:
@@ -847,6 +858,9 @@ def run_script(rootFolder, commands):
 
 def get_backups_list():
   result = []
+  if not env.config['supportsSSH']:
+    return result;
+
   with cd(env.config['backupFolder']), hide('output'), warn_only():
     for ext in ('*.gz', '*.tgz', '*.sql'):
       output = run('ls -l ' + ext + ' 2>/dev/null')
@@ -956,8 +970,8 @@ def restore(commit, drop=0):
 def updateDrupalCore(version=7):
   check_config()
   if not env.config['useForDevelopment']:
-    print red('drupalUpdate not supported for staging/live environments ...')
-    exit
+    print red('drupalUpdateCore not supported for staging/live environments ...')
+    exit()
 
   backupDB()
 
