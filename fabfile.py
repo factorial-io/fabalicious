@@ -167,7 +167,7 @@ def get_configuration(name):
       'supportsInstalls': False,
       'supportsZippedBackups': True,
       'tmpFolder': '/tmp/',
-      'gitRootFolder': host_config,
+      'gitRootFolder': host_config['rootFolder'],
       'gitOptions': settings['gitOptions'],
       'branch': 'master'
     }
