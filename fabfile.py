@@ -814,7 +814,7 @@ def docker(subtask=False):
 
   if subtask not in docker_configuration['tasks']:
     print(red('Could not find subtask %s in dockerHosts-configuration %s' % (subtask, config_name)))
-    print('Available subtasks: ' +  ', '.join(docker_configuration.keys()))
+    print('Available subtasks: ' +  ', '.join(docker_configuration['tasks'].keys()))
     exit()
 
   print(green("Running task '{subtask}' on guest-host '{docker_host}' for container '{container}'".format(subtask=subtask, docker_host=config_name, container=env.config['docker']['name']) ))
