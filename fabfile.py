@@ -95,7 +95,7 @@ def get_all_configurations():
 
   if not stream:
     print(red('could not find fabfile.yaml'))
-    exit()
+    exit(1)
 
   return yaml.load(stream)
 
@@ -108,7 +108,7 @@ def validate_dict(keys, dict, message):
       validated = False
 
   if not validated:
-    exit()
+    exit(1)
 
 def data_merge(dictionary1, dictionary2):
   output = {}
@@ -211,7 +211,7 @@ def get_configuration(name):
 
   print(red('Configuraton '+name+' not found \n'))
   list()
-  exit()
+  exit(1)
 
 def find_between( s, first, last ):
     try:
@@ -285,7 +285,7 @@ def check_config():
     return True
 
   print(red('no config set! Please use fab config:<your-config> <task>'))
-  exit()
+  exit(1)
 
 
 def run_custom(config, run_key):
@@ -332,12 +332,12 @@ def check_source_config(config_name = False):
 
   if not config_name:
     print(red('copyFrom needs a configuration as a source to copy from'))
-    exit()
+    exit(1)
 
   source_config = get_configuration(config_name)
   if not source_config:
     print(red('can\'t find source config '+config_name))
-    exit();
+    exit(1);
 
   return source_config
 
@@ -657,7 +657,7 @@ def install():
   if env.config['hasDrush'] and env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'database' not in env.config:
       print red('missing database-dictionary in config '+current_config)
-      exit()
+      exit(1)
 
     print green('Installing fresh database for '+ current_config)
 
@@ -719,7 +719,7 @@ def behat(preset=False, options='', name=False, format=False, out=False):
   if preset:
     if not preset in env.config['behat']['presets']:
       print red('Preset %s is missing from "behat/presets"-configuration' % preset)
-      exit()
+      exit(1)
 
     options += env.config['behat']['presets'][preset]
 
@@ -734,7 +734,7 @@ def behat(preset=False, options='', name=False, format=False, out=False):
 
   if not 'run' in env.config['behat']:
     print(red('missing "run" in "behat"-section in fabfile.yaml'))
-    exit()
+    exit(1)
   env.output_prefix = False
   with cd(env.config['gitRootFolder']):
     run(env.config['behat']['run'] + ' ' + options)
@@ -748,7 +748,7 @@ def installBehat():
 
   if not 'install' in env.config['behat']:
     print(red('missing "install" in "behat"-section in fabfile.yaml'))
-    exit()
+    exit(1)
 
   env.output_prefix = False
   with cd(env.config['gitRootFolder']):
@@ -771,7 +771,7 @@ def expand_subtasks(tasks, task_name):
           commands.append(cmd)
       else:
         print red("subtask not found in tasks: "+sub_task_name)
-        exit()
+        exit(1)
     else:
       commands.append(line)
 
@@ -781,12 +781,12 @@ def expand_subtasks(tasks, task_name):
 def docker(subtask=False):
   if not subtask:
     print red('Missing subtask for task docker.')
-    exit()
+    exit(1)
 
   check_config()
   if not 'docker' in env.config:
     print red('no docker configuration found.')
-    exit()
+    exit(1)
 
   # validate host-configuration
   keys = ("name", "configuration")
@@ -795,7 +795,7 @@ def docker(subtask=False):
 
   if not 'dockerHosts' in settings:
     print(red('No dockerHosts-configuration found'))
-    exit()
+    exit(1)
 
   all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
   config_name = env.config['docker']['configuration']
@@ -803,7 +803,7 @@ def docker(subtask=False):
     print(red('Could not find docker-configuration %s in dockerHosts' % (config_name)))
     print('Available configurations: ' +  ', '.join(all_docker_hosts.keys()))
 
-    exit()
+    exit(1)
 
   docker_configuration = all_docker_hosts[config_name]
 
@@ -815,7 +815,7 @@ def docker(subtask=False):
   if subtask not in docker_configuration['tasks']:
     print(red('Could not find subtask %s in dockerHosts-configuration %s' % (subtask, config_name)))
     print('Available subtasks: ' +  ', '.join(docker_configuration['tasks'].keys()))
-    exit()
+    exit(1)
 
   print(green("Running task '{subtask}' on guest-host '{docker_host}' for container '{container}'".format(subtask=subtask, docker_host=config_name, container=env.config['docker']['name']) ))
 
@@ -921,7 +921,7 @@ def restore(commit, drop=0):
   if not found:
     print red('Could not find requested backup ' + commit+'!')
     list_backups();
-    exit()
+    exit(1)
 
   # restore sql
   if files['sql']:
@@ -971,7 +971,7 @@ def updateDrupalCore(version=7):
   check_config()
   if not env.config['useForDevelopment']:
     print red('drupalUpdateCore not supported for staging/live environments ...')
-    exit()
+    exit(1)
 
   backupDB()
 
