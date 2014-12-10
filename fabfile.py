@@ -689,6 +689,7 @@ def copySSHKeyToDocker():
   check_config()
   if not 'dockerKeyFile' in settings:
     print(red('missing dockerKeyFile in fabfile.yaml'))
+    exit(1)
 
   key_file = settings['dockerKeyFile']
 
@@ -698,6 +699,7 @@ def copySSHKeyToDocker():
   if 'dockerAuthorizedKeyFile' in settings:
     authorized_keys_file = settings['dockerAuthorizedKeyFile']
     put(authorized_keys_file, '/root/.ssh/authorized_keys')
+
   run('chmod 600 /root/.ssh/id_rsa')
   run('chmod 644 /root/.ssh/id_rsa.pub')
   run('chmod 700 /root/.ssh')
