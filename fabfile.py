@@ -689,6 +689,7 @@ def copySSHKeyToDocker():
   check_config()
   if not 'dockerKeyFile' in settings:
     print(red('missing dockerKeyFile in fabfile.yaml'))
+    exit(1)
 
   key_file = settings['dockerKeyFile']
 
@@ -698,6 +699,7 @@ def copySSHKeyToDocker():
   if 'dockerAuthorizedKeyFile' in settings:
     authorized_keys_file = settings['dockerAuthorizedKeyFile']
     put(authorized_keys_file, '/root/.ssh/authorized_keys')
+
   run('chmod 600 /root/.ssh/id_rsa')
   run('chmod 644 /root/.ssh/id_rsa.pub')
   run('chmod 700 /root/.ssh')
@@ -846,14 +848,25 @@ def docker(subtask=False):
 
   execute(run_script, docker_configuration['rootFolder'], parsed_commands, host=host_str)
 
+
+
 @task
 def run_script(rootFolder=False, commands=False):
   if not rootFolder:
     return;
-
-  with cd(rootFolder), warn_only():
-    for line in commands:
-      run(line)
+  warnOnly = True
+  for line in commands:
+    with cd(rootFolder):
+      if line.lower() == 'fail_on_error(1)':
+        warnOnly = False
+      elif line.lower() == 'fail_on_error(0)':
+        warnOnly = True
+      else:
+        if warnOnly:
+          with warn_only():
+            run(line)
+        else:
+          run(line)
 
 
 def get_backups_list():
