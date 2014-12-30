@@ -169,7 +169,9 @@ def get_configuration(name):
       'tmpFolder': '/tmp/',
       'gitRootFolder': host_config['rootFolder'],
       'gitOptions': settings['gitOptions'],
-      'branch': 'master'
+      'branch': 'master',
+      'useShell': settings['useShell'],
+      'usePty': settings['usePty']
     }
 
     for key in defaults:
@@ -260,8 +262,10 @@ def apply_config(config, name):
   global current_config
   current_config = name
 
-  env.use_shell = settings['useShell']
-  env.always_use_pty = settings['usePty']
+  env.use_shell = config['useShell']
+  env.always_use_pty = config['usePty']
+
+  # print "use_shell: %i, use_pty: %i" % (env.use_shell, env.always_use_pty)
 
   if not config['supportsSSH']:
     return;
