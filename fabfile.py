@@ -410,6 +410,8 @@ def reset(withPasswordReset=False):
   check_config()
   print green('Resetting '+ settings['name'] + "@" + current_config)
 
+  run_custom(env.config, 'resetPrepare')
+
   if env.config['hasDrush'] == True:
     with cd(env.config['siteFolder']):
         if env.config['useForDevelopment'] == True:
