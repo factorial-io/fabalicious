@@ -8,6 +8,7 @@ import yaml
 import subprocess, shlex, atexit, time
 import os.path
 import re
+import copy
 
 settings = 0
 current_config = 'unknown'
@@ -94,7 +95,7 @@ def get_all_configurations():
 
   if not stream:
     print(red('could not find fabfile.yaml'))
-    exit()
+    exit(1)
 
   return yaml.load(stream)
 
@@ -107,7 +108,7 @@ def validate_dict(keys, dict, message):
       validated = False
 
   if not validated:
-    exit()
+    exit(1)
 
 def data_merge(dictionary1, dictionary2):
   output = {}
@@ -116,9 +117,9 @@ def data_merge(dictionary1, dictionary2):
       if isinstance(dictionary2[item], dict):
         output[item] = data_merge(value, dictionary2.pop(item))
     else:
-      output[item] = value
+      output[item] = copy.deepcopy(value)
   for item, value in dictionary2.iteritems():
-    output[item] = value
+    output[item] = copy.deepcopy(value)
   return output
 
 
@@ -152,49 +153,67 @@ def get_configuration(name):
     host_config = config['hosts'][name]
     host_config = resolve_inheritance(host_config, config['hosts'])
 
-    keys = ("host", "rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
+    keys = ("host", "rootFolder")
     validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
 
-    host_config['siteFolder'] = host_config['rootFolder'] + host_config['siteFolder']
-    host_config['filesFolder'] = host_config['rootFolder'] + host_config['filesFolder']
+    # add defaults
+    defaults = {
+      'supportsSSH': True,
+      'useForDevelopment': False,
+      'hasDrush': False,
+      'ignoreSubmodules': False,
+      'supportsBackups': True,
+      'supportsCopyFrom': True,
+      'supportsInstalls': False,
+      'supportsZippedBackups': True,
+      'tmpFolder': '/tmp/',
+      'gitRootFolder': host_config['rootFolder'],
+      'gitOptions': settings['gitOptions'],
+      'branch': 'master',
+      'useShell': settings['useShell'],
+      'usePty': settings['usePty']
+    }
 
-    if 'useForDevelopment' not in host_config:
-      host_config['useForDevelopment'] = False
+    for key in defaults:
+      if key not in host_config:
+        host_config[key] = defaults[key]
 
-    if 'hasDrush' not in host_config:
-      host_config['hasDrush'] = False
+    # check keys again
+    if host_config['supportsSSH']:
+      keys = ("rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
+      validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
 
-    if 'ignoreSubmodules' not in host_config:
-      host_config['ignoreSubmodules'] = False
+      host_config['siteFolder'] = host_config['rootFolder'] + host_config['siteFolder']
+      host_config['filesFolder'] = host_config['rootFolder'] + host_config['filesFolder']
 
-    if 'supportsBackups' not in host_config:
-      host_config['supportsBackups'] = True
+      host_config['gitOptions'] = data_merge(settings['gitOptions'], host_config['gitOptions'])
 
-    if 'supportsCopyFrom' not in host_config:
-      host_config['supportsCopyFrom'] = True
+    else:
+      # disable other settings, when supportsSSH is false
+      keys = ( 'useForDevelopment', 'ignoreSubmodules', 'supportsBackups', 'supportsCopyFrom', 'supportsInstalls')
+      for key in keys:
+        host_config[key] = False
 
-    if 'supportsInstalls' not in host_config:
-      host_config['supportsInstalls'] = False
+    if "docker" in host_config:
+      keys = ("name", "configuration")
+      validate_dict(keys, host_config["docker"], 'Configuraton '+name+' has missing key in docker')
 
-    if 'supportsZippedBackups' not in host_config:
-      host_config['supportsZippedBackups'] = True
+    if "sshTunnel" in host_config and "docker" in host_config:
+      docker_name = host_config["docker"]["name"]
+      host_config["sshTunnel"]["destHostFromDockerContainer"] = docker_name
 
-    if 'gitRootFolder' not in host_config:
-      host_config['gitRootFolder'] = host_config['rootFolder']
+    if "behatPath" in host_config:
+      host_config['behat'] = { 'presets': dict() }
+      host_config['behat']['run'] = host_config['behatPath']
 
-    if 'tmpFolder' not in host_config:
-      host_config['tmpFolder'] = '/tmp/'
-
-    if "gitOptions" not in host_config:
-      host_config['gitOptions'] = settings['gitOptions']
-
-    host_config['gitOptions'] = data_merge(settings['gitOptions'], host_config['gitOptions'])
+    if not 'behat' in host_config:
+      host_config['behat'] = { 'presets': dict() }
 
     return host_config
 
   print(red('Configuraton '+name+' not found \n'))
   list()
-  exit()
+  exit(1)
 
 def find_between( s, first, last ):
     try:
@@ -238,6 +257,19 @@ def apply_config(config, name):
 
   header()
 
+  env.config = config
+
+  global current_config
+  current_config = name
+
+  env.use_shell = config['useShell']
+  env.always_use_pty = config['usePty']
+
+  # print "use_shell: %i, use_pty: %i" % (env.use_shell, env.always_use_pty)
+
+  if not config['supportsSSH']:
+    return;
+
   if 'port' in config:
     env.port = config['port']
   if 'password' in config:
@@ -245,13 +277,6 @@ def apply_config(config, name):
 
   env.user = config['user']
   env.hosts = [ config['host'] ]
-  env.config = config
-
-  global current_config
-  current_config = name
-
-  env.use_shell = settings['useShell']
-  env.always_use_pty = settings['usePty']
 
   if 'sshTunnel' in config:
     create_ssh_tunnel(config, config['sshTunnel'])
@@ -264,7 +289,7 @@ def check_config():
     return True
 
   print(red('no config set! Please use fab config:<your-config> <task>'))
-  exit()
+  exit(1)
 
 
 def run_custom(config, run_key):
@@ -281,7 +306,12 @@ def run_custom(config, run_key):
     with cd(config['rootFolder']):
       for line in config[run_key]:
         line = pattern.sub(lambda x: replacements[x.group()], line)
-        run(line)
+        result = re.match(r'run_docker_task\((.*)\)', line)
+        if result:
+          docker_task_name = result.group(1)
+          docker(docker_task_name)
+        else:
+          run(line)
 
   env.output_prefix = True
 
@@ -306,17 +336,20 @@ def check_source_config(config_name = False):
 
   if not config_name:
     print(red('copyFrom needs a configuration as a source to copy from'))
-    exit()
+    exit(1)
 
   source_config = get_configuration(config_name)
   if not source_config:
     print(red('can\'t find source config '+config_name))
-    exit();
+    exit(1);
 
   return source_config
 
 
 def get_version():
+  if not env.config['supportsSSH']:
+    return 'unknown';
+
   with cd(env.config['gitRootFolder']):
     with hide('output'):
       output = run('git describe --always')
@@ -371,16 +404,13 @@ def config(config_name='local'):
   apply_config(config, config_name)
 
 
-@task
-def uname():
-  check_config()
-  run('uname -a')
-
 
 @task
 def reset(withPasswordReset=False):
   check_config()
   print green('Resetting '+ settings['name'] + "@" + current_config)
+
+  run_custom(env.config, 'resetPrepare')
 
   if env.config['hasDrush'] == True:
     with cd(env.config['siteFolder']):
@@ -391,8 +421,8 @@ def reset(withPasswordReset=False):
             run('chmod -R 777 ' + env.config['filesFolder'])
         if 'deploymentModule' in settings:
           run_drush('en -y ' + settings['deploymentModule'])
-        run_drush('fra -y')
         run_drush('updb -y')
+        run_drush('fra -y')
         run_common_commands()
         run_drush(' cc all')
 
@@ -463,20 +493,21 @@ def deploy(resetAfterwards=True):
 
   run_custom(env.config, 'deployPrepare')
 
-  with cd(env.config['gitRootFolder']):
-    run('git checkout '+branch)
-    run('git fetch --tags')
+  if env.config['supportsSSH']:
+    with cd(env.config['gitRootFolder']):
+      run('git checkout '+branch)
+      run('git fetch --tags')
 
-    git_options = ''
-    if 'pull' in env.config['gitOptions']:
-      git_options = ' '.join(env.config['gitOptions']['pull'])
+      git_options = ''
+      if 'pull' in env.config['gitOptions']:
+        git_options = ' '.join(env.config['gitOptions']['pull'])
 
-    run('git pull '+ git_options + ' origin ' +branch)
+      run('git pull '+ git_options + ' origin ' +branch)
 
-    if not env.config['ignoreSubmodules']:
-      run('git submodule init')
-      run('git submodule sync')
-      run('git submodule update --init --recursive')
+      if not env.config['ignoreSubmodules']:
+        run('git submodule init')
+        run('git submodule sync')
+        run('git submodule update --init --recursive')
 
   run_custom(env.config, 'deploy')
 
@@ -632,7 +663,7 @@ def install():
   if env.config['hasDrush'] and env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'database' not in env.config:
       print red('missing database-dictionary in config '+current_config)
-      exit()
+      exit(1)
 
     print green('Installing fresh database for '+ current_config)
 
@@ -664,6 +695,7 @@ def copySSHKeyToDocker():
   check_config()
   if not 'dockerKeyFile' in settings:
     print(red('missing dockerKeyFile in fabfile.yaml'))
+    exit(1)
 
   key_file = settings['dockerKeyFile']
 
@@ -673,6 +705,7 @@ def copySSHKeyToDocker():
   if 'dockerAuthorizedKeyFile' in settings:
     authorized_keys_file = settings['dockerAuthorizedKeyFile']
     put(authorized_keys_file, '/root/.ssh/authorized_keys')
+
   run('chmod 600 /root/.ssh/id_rsa')
   run('chmod 644 /root/.ssh/id_rsa.pub')
   run('chmod 700 /root/.ssh')
@@ -683,20 +716,52 @@ def copySSHKeyToDocker():
 
 
 @task
-def behat(options='', name=False, format="pretty", out=False):
+def behat(preset=False, options='', name=False, format=False, out=False):
   check_config()
+
+  # use default preset if available
+  if not preset and 'default' in env.config['behat']['presets']:
+    preset = 'default'
+
+  # use given preset and append it to existing options
+  if preset:
+    if not preset in env.config['behat']['presets']:
+      print red('Preset %s is missing from "behat/presets"-configuration' % preset)
+      exit(1)
+
+    options += env.config['behat']['presets'][preset]
+
   if name:
     options += ' --name="' + name + '"'
   if out:
     options += ' --out="' + out + '"'
-  options += ' --format="' + format + '"'
+  if format:
+    options += ' --format="' + format + '"'
 
-  if not 'behatPath' in env.config:
-    print(red('missing behatPath in fabfile.yaml'))
-    exit()
+
+
+  if not 'run' in env.config['behat']:
+    print(red('missing "run" in "behat"-section in fabfile.yaml'))
+    exit(1)
   env.output_prefix = False
   with cd(env.config['gitRootFolder']):
-    run(env.config['behatPath'] + ' ' + options)
+    run(env.config['behat']['run'] + ' ' + options)
+  env.output_prefix = True
+
+
+
+@task
+def installBehat():
+  check_config()
+
+  if not 'install' in env.config['behat']:
+    print(red('missing "install" in "behat"-section in fabfile.yaml'))
+    exit(1)
+
+  env.output_prefix = False
+  with cd(env.config['gitRootFolder']):
+    for line in env.config['behat']['install']:
+      run(line)
   env.output_prefix = True
 
 
@@ -714,18 +779,22 @@ def expand_subtasks(tasks, task_name):
           commands.append(cmd)
       else:
         print red("subtask not found in tasks: "+sub_task_name)
-        exit()
+        exit(1)
     else:
       commands.append(line)
 
   return commands
 
 @task
-def docker(subtask='info'):
+def docker(subtask=False):
+  if not subtask:
+    print red('Missing subtask for task docker.')
+    exit(1)
+
   check_config()
   if not 'docker' in env.config:
     print red('no docker configuration found.')
-    exit()
+    exit(1)
 
   # validate host-configuration
   keys = ("name", "configuration")
@@ -734,13 +803,15 @@ def docker(subtask='info'):
 
   if not 'dockerHosts' in settings:
     print(red('No dockerHosts-configuration found'))
-    exit()
+    exit(1)
 
-  all_docker_hosts = settings['dockerHosts']
+  all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
   config_name = env.config['docker']['configuration']
   if not config_name in all_docker_hosts:
     print(red('Could not find docker-configuration %s in dockerHosts' % (config_name)))
-    exit()
+    print('Available configurations: ' +  ', '.join(all_docker_hosts.keys()))
+
+    exit(1)
 
   docker_configuration = all_docker_hosts[config_name]
 
@@ -751,7 +822,8 @@ def docker(subtask='info'):
 
   if subtask not in docker_configuration['tasks']:
     print(red('Could not find subtask %s in dockerHosts-configuration %s' % (subtask, config_name)))
-    exit()
+    print('Available subtasks: ' +  ', '.join(docker_configuration['tasks'].keys()))
+    exit(1)
 
   print(green("Running task '{subtask}' on guest-host '{docker_host}' for container '{container}'".format(subtask=subtask, docker_host=config_name, container=env.config['docker']['name']) ))
 
@@ -761,7 +833,8 @@ def docker(subtask='info'):
 
   replacements = {}
   for key in ('user', 'host', 'port', 'branch', 'rootFolder'):
-    replacements['%guest.'+key+'%'] = str(env.config[key])
+    if key in env.config:
+      replacements['%guest.'+key+'%'] = str(env.config[key])
   for key in ('user', 'host', 'port', 'rootFolder'):
     replacements['%'+key+'%'] = str(docker_configuration[key])
 
@@ -781,16 +854,32 @@ def docker(subtask='info'):
 
   execute(run_script, docker_configuration['rootFolder'], parsed_commands, host=host_str)
 
-@task
-def run_script(rootFolder, commands):
 
-  with cd(rootFolder), warn_only():
-    for line in commands:
-      run(line)
+
+@task
+def run_script(rootFolder=False, commands=False):
+  if not rootFolder:
+    return;
+  warnOnly = True
+  for line in commands:
+    with cd(rootFolder):
+      if line.lower() == 'fail_on_error(1)':
+        warnOnly = False
+      elif line.lower() == 'fail_on_error(0)':
+        warnOnly = True
+      else:
+        if warnOnly:
+          with warn_only():
+            run(line)
+        else:
+          run(line)
 
 
 def get_backups_list():
   result = []
+  if not env.config['supportsSSH']:
+    return result;
+
   with cd(env.config['backupFolder']), hide('output'), warn_only():
     for ext in ('*.gz', '*.tgz', '*.sql'):
       output = run('ls -l ' + ext + ' 2>/dev/null')
@@ -851,7 +940,7 @@ def restore(commit, drop=0):
   if not found:
     print red('Could not find requested backup ' + commit+'!')
     list_backups();
-    exit()
+    exit(1)
 
   # restore sql
   if files['sql']:
@@ -900,8 +989,8 @@ def restore(commit, drop=0):
 def updateDrupalCore(version=7):
   check_config()
   if not env.config['useForDevelopment']:
-    print red('drupalUpdate not supported for staging/live environments ...')
-    exit
+    print red('drupalUpdateCore not supported for staging/live environments ...')
+    exit(1)
 
   backupDB()
 
