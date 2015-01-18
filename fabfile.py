@@ -421,8 +421,8 @@ def reset(withPasswordReset=False):
             run('chmod -R 777 ' + env.config['filesFolder'])
         if 'deploymentModule' in settings:
           run_drush('en -y ' + settings['deploymentModule'])
-        run_drush('fra -y')
         run_drush('updb -y')
+        run_drush('fra -y')
         run_common_commands()
         run_drush(' cc all')
 
