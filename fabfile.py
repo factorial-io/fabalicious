@@ -223,21 +223,34 @@ def find_between( s, first, last ):
     except ValueError:
         return ""
 
+def get_docker_container_ip(docker_name, docker_host, docker_user, docker_port):
+
+  cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (docker_port, docker_user, docker_host, docker_name)
+
+  try:
+    with hide('output'):
+      output = local(cmd, capture=True)
+  except SystemExit:
+    print red('Docker not running, can\'t get ip')
+    return
+
+  ip_address = find_between(output.stdout, '"IPAddress": "', '"')
+
+  return ip_address
+
+
 
 def create_ssh_tunnel(config, tunnel_config, remote=False):
   o = tunnel_config
 
   if 'destHostFromDockerContainer' in o:
-    cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (o['bridgePort'], o['bridgeUser'], o['bridgeHost'], o['destHostFromDockerContainer'])
 
-    try:
-      with hide('output'):
-        output = local(cmd, capture=True)
-    except SystemExit:
+    ip_address = get_docker_container_ip(o['destHostFromDockerContainer'], o['bridgeHost'], o['bridgeUser'], o['bridgePort'])
+
+    if not ip_address:
       print red('Docker not running, can\'t establish tunnel')
       return
 
-    ip_address = find_between(output.stdout, '"IPAddress": "', '"')
     print(green("Docker container " + o['destHostFromDockerContainer'] + " uses IP " + ip_address))
 
     o['destHost'] = ip_address
@@ -280,6 +293,19 @@ def apply_config(config, name):
 
   if 'sshTunnel' in config:
     create_ssh_tunnel(config, config['sshTunnel'])
+
+  # add docker configuration password to env.passwords
+  if 'docker' in config:
+
+    all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
+    config_name = config['docker']['configuration']
+    if config_name in all_docker_hosts:
+      docker_configuration = all_docker_hosts[config_name]
+
+      host_str = docker_configuration['user'] + '@'+docker_configuration['host']+':'+str(docker_configuration['port'])
+
+      if 'password' in docker_configuration:
+        env.passwords[host_str]= docker_configuration['password']
 
 
 
@@ -819,6 +845,20 @@ def docker(subtask=False):
 
   keys = ("host", "port", "user", "tasks", "rootFolder")
   validate_dict(keys, docker_configuration, 'dockerHosts-Configuraton '+config_name+' has missing key')
+
+  if subtask == "show_remote_access":
+    ip = get_docker_container_ip(env.config['docker']['name'], docker_configuration['host'], docker_configuration['user'], docker_configuration['port'])
+
+    if not ip:
+      print red('Could not get docker-ip-address.')
+      exit(1)
+
+    print "To connect to your docker-instance, please use the following ssh-command, and leave the terminal-window open:"
+    print
+    print "ssh -L<your-public-ip-address>:8888:%s -p %s %s@%s" % (ip, docker_configuration['port'], docker_configuration['user'], docker_configuration['host'])
+    print
+    print "Then you can connect to your instance via http://<your-public-ip-address>:8888"
+    exit()
 
   if subtask not in docker_configuration['tasks']:
     print(red('Could not find subtask %s in dockerHosts-configuration %s' % (subtask, config_name)))
