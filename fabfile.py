@@ -16,7 +16,7 @@ current_config = 'unknown'
 env.forward_agent = True
 env.use_shell = False
 
-ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null'
+ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 
 class SSHTunnel:
   def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=15):
