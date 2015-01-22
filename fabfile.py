@@ -16,12 +16,14 @@ current_config = 'unknown'
 env.forward_agent = True
 env.use_shell = False
 
+ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null'
+
 class SSHTunnel:
   def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=15):
     self.local_port = local_port
 
     if not strictHostKeyChecking:
-      cmd = 'ssh -o StrictHostKeyChecking=no'
+      cmd = 'ssh ' + ssh_no_strict_key_host_checking_params
     else:
       cmd = 'ssh'
 
@@ -43,8 +45,8 @@ class RemoteSSHTunnel:
     self.bridge_host = bridge_host
     self.bridge_user = bridge_user
     if not strictHostKeyChecking:
-      remote_cmd = 'ssh -o StrictHostKeyChecking=no'
-      cmd = 'ssh -o StrictHostKeyChecking=no'
+      remote_cmd = 'ssh ' + ssh_no_strict_key_host_checking_params
+      cmd = 'ssh ' + ssh_no_strict_key_host_checking_params
     else:
       remote_cmd = 'ssh'
       cmd = 'ssh'
@@ -571,7 +573,7 @@ def rsync(config_name, files_type = 'filesFolder'):
 
 
     rsync = 'rsync -rav --no-o --no-g ';
-    rsync += ' -e "ssh -o StrictHostKeyChecking=no -p '+str(source_ssh_port)+'"'
+    rsync += ' -e "ssh '+ssh_no_strict_key_host_checking_params+' -p '+str(source_ssh_port)+'"'
     rsync += ' ' + exclude_files_str
     rsync += ' ' + source_config['user']+'@'+source_config['host']
     rsync += ':' + source_config[files_type]+'/*'
@@ -617,7 +619,7 @@ def _copyDBFrom(config_name = False):
         no_strict_host_key_checking = True
 
     if no_strict_host_key_checking:
-      ssh_args = " -o StrictHostKeyChecking=no" + ssh_args
+      ssh_args = " " + ssh_no_strict_key_host_checking_params + ssh_args
 
     sql_name_source = source_config['tmpFolder'] + config_name + '.sql'
     sql_name_target = target_config['tmpFolder'] + config_name + '.sql'
