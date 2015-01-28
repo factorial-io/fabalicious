@@ -660,11 +660,10 @@ def copyFrom(config_name = False, copyFiles = True, copyDB = True):
     tunnel = create_ssh_tunnel(env.config, source_config['sshTunnel'], False)
 
 
-  if copyFiles:
-    _copyFilesFrom(config_name)
   if copyDB:
     _copyDBFrom(config_name)
-
+  if copyFiles:
+    _copyFilesFrom(config_name)
   if copyDB:
     reset(withPasswordReset=True)
 
