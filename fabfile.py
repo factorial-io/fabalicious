@@ -573,7 +573,7 @@ def rsync(config_name, files_type = 'filesFolder'):
 
 
     rsync = 'rsync -rav --no-o --no-g ';
-    rsync += ' -e "ssh '+ssh_no_strict_key_host_checking_params+' -p '+str(source_ssh_port)+'"'
+    rsync += ' -e "ssh -T -o Compression=no '+ssh_no_strict_key_host_checking_params+' -p '+str(source_ssh_port)+'"'
     rsync += ' ' + exclude_files_str
     rsync += ' ' + source_config['user']+'@'+source_config['host']
     rsync += ':' + source_config[files_type]+'/*'
