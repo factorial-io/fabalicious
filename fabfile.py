@@ -1058,3 +1058,26 @@ def updateDrupalCore(version=7):
 
   print green("Updated drupal successfully to '%s'. Please review the changes in the new branch drupal-update." % drupal_folder)
 
+
+@task
+def restoreSQLFromFile(full_file_name):
+  check_config()
+  sql_name_target = env.config['tmpFolder'] + 'manual_upload.sql'
+
+
+  if fileExtension == 'gz':
+    sql_name_target += '.gz'
+
+  fileName, fileExtension = os.path.splitext(full_file_name)
+
+  put(full_file_name, sql_name_target)
+
+  # import sql into target
+  with cd(env.config['siteFolder']):
+    if fileExtension == 'gz':
+      run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
+    else:
+      run_drush('drush sql-cli < ' + sql_name_target, False)
+
+    run('rm '+sql_name_target)
+
