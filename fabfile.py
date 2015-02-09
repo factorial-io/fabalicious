@@ -1081,3 +1081,9 @@ def restoreSQLFromFile(full_file_name):
 
     run('rm '+sql_name_target)
 
+
+@task
+def ssh():
+  check_config()
+  with cd(env.config['rootFolder']):
+    open_shell()
