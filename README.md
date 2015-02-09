@@ -240,4 +240,4 @@ at.
 * `copySSHKeysToDocker`: copies stored ssh-keys into a docker-image. You'll need to set `dockerKeyFile`. If there's a setting for `dockerAuthorizedKeyFile` the authorized_key-file will also copied into the docker. This will help with docker-to-docker-communication via SSH.
 * `updateDrupalCore:<version=x>`: This task will create a new branch, download the latest stable release from drupal, and move all files to your webRoot. After that you can review the new code, commit it and marge it into your existing branch. Why not use drush for this? In my testings it didn't work reliable, sometimes the update went smooth, sometimes it doesn't do anything.
 * `restoreSQLFromFile:<file-name>`: will copy file-name to the remote host and import it via drush.
-
+* `ssh`: create a remote shell.
