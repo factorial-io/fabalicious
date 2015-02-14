@@ -81,20 +81,21 @@ class RemoteSSHTunnel:
 def get_all_configurations():
 
   start_folder = os.path.dirname(os.path.realpath(__file__))
-  found = False
-  max_levels = 3
   stream = False
-  while not found and max_levels >= 0:
-    try:
-      stream = open(start_folder + "/fabfile.yaml", 'r')
-      found = True
-    except IOError:
-      max_levels = max_levels - 1
-      found = False
-      start_folder = os.path.dirname(start_folder)
+
+  if os.path.isfile(start_folder + "/fabfile.yaml"):
+    stream = open(start_folder + "/fabfile.yaml", 'r')
+    found = True
+  elif os.path.isfile(start_folder + "/fabfile.yaml.inc"):
+    stream = open(start_folder + "/fabfile.yaml.inc", 'r')
+    found = True
+  else:
+    max_levels = max_levels - 1
+    found = False
+    start_folder = os.path.dirname(start_folder)
 
   if not stream:
-    print(red('could not find fabfile.yaml'))
+    print(red('Could not find fabfile.yaml or fabfile.yaml.inc'))
     exit(1)
 
   return yaml.load(stream)
