@@ -82,24 +82,42 @@ class RemoteSSHTunnel:
 
 def get_all_configurations():
 
+  " traverse directories up and find all yaml configuration files"
   start_folder = os.path.dirname(os.path.realpath(__file__))
-  found = False
-  max_levels = 3
-  stream = False
-  while not found and max_levels >= 0:
-    try:
-      stream = open(start_folder + "/fabfile.yaml", 'r')
-      found = True
-    except IOError:
-      max_levels = max_levels - 1
-      found = False
-      start_folder = os.path.dirname(start_folder)
+  max_levels = 4
+  files = []
+  while max_levels >= 0:
+    max_levels = max_levels - 1
+    if os.path.isfile(start_folder + "/fabfile.yaml"):
+      files.append(open(start_folder + "/fabfile.yaml", 'r'))
+    elif os.path.isfile(start_folder + "/fabfile.yaml.inc"):
+      files.append(open(start_folder + "/fabfile.yaml.inc", 'r'))
+    start_folder = os.path.abspath(os.path.join(start_folder, os.pardir))
 
-  if not stream:
-    print(red('could not find fabfile.yaml'))
+  if not files:
+    print(red('Could not find fabfile.yaml or fabfile.yaml.inc'))
     exit(1)
 
-  return yaml.load(stream)
+  yamlConfig = {}
+  for filePointer in files:
+    yamlConfig = merge(yamlConfig, yaml.load(filePointer))
+
+  return yamlConfig
+
+def merge(a, b, path=None):
+  "merges b into a"
+  if path is None: path = []
+  for key in b:
+    if key in a:
+      if isinstance(a[key], dict) and isinstance(b[key], dict):
+        merge(a[key], b[key], path + [str(key)])
+      elif a[key] == b[key]:
+        pass # same leaf value
+      else:
+        raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
+    else:
+      a[key] = b[key]
+  return a
 
 
 def validate_dict(keys, dict, message):
