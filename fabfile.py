@@ -9,6 +9,7 @@ import subprocess, shlex, atexit, time
 import os.path
 import re
 import copy
+import glob
 
 settings = 0
 current_config = 'unknown'
@@ -78,28 +79,69 @@ class RemoteSSHTunnel:
     return 'localhost:%d' % self.local_port
 
 
+def load_all_yamls_from_dir(path):
+  result = {}
+  files = glob.glob(path+'/*.yaml') + glob.glob(path+'/*.yml')
 
+  for file in files:
+    try:
+      stream = open(file, 'r')
+      data = yaml.load(stream)
+      key = os.path.basename(file)
+      key = os.path.splitext(key)[0]
+      result[key] = data
+
+    except IOError:
+      print red('Could not read from %' % file)
+
+  return result
+
+def load_configuration(input_file):
+  print "reading from :" + input_file
+
+  stream = open(input_file, 'r')
+  data = yaml.load(stream)
+
+  if 'hosts' not in data:
+    data['hosts'] = {}
+  if 'dockerHosts' not in data:
+    data['dockerHosts'] = {}
+
+  if (os.path.basename(input_file) == 'index.yaml'):
+    path = os.path.dirname(input_file)
+    data['hosts'] = load_all_yamls_from_dir(path + "/hosts")
+    data['dockerHosts'] = load_all_yamls_from_dir(path + "/dockerHosts")
+
+    print data
+
+  return data
 
 def get_all_configurations():
 
   start_folder = os.path.dirname(os.path.realpath(__file__))
-  found = False
   max_levels = 3
-  stream = False
+
+  # Find our configuration-file:
+  candidates = ['fabfile.yaml', 'fabfile.yml', 'fabalicious/index.yaml', 'fabfile.yml.inc', 'fabfile.yaml.inc']
   while not found and max_levels >= 0:
-    try:
-      stream = open(start_folder + "/fabfile.yaml", 'r')
-      found = True
-    except IOError:
-      max_levels = max_levels - 1
-      found = False
-      start_folder = os.path.dirname(start_folder)
+    for candidate in candidates:
+      try:
+        if os.path.isfile(start_folder + '/' + candidate):
+          return load_configuration(start_folder + '/' + candidate)
+          break
 
-  if not stream:
-    print(red('could not find fabfile.yaml'))
-    exit(1)
+        max_levels = max_levels - 1
+        start_folder = os.path.dirname(start_folder)
 
-  return yaml.load(stream)
+      except IOError:
+        max_levels = max_levels - 1
+        found = False
+        start_folder = os.path.dirname(start_folder)
+
+  # if we get here, we didn't find a suitable configuration file
+  print(red('could not find suitable configuration file!'))
+  exit(1)
+
 
 
 def validate_dict(keys, dict, message):
