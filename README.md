@@ -323,3 +323,49 @@ or
       ...
       docker:
         configuration: http://external.host.tld/path/to/the/external/config-file.yaml
+
+### Inheritance
+
+Besides including external files there's another mechanism to include configuration-data: Inheritance.
+If a ``host``, a ``dockerHost`` or the fabfile itself has the key ``inheritsFrom``, then the given key is used as a base-configuration. Here's a simple example:
+
+    hosts:
+      default:
+          port: 22
+          host: localhost
+          user: default
+      example1:
+          inheritsFrom: default
+          port: 23
+      example2:
+          inheritsFrom: example1
+          user: example2
+
+``example1`` will store the merged configuration from ``default`` with the configuration of ``example1``. ``example2``is a merge of all three configurations: ``example2`` with ``example1`` with ``default``.
+
+    hosts:
+      example1:
+        port: 23
+        host: localhost
+        user: default
+      example2:
+        port: 23
+        host: localhost
+        user: example2
+
+
+You can even reference external files to inherit from:
+
+    hosts:
+      fileExample:
+        inheritsFrom: ./path/to/config/file.yaml
+      httpExapme:
+        inheritsFrom: http://my.tld/path/to/config_file.yaml
+
+This mechanism works also for the fabfile.yaml / index.yaml itself, and is not limited to one entry:
+
+    name: test fabfile
+
+    inheritsFrom:
+      - ./mbb.yaml
+      - ./drupal.yaml
