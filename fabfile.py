@@ -17,6 +17,8 @@ current_config = 'unknown'
 env.forward_agent = True
 env.use_shell = False
 
+fabfile_basedir = False
+
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 
 class SSHTunnel:
@@ -117,26 +119,25 @@ def load_configuration(input_file):
   return data
 
 def get_all_configurations():
+  global fabfile_basedir
 
   start_folder = os.path.dirname(os.path.realpath(__file__))
   max_levels = 3
 
   # Find our configuration-file:
-  candidates = ['fabfile.yaml', 'fabfile.yml', 'fabalicious/index.yaml', 'fabfile.yml.inc', 'fabfile.yaml.inc']
-  while not found and max_levels >= 0:
+  candidates = ['fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
+  while max_levels >= 0:
     for candidate in candidates:
       try:
         if os.path.isfile(start_folder + '/' + candidate):
+          fabfile_basedir = start_folder
           return load_configuration(start_folder + '/' + candidate)
-          break
-
-        max_levels = max_levels - 1
-        start_folder = os.path.dirname(start_folder)
 
       except IOError:
-        max_levels = max_levels - 1
-        found = False
-        start_folder = os.path.dirname(start_folder)
+        print "could not read from % " % (start_folder + '/' + candidate)
+
+    max_levels = max_levels - 1
+    start_folder = os.path.dirname(start_folder)
 
   # if we get here, we didn't find a suitable configuration file
   print(red('could not find suitable configuration file!'))
