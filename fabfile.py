@@ -10,6 +10,7 @@ import os.path
 import re
 import copy
 import glob
+import urllib2
 
 settings = 0
 current_config = 'unknown'
@@ -113,8 +114,6 @@ def load_configuration(input_file):
     path = os.path.dirname(input_file)
     data['hosts'] = load_all_yamls_from_dir(path + "/hosts")
     data['dockerHosts'] = load_all_yamls_from_dir(path + "/dockerHosts")
-
-    print data
 
   return data
 
@@ -311,6 +310,48 @@ def create_ssh_tunnel(config, tunnel_config, remote=False):
 
   return tunnel
 
+
+def get_docker_configuration_via_file(config_file_name):
+  global fabfile_basedir
+  abs_path = os.path.abspath(fabfile_basedir + '/' + config_file_name)
+  data = False
+  print "Reading docker configuration from %s" % abs_path
+  try:
+    stream = open(abs_path, 'r')
+    data = yaml.load(stream)
+  except IOError:
+    print red("could not read docker-configuration from %s" % abs_path)
+
+  return data
+
+
+def get_docker_configuration_via_http(config_file_name):
+  try:
+    response = urllib2.urlopen(config_file_name)
+    html = response.read()
+    return yaml.load(html)
+  except urllib2.HTTPError, err:
+    if err.code == 404:
+      print red('Could not find docker configuration at %s' %config_file_name)
+    else:
+      raise
+
+  return False
+
+def get_docker_configuration(config_name):
+  if config_name[0:7] == 'http://' or config_name[0:8] == 'https://':
+    return get_docker_configuration_via_http(config_name)
+  elif config_name[0:1] == '.':
+    return get_docker_configuration_via_file(config_name)
+  else:
+    all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
+    config_name = config['docker']['configuration']
+    if config_name in all_docker_hosts:
+      return all_docker_hosts[config_name]
+
+  return False
+
+
 def apply_config(config, name):
 
   header()
@@ -342,10 +383,8 @@ def apply_config(config, name):
   # add docker configuration password to env.passwords
   if 'docker' in config:
 
-    all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
-    config_name = config['docker']['configuration']
-    if config_name in all_docker_hosts:
-      docker_configuration = all_docker_hosts[config_name]
+    docker_configuration = get_docker_configuration(config['docker']['configuration'])
+    if docker_configuration:
 
       host_str = docker_configuration['user'] + '@'+docker_configuration['host']+':'+str(docker_configuration['port'])
 
@@ -875,15 +914,14 @@ def docker(subtask=False):
     print(red('No dockerHosts-configuration found'))
     exit(1)
 
-  all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
+  all_docker_hosts = settings['dockerHosts']
   config_name = env.config['docker']['configuration']
-  if not config_name in all_docker_hosts:
+  docker_configuration = get_docker_configuration(config_name)
+  if not docker_configuration:
     print(red('Could not find docker-configuration %s in dockerHosts' % (config_name)))
     print('Available configurations: ' +  ', '.join(all_docker_hosts.keys()))
 
     exit(1)
-
-  docker_configuration = all_docker_hosts[config_name]
 
   docker_configuration = resolve_inheritance(docker_configuration, all_docker_hosts)
 
@@ -909,7 +947,7 @@ def docker(subtask=False):
     print('Available subtasks: ' +  ', '.join(docker_configuration['tasks'].keys()))
     exit(1)
 
-  print(green("Running task '{subtask}' on guest-host '{docker_host}' for container '{container}'".format(subtask=subtask, docker_host=config_name, container=env.config['docker']['name']) ))
+  print(green("Running task '{subtask}' on guest-host '{docker_host}' for container '{container}'".format(subtask=subtask, docker_host=docker_configuration['host'], container=env.config['docker']['name']) ))
 
   commands = expand_subtasks(docker_configuration['tasks'], subtask)
 
