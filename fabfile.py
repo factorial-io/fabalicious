@@ -1065,11 +1065,11 @@ def restoreSQLFromFile(full_file_name):
   check_config()
   sql_name_target = env.config['tmpFolder'] + 'manual_upload.sql'
 
+  fileName, fileExtension = os.path.splitext(full_file_name)
 
   if fileExtension == 'gz':
     sql_name_target += '.gz'
 
-  fileName, fileExtension = os.path.splitext(full_file_name)
 
   put(full_file_name, sql_name_target)
 
@@ -1088,3 +1088,9 @@ def ssh():
   check_config()
   with cd(env.config['rootFolder']):
     open_shell()
+
+@task
+def putFile(fileName):
+  check_config()
+  put(fileName, env.config['tmpFolder'])
+
