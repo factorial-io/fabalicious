@@ -523,6 +523,7 @@ def deploy(resetAfterwards=True):
 
   if env.config['supportsSSH']:
     with cd(env.config['gitRootFolder']):
+      run('git fetch origin')
       run('git checkout '+branch)
       run('git fetch --tags')
 
