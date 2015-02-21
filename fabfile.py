@@ -402,7 +402,7 @@ def get_configuration_via_http(config_file_name):
 
 
 
-def get_docker_configuration(config_name):
+def get_docker_configuration(config_name, config):
   if config_name[0:7] == 'http://' or config_name[0:8] == 'https://':
     return get_configuration_via_http(config_name)
   elif config_name[0:1] == '.':
@@ -448,7 +448,7 @@ def apply_config(config, name):
   # add docker configuration password to env.passwords
   if 'docker' in config:
 
-    docker_configuration = get_docker_configuration(config['docker']['configuration'])
+    docker_configuration = get_docker_configuration(config['docker']['configuration'], config)
     if docker_configuration:
 
       host_str = docker_configuration['user'] + '@'+docker_configuration['host']+':'+str(docker_configuration['port'])
@@ -1013,7 +1013,7 @@ def docker(subtask=False):
 
   all_docker_hosts = settings['dockerHosts']
   config_name = env.config['docker']['configuration']
-  docker_configuration = get_docker_configuration(config_name)
+  docker_configuration = get_docker_configuration(config_name, env.config)
   if not docker_configuration:
     print(red('Could not find docker-configuration %s in dockerHosts' % (config_name)))
     print('Available configurations: ' +  ', '.join(all_docker_hosts.keys()))
