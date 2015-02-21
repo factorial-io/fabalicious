@@ -866,6 +866,8 @@ def install():
       print red('missing database-dictionary in config '+current_config)
       exit(1)
 
+    validate_dict(['user', 'pass', 'name'], env.config['database'], 'Missing database configuration: ')
+
     print green('Installing fresh database for '+ current_config)
 
     o = env.config['database']
