@@ -574,12 +574,19 @@ def list():
 
 
 @task
-def about(config_name='local'):
+def about(config_name=False):
+  if not config_name:
+    config_name = current_config
   configuration = get_configuration(config_name)
   if configuration:
     print("Configuration for " + config_name)
     for key, value in configuration.items():
-      print(key.ljust(25) + ': '+ str(value))
+      if isinstance(key, dict):
+        print(key.ljust(25) + ': ')
+        for dict_key, dict_value in value:
+          print('  ' + dict_key.ljust(23) + ': '+ str(dict_value))
+      else:
+        print(key.ljust(25) + ': '+ str(value))
 
 
 
