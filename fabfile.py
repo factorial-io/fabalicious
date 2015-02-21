@@ -588,10 +588,14 @@ def about(config_name=False):
   if configuration:
     print("Configuration for " + config_name)
     for key, value in configuration.items():
-      if isinstance(key, dict):
-        print(key.ljust(25) + ': ')
-        for dict_key, dict_value in value:
+      if isinstance(value, dict):
+        print(key)
+        for dict_key, dict_value in value.items():
           print('  ' + dict_key.ljust(23) + ': '+ str(dict_value))
+      elif hasattr(value, "__len__") and not hasattr(value, 'strip'):
+          print key
+          for list_value in value:
+            print(' '.ljust(25) + ': '+ str(list_value))
       else:
         print(key.ljust(25) + ': '+ str(value))
 
