@@ -281,10 +281,16 @@ def get_configuration(name):
     if "docker" in host_config:
       keys = ("name", "configuration")
       validate_dict(keys, host_config["docker"], 'Configuraton '+name+' has missing key in docker')
+      if not 'tag' in host_config["docker"]:
+        host_config["docker"]["tag"] = "latest"
 
     if "sshTunnel" in host_config and "docker" in host_config:
       docker_name = host_config["docker"]["name"]
       host_config["sshTunnel"]["destHostFromDockerContainer"] = docker_name
+
+    if "sshTunnel" in host_config:
+      if not 'localPort' in host_config['sshTunnel']:
+        host_config['sshTunnel']['localPort'] = host_config['port']
 
     if "behatPath" in host_config:
       host_config['behat'] = { 'presets': dict() }
@@ -389,6 +395,7 @@ def get_configuration_via_file(config_file_name):
 
 def get_configuration_via_http(config_file_name):
   try:
+    print "Reading configuration from %s" % config_file_name
     response = urllib2.urlopen(config_file_name)
     html = response.read()
     return yaml.load(html)
