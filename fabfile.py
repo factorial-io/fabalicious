@@ -523,6 +523,7 @@ def deploy(resetAfterwards=True):
 
   if env.config['supportsSSH']:
     with cd(env.config['gitRootFolder']):
+      run('git fetch origin')
       run('git checkout '+branch)
       run('git fetch --tags')
 
@@ -687,7 +688,7 @@ def drush(drush_command):
 @task
 def install():
   check_config()
-  if env.config['hasDrush'] and env.config['useForDevelopment'] and env.config['supportsInstalls']:
+  if env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'database' not in env.config:
       print red('missing database-dictionary in config '+current_config)
       exit(1)
@@ -701,17 +702,18 @@ def install():
       mysql_cmd += 'GRANT ALL PRIVILEGES ON '+o['name']+'.* TO '+o['user']+'@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
 
       run('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"')
-      with warn_only():
-        run('chmod u+w '+env.config['siteFolder'])
-        run('chmod u+w '+env.config['siteFolder']+'/settings.php')
-        run('rm -f '+env.config['siteFolder']+'/settings.php.old')
-        run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old 2>/dev/null')
+      if env.config['hasDrush']:
+        with warn_only():
+          run('chmod u+w '+env.config['siteFolder'])
+          run('chmod u+w '+env.config['siteFolder']+'/settings.php')
+          run('rm -f '+env.config['siteFolder']+'/settings.php.old')
+          run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old 2>/dev/null')
 
-      sites_folder = os.path.basename(env.config['siteFolder'])
-      run_drush('site-install minimal  --sites-subdir='+sites_folder+' --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
+        sites_folder = os.path.basename(env.config['siteFolder'])
+        run_drush('site-install minimal  --sites-subdir='+sites_folder+' --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
 
-      if 'deploymentModule' in settings:
-        run_drush('en -y '+settings['deploymentModule'])
+        if 'deploymentModule' in settings:
+          run_drush('en -y '+settings['deploymentModule'])
 
       reset()
   else:
@@ -1064,11 +1066,11 @@ def restoreSQLFromFile(full_file_name):
   check_config()
   sql_name_target = env.config['tmpFolder'] + 'manual_upload.sql'
 
+  fileName, fileExtension = os.path.splitext(full_file_name)
 
   if fileExtension == 'gz':
     sql_name_target += '.gz'
 
-  fileName, fileExtension = os.path.splitext(full_file_name)
 
   put(full_file_name, sql_name_target)
 
@@ -1087,3 +1089,9 @@ def ssh():
   check_config()
   with cd(env.config['rootFolder']):
     open_shell()
+
+@task
+def putFile(fileName):
+  check_config()
+  put(fileName, env.config['tmpFolder'])
+

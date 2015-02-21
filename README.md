@@ -231,7 +231,7 @@ run a task
 * `copyFrom:<source-host>`: copies all files from `filesFolder` at source-host to target host, and imports a sql-dump from source-host.
 * `copyDBFrom:<source-host>`: copies only the DB from the source-host
 * `copyFilesFrom:<source-host>`: copies only the files from the source-host
-* `install`: will install drupal with profile minimal. Works currently only when `supportsInstall=true`, `hasDrush=true` and `useForDevelopment=true`. Needs an additional host-setting: `database`-dictionary. This task will overwrite your settings.php-file and databases, so be prepared!
+* `install`: will install a database in the docker-container. Works currently only when `supportsInstall=true`, `hasDrush=true` and `useForDevelopment=true`. Needs an additional host-setting: `database`-dictionary. If `hasDrush=true` the code will install drupal with profile minimal.  This task will overwrite your settings.php-file and databases, so be prepared!
 * `behat:<name="Name of feature",format="pretty", out="", options="">`: run behat tests, the configuration needs a setting for `behat:run` which gets called to run the tests. You can add command-line-options to the command, the most used (name, format and out) are mirrored by fabalicious, as escaping all the commas is cumbersome.
 * `installBehat`: install behat, the configuration needs a setting for `behat:install` which gets called to install behat
 at.
@@ -241,3 +241,4 @@ at.
 * `updateDrupalCore:<version=x>`: This task will create a new branch, download the latest stable release from drupal, and move all files to your webRoot. After that you can review the new code, commit it and marge it into your existing branch. Why not use drush for this? In my testings it didn't work reliable, sometimes the update went smooth, sometimes it doesn't do anything.
 * `restoreSQLFromFile:<file-name>`: will copy file-name to the remote host and import it via drush.
 * `ssh`: create a remote shell.
+* `putFile:<filename>` copy a file to the remote host into the tmp-folder.
