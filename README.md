@@ -242,3 +242,131 @@ at.
 * `restoreSQLFromFile:<file-name>`: will copy file-name to the remote host and import it via drush.
 * `ssh`: create a remote shell.
 * `putFile:<filename>` copy a file to the remote host into the tmp-folder.
+
+
+## Advanced topics
+
+### Storing your hosts and dockerHosts configuration in separate files
+
+Instead of storing all your information in one fabfile.yaml you can create a folder named ``fabalicious`` and store global information in ``index.yaml``, dockerHosts-configuration in ``dockerHosts`` and host-configuration in the folder ``hosts``. The filename acts as the key for the included configuration. Here's an example:
+
+    fabalicious
+    ├── dockerHosts
+    │   ├── default.yaml
+    │   ├── local.yaml
+    │   ├── mbb.yaml
+    │   └── dev-server.yaml
+    ├── hosts
+    │   ├── local.yaml
+    │   ├── mbb.yaml
+    │   ├── dev.host.server2.de.yaml
+    │   ├── stage.host.server2.de.yaml
+    │   └── live.host.server2.de.yaml
+    └── index.yaml
+
+dockerHosts has 4 configurations: ``default``, ``local``, ``mbb``, and ``dev-server``. Hosts as 5 configurations named ``local``, ``mbb``, ``dev.host.server2.de``, ``stage.host.server2.de``, and ``live.host.server2.de.yaml``.
+
+Here's an example of ``local.yaml``: (Note the missing key)
+
+    host: drupal.dev
+    port: 222
+    user: root
+    password: root
+    rootFolder: /var/www
+    siteFolder: /sites/default
+    filesFolder: /sites/default/files
+    backupFolder: /var/www/backups
+    useForDevelopment: true
+    branch: develop
+    hasDrush: true
+    supportsInstalls: true
+    vagrant:
+      ip: 33.33.33.21
+    docker:
+      name: drupal
+      configuration: local
+    database:
+      name: drupal_cms
+      user: root
+      pass: admin
+
+If your fabalicious-folder is part of your web-directory, add an ``.htaccess``-file to your fabalicious-folder:
+
+    <FilesMatch ".(yaml|yml)$">
+      deny from all
+    </FilesMatch>
+
+
+### Include dockerHosts-configuration from outside the fabfile.yaml/ fabalicious-folder
+
+To prevent copy-/pasting configuration from one project to another you can reference files from outside your fabalicious-folder/ -file. You can reference files from your file-system (relative to the location of your fabfile.yaml / fabalicious-folder) or remote-files via http/https.
+
+Reference the external file in your host-configuration via
+
+    mbb:
+      host: ...
+      ...
+      docker:
+        configuration: ./path/to/the/external/config-file.yaml
+
+or
+
+    mbb:
+      host: ...
+      ...
+      docker:
+        configuration: ../../../global-config/path/to/the/external/config-file.yaml
+
+or
+
+    mbb:
+      host: ...
+      ...
+      docker:
+        configuration: http://external.host.tld/path/to/the/external/config-file.yaml
+
+### Inheritance
+
+Besides including external files there's another mechanism to include configuration-data: Inheritance.
+If a ``host``, a ``dockerHost`` or the fabfile itself has the key ``inheritsFrom``, then the given key is used as a base-configuration. Here's a simple example:
+
+    hosts:
+      default:
+          port: 22
+          host: localhost
+          user: default
+      example1:
+          inheritsFrom: default
+          port: 23
+      example2:
+          inheritsFrom: example1
+          user: example2
+
+``example1`` will store the merged configuration from ``default`` with the configuration of ``example1``. ``example2``is a merge of all three configurations: ``example2`` with ``example1`` with ``default``.
+
+    hosts:
+      example1:
+        port: 23
+        host: localhost
+        user: default
+      example2:
+        port: 23
+        host: localhost
+        user: example2
+
+
+You can even reference external files to inherit from:
+
+    hosts:
+      fileExample:
+        inheritsFrom: ./path/to/config/file.yaml
+      httpExapme:
+        inheritsFrom: http://my.tld/path/to/config_file.yaml
+
+This mechanism works also for the fabfile.yaml / index.yaml itself, and is not limited to one entry:
+
+    name: test fabfile
+
+    inheritsFrom:
+      - ./mbb.yaml
+      - ./drupal.yaml
