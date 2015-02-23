@@ -221,7 +221,6 @@ def resolve_inheritance_impl(config, all_configs):
 
   if base_config:
     config = data_merge(base_config, config)
-    print config
 
   return config
 
