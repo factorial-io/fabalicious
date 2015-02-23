@@ -181,7 +181,6 @@ def data_merge(a, b):
   return output
 
 
-
 def resolve_inheritance(config, all_configs):
   if 'inheritsFrom' not in config:
     return config
@@ -191,25 +190,38 @@ def resolve_inheritance(config, all_configs):
   config.pop('inheritsFrom', None)
 
   if not isinstance(inherits_from, basestring):
-    base_config = {}
-    for item in inherits_from:
-      base_config['inheritsFrom'] = item
-      base_config = resolve_inheritance(base_config, all_configs)
+    for item in reversed(inherits_from):
+      config['inheritsFrom'] = item
+      config = resolve_inheritance_impl(config, all_configs)
+
+    return config
+
   else:
-    if inherits_from[0:7] == 'http://' or inherits_from[0:8] == 'https://':
-      base_config = get_configuration_via_http(inherits_from)
+    return resolve_inheritance_impl(config, all_configs)
 
-    elif inherits_from[0:1] == '.' or inherits_from[0:1] == '/':
-      base_config = get_configuration_via_file(inherits_from)
 
-    elif inherits_from in all_configs:
-      base_config = all_configs[inherits_from]
+def resolve_inheritance_impl(config, all_configs):
+  if 'inheritsFrom' not in config:
+    return config
+
+  inherits_from = config['inheritsFrom']
+  base_config = False
+
+  if inherits_from[0:7] == 'http://' or inherits_from[0:8] == 'https://':
+    base_config = get_configuration_via_http(inherits_from)
+
+  elif inherits_from[0:1] == '.' or inherits_from[0:1] == '/':
+    base_config = get_configuration_via_file(inherits_from)
+
+  elif inherits_from in all_configs:
+    base_config = all_configs[inherits_from]
 
   if base_config and 'inheritsFrom' in base_config:
     base_config = resolve_inheritance(base_config, all_configs)
 
   if base_config:
     config = data_merge(base_config, config)
+    print config
 
   return config
 
