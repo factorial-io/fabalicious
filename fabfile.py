@@ -106,7 +106,7 @@ def load_all_yamls_from_dir(path):
 
 
 def load_configuration(input_file):
-  print "Reading configuration from %s" % input_file
+  # print "Reading configuration from %s" % input_file
 
   stream = open(input_file, 'r')
   data = yaml.load(stream)
@@ -393,7 +393,7 @@ def get_configuration_via_file(config_file_name):
     return False
 
   data = False
-  print "Reading configuration from %s" % found
+  # print "Reading configuration from %s" % found
   try:
     stream = open(found, 'r')
     data = yaml.load(stream)
@@ -406,7 +406,7 @@ def get_configuration_via_file(config_file_name):
 
 def get_configuration_via_http(config_file_name):
   try:
-    print "Reading configuration from %s" % config_file_name
+    # print "Reading configuration from %s" % config_file_name
     response = urllib2.urlopen(config_file_name)
     html = response.read()
     return yaml.load(html)
@@ -521,7 +521,7 @@ def get_settings(key, subkey):
 
 def header():
   if header.sended not in locals() and header.sended != 1:
-    print(green("Huber\'s Deployment Scripts\n"))
+    print(green("Fabalicious deployment scripts\n"))
     header.sended = 1
 header.sended = 0
 
@@ -617,6 +617,22 @@ def config(config_name='local'):
   config = get_configuration(config_name)
   apply_config(config, config_name)
 
+
+@task
+def getProperty(in_key):
+  with hide('output','running','warnings'):
+    check_config()
+    keys = in_key.split('/')
+    c = env.config
+    for key in keys:
+      if key in c:
+        c = c[key]
+      else:
+        print red('property %s not found!' % in_key)
+        exit(1)
+
+  print c
+  exit(1)
 
 
 @task
