@@ -197,6 +197,7 @@ def resolve_inheritance(config, all_configs):
     return config
 
   else:
+    config['inheritsFrom'] = inherits_from
     return resolve_inheritance_impl(config, all_configs)
 
 
