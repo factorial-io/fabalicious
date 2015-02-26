@@ -244,7 +244,25 @@ def get_configuration(name):
     if not "gitOptions" in settings:
       settings['gitOptions'] = { 'pull' : [ '--no-edit', '--rebase'] }
 
-
+    if not 'sqlSkipTables' in settings:
+      settings['sqlSkipTables'] = [
+        'cache',
+        'cache_block',
+        'cache_bootstrap',
+        'cache_field',
+        'cache_filter',
+        'cache_form',
+        'cache_libraries',
+        'cache_menu',
+        'cache_metatag',
+        'cache_page',
+        'cache_path',
+        'cache_token',
+        'cache_update',
+        'cache_views',
+        'cache_views_data',
+        'session'
+      ]
 
     host_config = config['hosts'][name]
     host_config = resolve_inheritance(host_config, config['hosts'])
@@ -666,13 +684,16 @@ def backup_sql(backup_file_name, config):
   if(config['hasDrush']):
     with cd(config['siteFolder']):
       with warn_only():
+        skip_tables = ''
+        if 'sqlSkipTables' in settings and settings['sqlSkipTables'] != False:
+          skip_tables = '--skip-tables-list=' + ','.join(settings['sqlSkipTables'])
         run('mkdir -p ' + config['backupFolder'])
         if config['supportsZippedBackups']:
           run('rm -f '+backup_file_name)
           run('rm -f '+backup_file_name+'.gz')
-          run_drush('sql-dump --gzip --result-file=' + backup_file_name)
+          run_drush('sql-dump ' + skip_tables + ' --gzip --result-file=' + backup_file_name)
         else:
-          run_drush('sql-dump --result-file=' + backup_file_name)
+          run_drush('sql-dump ' + skip_tables + '--result-file=' + backup_file_name)
 
 
 

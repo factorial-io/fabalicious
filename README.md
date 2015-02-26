@@ -26,7 +26,9 @@ On systems with a non-bash environment like lshell try the following settings in
 ##fabfile.yaml
 
     name: The name of your project
+
     deploymentModule: the name of your drupal deployment-module
+
     # common commands are executed when resetting/deploying an installation,
     # for all hosts. if 'useForDevelopment' is set, then 'development' is used
     common:
@@ -42,6 +44,13 @@ On systems with a non-bash environment like lshell try the following settings in
 
     # optional, defaults to true
     usePty: <boolean>
+
+    # optional, a list of tables to skip, when dumping to sql,
+    # set to False, if you want to dump all tables. If nothing is set,
+    # fabalicious will skip common drupal cache-tables.
+    sqlSkipTables:
+      - cache
+      - views_cache
 
     # custom parameters for git-commands (currently only pull supported)
     # if no custom parameters are set '--rebase' and '--no-edit' are used
