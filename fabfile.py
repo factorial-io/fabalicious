@@ -633,7 +633,7 @@ def getProperty(in_key):
         exit(1)
 
   print c
-  exit(1)
+  exit(0)
 
 
 @task
