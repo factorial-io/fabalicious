@@ -238,8 +238,8 @@ def check_fabalicious_version(required_version, msg):
 
   if not check_fabalicious_version.version:
     app_folder = os.path.dirname(os.path.realpath(__file__))
-    with hide('output', 'commands'):
-      output = local('cd ' + app_folder + ' ; git describe --always', capture=True)
+    with lcd(app_folder), hide('output', 'commands'):
+      output = local('git describe --always', capture=True)
       output = output.stdout.splitlines()
       check_fabalicious_version.version = output[-1].replace('/', '-')
       p = check_fabalicious_version.version.find('-')
