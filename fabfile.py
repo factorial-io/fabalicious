@@ -125,6 +125,8 @@ def load_configuration(input_file):
     data['dockerHosts'] = load_all_yamls_from_dir(path + "/dockerHosts")
 
   data = resolve_inheritance(data, {})
+  if 'requires' in data:
+    check_fabalicious_version(data['requires'], 'file ' + input_file)
 
   # print json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
 
@@ -228,7 +230,33 @@ def resolve_inheritance_impl(config, all_configs):
 
   return config
 
+def versiontuple(v):
+  return tuple(map(int, (v.split("."))))
 
+def check_fabalicious_version(required_version, msg):
+  required_version = str(required_version)
+
+  if not check_fabalicious_version.version:
+    app_folder = os.path.dirname(os.path.realpath(__file__))
+    with hide('output', 'commands'):
+      output = local('cd ' + app_folder + ' ; git describe --always', capture=True)
+      output = output.stdout.splitlines()
+      check_fabalicious_version.version = output[-1].replace('/', '-')
+      p = check_fabalicious_version.version.find('-')
+      if p >= 0:
+        check_fabalicious_version.version = check_fabalicious_version.version[0:p]
+
+  current_version = check_fabalicious_version.version
+
+  if (versiontuple(current_version) < versiontuple(required_version)):
+    print red('The %s needs %s as minimum app-version.' % (msg, required_version))
+    print red('You are currently using %s. Please update your fabalicious installation.' % current_version)
+    exit(1)
+  print current_version, required_version
+  print current_version < required_version
+  exit(1)
+
+check_fabalicious_version.version = False
 
 def get_configuration(name):
   config = get_all_configurations()
@@ -269,6 +297,8 @@ def get_configuration(name):
 
     host_config = config['hosts'][name]
     host_config = resolve_inheritance(host_config, config['hosts'])
+    if 'requires' in host_config:
+      check_fabalicious_version(host_config['requires'], 'host-configuration ' + name)
 
     keys = ("host", "rootFolder")
     validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
@@ -331,6 +361,7 @@ def get_configuration(name):
 
     if not 'behat' in host_config:
       host_config['behat'] = { 'presets': dict() }
+
 
     return host_config
 
@@ -570,7 +601,7 @@ def get_version():
     return 'unknown';
 
   with cd(env.config['gitRootFolder']):
-    with hide('output'):
+    with hide('output', 'commands'):
       output = run('git describe --always')
       output = output.stdout.splitlines()
       return output[-1].replace('/', '-')
@@ -1149,6 +1180,8 @@ def docker(subtask=False):
     exit(1)
 
   docker_configuration = resolve_inheritance(docker_configuration, all_docker_hosts)
+  if 'requires' in docker_configuration:
+    check_fabalicious_version(docker_configuration['requires'], 'docker-configuration ' + config_name)
 
   keys = ("host", "port", "user", "tasks", "rootFolder")
   validate_dict(keys, docker_configuration, 'dockerHosts-Configuraton '+config_name+' has missing key')
