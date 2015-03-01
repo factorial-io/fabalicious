@@ -252,9 +252,7 @@ def check_fabalicious_version(required_version, msg):
     print red('The %s needs %s as minimum app-version.' % (msg, required_version))
     print red('You are currently using %s. Please update your fabalicious installation.' % current_version)
     exit(1)
-  print current_version, required_version
-  print current_version < required_version
-  exit(1)
+
 
 check_fabalicious_version.version = False
 
