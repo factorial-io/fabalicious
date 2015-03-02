@@ -11,6 +11,7 @@ import re
 import copy
 import glob
 import urllib2
+import sys
 
 settings = 0
 current_config = 'unknown'
@@ -19,6 +20,8 @@ env.forward_agent = True
 env.use_shell = False
 
 fabfile_basedir = False
+
+
 
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 
@@ -122,6 +125,8 @@ def load_configuration(input_file):
     data['dockerHosts'] = load_all_yamls_from_dir(path + "/dockerHosts")
 
   data = resolve_inheritance(data, {})
+  if 'requires' in data:
+    check_fabalicious_version(data['requires'], 'file ' + input_file)
 
   # print json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
 
@@ -225,7 +230,31 @@ def resolve_inheritance_impl(config, all_configs):
 
   return config
 
+def versiontuple(v):
+  return tuple(map(int, (v.split("."))))
 
+def check_fabalicious_version(required_version, msg):
+  required_version = str(required_version)
+
+  if not check_fabalicious_version.version:
+    app_folder = os.path.dirname(os.path.realpath(__file__))
+    with lcd(app_folder), hide('output', 'commands'):
+      output = local('git describe --always', capture=True)
+      output = output.stdout.splitlines()
+      check_fabalicious_version.version = output[-1].replace('/', '-')
+      p = check_fabalicious_version.version.find('-')
+      if p >= 0:
+        check_fabalicious_version.version = check_fabalicious_version.version[0:p]
+
+  current_version = check_fabalicious_version.version
+
+  if (versiontuple(current_version) < versiontuple(required_version)):
+    print red('The %s needs %s as minimum app-version.' % (msg, required_version))
+    print red('You are currently using %s. Please update your fabalicious installation.' % current_version)
+    exit(1)
+
+
+check_fabalicious_version.version = False
 
 def get_configuration(name):
   config = get_all_configurations()
@@ -266,6 +295,8 @@ def get_configuration(name):
 
     host_config = config['hosts'][name]
     host_config = resolve_inheritance(host_config, config['hosts'])
+    if 'requires' in host_config:
+      check_fabalicious_version(host_config['requires'], 'host-configuration ' + name)
 
     keys = ("host", "rootFolder")
     validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
@@ -328,6 +359,7 @@ def get_configuration(name):
 
     if not 'behat' in host_config:
       host_config['behat'] = { 'presets': dict() }
+
 
     return host_config
 
@@ -567,7 +599,7 @@ def get_version():
     return 'unknown';
 
   with cd(env.config['gitRootFolder']):
-    with hide('output'):
+    with hide('output', 'commands'):
       output = run('git describe --always')
       output = output.stdout.splitlines()
       return output[-1].replace('/', '-')
@@ -1052,6 +1084,69 @@ def expand_subtasks(tasks, task_name):
   return commands
 
 
+def docker_callback_fail_on_error(state, flag):
+  if flag == '1':
+    state['warnOnly'] = False
+  else:
+    state['warnOnly'] = True
+
+
+def docker_callback_echo(state, str, color = False):
+  if color == 'red':
+    print red(str)
+  elif color == 'green':
+    print green(str)
+  else:
+    print str
+
+
+def docker_callback_execute_host_task(state, task, *args):
+  check_config();
+
+  hostStr = env.config['user'] + '@' + env.config['host'] + ":" + str(env.config['port'])
+
+  if len(args) > 0:
+    execute(task, args, host=hostStr)
+  else:
+    execute(task, host=hostStr)
+
+
+@task
+def waitForServices():
+  check_config()
+  max_tries = 5
+  try_n = 0
+
+  while(True):
+    try_n += 1
+    try:
+      with cd(env.config['rootFolder']), hide('commands'):
+
+        output = run('supervisorctl status')
+        output = output.stdout.splitlines()
+        count_running = 0
+        count_services = 0;
+        for line in output:
+          if line.strip() != '':
+            count_services += 1
+            if line.find('RUNNING'):
+              count_running += 1
+        if count_services == count_running:
+          print green('Services up and running!')
+          break;
+
+    except:
+      # TODO:
+      # handle only relevant exceptions like
+      # fabric.exceptions.NetworkError
+
+      if (try_n < max_tries):
+        # Let's wait and try again...
+        time.sleep(5)
+      else:
+        print red("Supervisord not coming up at all")
+        break
+
 
 @task
 def docker(subtask=False):
@@ -1083,6 +1178,8 @@ def docker(subtask=False):
     exit(1)
 
   docker_configuration = resolve_inheritance(docker_configuration, all_docker_hosts)
+  if 'requires' in docker_configuration:
+    check_fabalicious_version(docker_configuration['requires'], 'docker-configuration ' + config_name)
 
   keys = ("host", "port", "user", "tasks", "rootFolder")
   validate_dict(keys, docker_configuration, 'dockerHosts-Configuraton '+config_name+' has missing key')
@@ -1133,23 +1230,47 @@ def docker(subtask=False):
   if 'password' in docker_configuration:
     env.passwords[host_str]= docker_configuration['password']
 
-  execute(run_script, docker_configuration['rootFolder'], parsed_commands, host=host_str)
+  callbacks = {
+    'fail_on_error':  docker_callback_fail_on_error,
+    'echo': docker_callback_echo,
+    'execute': docker_callback_execute_host_task
+  }
+
+  execute(run_script, docker_configuration['rootFolder'], parsed_commands, callbacks, host=host_str)
 
 
 
 @task
-def run_script(rootFolder=False, commands=False):
+def run_script(rootFolder=False, commands=False, callbacks=False):
   if not rootFolder:
     return;
-  warnOnly = True
+
+  state = { 'warnOnly': True }
   for line in commands:
     with cd(rootFolder):
-      if line.lower() == 'fail_on_error(1)':
-        warnOnly = False
-      elif line.lower() == 'fail_on_error(0)':
-        warnOnly = True
-      else:
-        if warnOnly:
+      handled = False
+      if callbacks:
+        start_p = line.find('(')
+        end_p = line.rfind(')')
+
+        if start_p >= 0 and end_p > 0:
+          func_name = line[0:start_p]
+
+          if func_name in callbacks:
+            arguments = False
+            func_args = line[start_p+1: end_p]
+            if func_args.strip() != '':
+              arguments = func_args.split(',')
+              arguments = map(lambda x: x.strip(), arguments)
+
+            if arguments:
+              callbacks[func_name](state, *arguments)
+            else:
+              callbacks[func_name](state)
+            handled = True
+
+      if not handled:
+        if state['warnOnly']:
           with warn_only():
             run(line)
         else:
@@ -1162,7 +1283,7 @@ def get_backups_list():
   if not env.config['supportsSSH']:
     return result;
 
-  with cd(env.config['backupFolder']), hide('output'), warn_only():
+  with cd(env.config['backupFolder']), hide('output', 'commands'), warn_only():
     for ext in ('*.gz', '*.tgz', '*.sql'):
       output = run('ls -l ' + ext + ' 2>/dev/null')
       lines = output.stdout.splitlines()

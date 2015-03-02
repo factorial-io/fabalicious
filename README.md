@@ -27,6 +27,10 @@ On systems with a non-bash environment like lshell try the following settings in
 
     name: The name of your project
 
+    #optional
+    requires: the required version of fabalicous to handle this configuration, e.g. 0.18.2
+
+    #optional
     deploymentModule: the name of your drupal deployment-module
 
     # common commands are executed when resetting/deploying an installation,
@@ -77,6 +81,7 @@ On systems with a non-bash environment like lshell try the following settings in
         user: <user>
         port: <port>
         rootFolder: <path-where-your-docker-stuff-resides>
+        requires: optional, the required version of fabalicous to handle this configuration, e.g. 0.18.2
 
         # you can add as many subtasks you want to control your docker instances.
         # you can use the configuration of your hosts-part with %varname% as pattern,
@@ -114,6 +119,7 @@ On systems with a non-bash environment like lshell try the following settings in
         host: <host>
         port: <port>
         user: <your-ssh-user>
+        requires: optional, the required version of fabalicous to handle this configuration, e.g. 0.18.2
 
         # if you are using basebox for setting up a vagrant-setup, specify the
         # ip here
