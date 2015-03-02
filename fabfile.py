@@ -238,8 +238,9 @@ def check_fabalicious_version(required_version, msg):
 
   if not check_fabalicious_version.version:
     app_folder = os.path.dirname(os.path.realpath(__file__))
-    with lcd(app_folder), hide('output', 'commands'):
-      output = local('git describe --always', capture=True)
+
+    with hide('output'):
+      output = local('cd %s; git describe --always' % app_folder, capture=True)
       output = output.stdout.splitlines()
       check_fabalicious_version.version = output[-1].replace('/', '-')
       p = check_fabalicious_version.version.find('-')
@@ -1114,7 +1115,7 @@ def docker_callback_execute_host_task(state, task, *args):
 @task
 def waitForServices():
   check_config()
-  max_tries = 5
+  max_tries = 10
   try_n = 0
 
   while(True):
