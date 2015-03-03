@@ -1000,23 +1000,26 @@ def copySSHKeyToDocker():
   check_config()
   if not 'dockerKeyFile' in settings:
     print(red('missing dockerKeyFile in fabfile.yaml'))
-    exit(1)
+    return
 
   key_file = settings['dockerKeyFile']
+  with cd(env.config['rootFolder']), hide('commands', 'output'):
+    run('mkdir -p /root/.ssh')
+    if 'dockerKeyFile' in settings:
+      put(key_file, '/root/.ssh/id_rsa')
+      put(key_file+'.pub', '/root/.ssh/id_rsa.pub')
+      run('chmod 600 /root/.ssh/id_rsa')
+      run('chmod 644 /root/.ssh/id_rsa.pub')
+      put(key_file+'.pub', '/tmp')
+      run('cat /tmp/'+os.path.basename(key_file)+'.pub >> /root/.ssh/authorized_keys')
+      run('rm /tmp/'+os.path.basename(key_file)+'.pub')
+      print green('Copied keyfile to docker.')
 
-  run('mkdir -p /root/.ssh')
-  put(key_file, '/root/.ssh/id_rsa')
-  put(key_file+'.pub', '/root/.ssh/id_rsa.pub')
-  if 'dockerAuthorizedKeyFile' in settings:
-    authorized_keys_file = settings['dockerAuthorizedKeyFile']
-    put(authorized_keys_file, '/root/.ssh/authorized_keys')
-
-  run('chmod 600 /root/.ssh/id_rsa')
-  run('chmod 644 /root/.ssh/id_rsa.pub')
-  run('chmod 700 /root/.ssh')
-  put(key_file+'.pub', '/tmp')
-  run('cat /tmp/'+os.path.basename(key_file)+'.pub >> /root/.ssh/authorized_keys')
-  run('rm /tmp/'+os.path.basename(key_file)+'.pub')
+    if 'dockerAuthorizedKeyFile' in settings:
+      authorized_keys_file = settings['dockerAuthorizedKeyFile']
+      put(authorized_keys_file, '/root/.ssh/authorized_keys')
+      print green('Copied authorized keys to docker.')
+    run('chmod 700 /root/.ssh')
 
 
 
