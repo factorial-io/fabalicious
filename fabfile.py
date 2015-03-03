@@ -237,7 +237,12 @@ def check_fabalicious_version(required_version, msg):
   required_version = str(required_version)
 
   if not check_fabalicious_version.version:
-    app_folder = os.path.dirname(os.path.realpath(__file__))
+
+    file = __file__
+    if os.path.basename(file) == 'fabfile.pyc':
+      file = os.path.dirname(file) + '/fabfile.py';
+
+    app_folder = os.path.dirname(os.path.realpath(file))
 
     with hide('output'):
       output = local('cd %s; git describe --always' % app_folder, capture=True)
