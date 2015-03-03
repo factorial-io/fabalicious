@@ -731,7 +731,7 @@ def backup_sql(backup_file_name, config):
           run('rm -f '+backup_file_name+'.gz')
           run_drush('sql-dump ' + skip_tables + ' --gzip --result-file=' + backup_file_name)
         else:
-          run_drush('sql-dump ' + skip_tables + '--result-file=' + backup_file_name)
+          run_drush('sql-dump ' + skip_tables + ' --result-file=' + backup_file_name)
 
 
 
