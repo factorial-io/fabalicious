@@ -1123,7 +1123,7 @@ def docker_callback_execute_host_task(state, task, *args):
 @task
 def waitForServices():
   check_config()
-  max_tries = 10
+  max_tries = 20
   try_n = 0
 
   while(True):
@@ -1151,6 +1151,7 @@ def waitForServices():
 
       if (try_n < max_tries):
         # Let's wait and try again...
+        print "Wait for 5 secs and try again."
         time.sleep(5)
       else:
         print red("Supervisord not coming up at all")
@@ -1254,7 +1255,20 @@ def run_script(rootFolder=False, commands=False, callbacks=False):
   if not rootFolder:
     return;
 
+  pattern = re.compile('\%(\S*)\%')
+
+
   state = { 'warnOnly': True }
+  # preflight
+  ok = True
+  for line in commands:
+    if pattern.search(line) != None:
+      print red('Found replacement-pattern in script-line %s, aborting ...' % line)
+      ok = False
+
+  if not ok:
+    return
+
   for line in commands:
     with cd(rootFolder):
       handled = False
@@ -1279,6 +1293,7 @@ def run_script(rootFolder=False, commands=False, callbacks=False):
             handled = True
 
       if not handled:
+
         if state['warnOnly']:
           with warn_only():
             run(line)
