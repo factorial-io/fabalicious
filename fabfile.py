@@ -724,7 +724,7 @@ def backup_sql(backup_file_name, config):
       with warn_only():
         skip_tables = ''
         if 'sqlSkipTables' in settings and settings['sqlSkipTables'] != False:
-          skip_tables = '--skip-tables-list=' + ','.join(settings['sqlSkipTables'])
+          skip_tables = '--structure-tables-list=' + ','.join(settings['sqlSkipTables'])
         run('mkdir -p ' + config['backupFolder'])
         if config['supportsZippedBackups']:
           run('rm -f '+backup_file_name)
@@ -1292,7 +1292,7 @@ def get_backups_list():
   if not env.config['supportsSSH']:
     return result;
 
-  with cd(env.config['backupFolder']), hide('output', 'commands'), warn_only():
+  with cd(env.config['backupFolder']), hide('running', 'stdout', 'stderr', 'warnings'), warn_only():
     for ext in ('*.gz', '*.tgz', '*.sql'):
       output = run('ls -l ' + ext + ' 2>/dev/null')
       lines = output.stdout.splitlines()
