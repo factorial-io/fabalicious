@@ -960,8 +960,6 @@ def drush(drush_command):
 
 @task
 def install(distribution='minimal', ask='True'):
-  print distribution
-  print ask
   check_config()
   if env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'database' not in env.config:
