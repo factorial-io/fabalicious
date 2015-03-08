@@ -706,8 +706,9 @@ def reset(withPasswordReset=False):
             run_drush('user-password admin --password="admin"')
           with warn_only():
             run('chmod -R 777 ' + env.config['filesFolder'])
-        if 'deploymentModule' in settings:
-          run_drush('en -y ' + settings['deploymentModule'])
+        with warn_only():
+          if 'deploymentModule' in settings:
+            run_drush('en -y ' + settings['deploymentModule'])
         run_drush('updb -y')
         run_drush('fra -y')
         run_common_commands()
@@ -958,7 +959,9 @@ def drush(drush_command):
 
 
 @task
-def install():
+def install(distribution='minimal', ask='True'):
+  print distribution
+  print ask
   check_config()
   if env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'database' not in env.config:
@@ -984,10 +987,18 @@ def install():
           run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old 2>/dev/null')
 
         sites_folder = os.path.basename(env.config['siteFolder'])
-        run_drush('site-install minimal  --sites-subdir='+sites_folder+' --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
+        options = ''
+        if ask.lower() == 'false' or ask.lower() == '0':
+          options = ' -y'
+        options += ' --sites-subdir='+sites_folder
+        options += ' --account-name=admin'
+        options += ' --account-pass=admin'
+        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name']
+        run_drush('site-install ' + distribution + ' ' + options)
 
-        if 'deploymentModule' in settings:
-          run_drush('en -y '+settings['deploymentModule'])
+        with warn_only():
+          if 'deploymentModule' in settings:
+            run_drush('en -y '+settings['deploymentModule'])
 
       reset()
   else:
