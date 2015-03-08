@@ -993,7 +993,7 @@ def install(distribution='minimal', ask='True'):
         options += ' --account-pass=admin'
         options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name']
         run_drush('site-install ' + distribution + ' ' + options)
-
+        run_drush('en features -y')
         with warn_only():
           if 'deploymentModule' in settings:
             run_drush('en -y '+settings['deploymentModule'])
