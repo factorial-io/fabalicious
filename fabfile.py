@@ -11,6 +11,7 @@ import re
 import copy
 import glob
 import urllib2
+import sys
 
 settings = 0
 current_config = 'unknown'
@@ -19,6 +20,8 @@ env.forward_agent = True
 env.use_shell = False
 
 fabfile_basedir = False
+
+
 
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 
@@ -122,6 +125,8 @@ def load_configuration(input_file):
     data['dockerHosts'] = load_all_yamls_from_dir(path + "/dockerHosts")
 
   data = resolve_inheritance(data, {})
+  if 'requires' in data:
+    check_fabalicious_version(data['requires'], 'file ' + input_file)
 
   # print json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
 
@@ -225,7 +230,37 @@ def resolve_inheritance_impl(config, all_configs):
 
   return config
 
+def versiontuple(v):
+  return tuple(map(int, (v.split("."))))
 
+def check_fabalicious_version(required_version, msg):
+  required_version = str(required_version)
+
+  if not check_fabalicious_version.version:
+
+    file = __file__
+    if os.path.basename(file) == 'fabfile.pyc':
+      file = os.path.dirname(file) + '/fabfile.py';
+
+    app_folder = os.path.dirname(os.path.realpath(file))
+
+    with hide('output'):
+      output = local('cd %s; git describe --always' % app_folder, capture=True)
+      output = output.stdout.splitlines()
+      check_fabalicious_version.version = output[-1].replace('/', '-')
+      p = check_fabalicious_version.version.find('-')
+      if p >= 0:
+        check_fabalicious_version.version = check_fabalicious_version.version[0:p]
+
+  current_version = check_fabalicious_version.version
+
+  if (versiontuple(current_version) < versiontuple(required_version)):
+    print red('The %s needs %s as minimum app-version.' % (msg, required_version))
+    print red('You are currently using %s. Please update your fabalicious installation.' % current_version)
+    exit(1)
+
+
+check_fabalicious_version.version = False
 
 def get_configuration(name):
   config = get_all_configurations()
@@ -266,6 +301,8 @@ def get_configuration(name):
 
     host_config = config['hosts'][name]
     host_config = resolve_inheritance(host_config, config['hosts'])
+    if 'requires' in host_config:
+      check_fabalicious_version(host_config['requires'], 'host-configuration ' + name)
 
     keys = ("host", "rootFolder")
     validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
@@ -328,6 +365,7 @@ def get_configuration(name):
 
     if not 'behat' in host_config:
       host_config['behat'] = { 'presets': dict() }
+
 
     return host_config
 
@@ -567,7 +605,7 @@ def get_version():
     return 'unknown';
 
   with cd(env.config['gitRootFolder']):
-    with hide('output'):
+    with hide('output', 'commands'):
       output = run('git describe --always')
       output = output.stdout.splitlines()
       return output[-1].replace('/', '-')
@@ -668,8 +706,9 @@ def reset(withPasswordReset=False):
             run_drush('user-password admin --password="admin"')
           with warn_only():
             run('chmod -R 777 ' + env.config['filesFolder'])
-        if 'deploymentModule' in settings:
-          run_drush('en -y ' + settings['deploymentModule'])
+        with warn_only():
+          if 'deploymentModule' in settings:
+            run_drush('en -y ' + settings['deploymentModule'])
         run_drush('updb -y')
         run_drush('fra -y')
         run_common_commands()
@@ -686,14 +725,14 @@ def backup_sql(backup_file_name, config):
       with warn_only():
         skip_tables = ''
         if 'sqlSkipTables' in settings and settings['sqlSkipTables'] != False:
-          skip_tables = '--skip-tables-list=' + ','.join(settings['sqlSkipTables'])
+          skip_tables = '--structure-tables-list=' + ','.join(settings['sqlSkipTables'])
         run('mkdir -p ' + config['backupFolder'])
         if config['supportsZippedBackups']:
           run('rm -f '+backup_file_name)
           run('rm -f '+backup_file_name+'.gz')
           run_drush('sql-dump ' + skip_tables + ' --gzip --result-file=' + backup_file_name)
         else:
-          run_drush('sql-dump ' + skip_tables + '--result-file=' + backup_file_name)
+          run_drush('sql-dump ' + skip_tables + ' --result-file=' + backup_file_name)
 
 
 
@@ -920,7 +959,7 @@ def drush(drush_command):
 
 
 @task
-def install():
+def install(distribution='minimal', ask='True'):
   check_config()
   if env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'database' not in env.config:
@@ -946,10 +985,18 @@ def install():
           run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old 2>/dev/null')
 
         sites_folder = os.path.basename(env.config['siteFolder'])
-        run_drush('site-install minimal  --sites-subdir='+sites_folder+' --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
-
-        if 'deploymentModule' in settings:
-          run_drush('en -y '+settings['deploymentModule'])
+        options = ''
+        if ask.lower() == 'false' or ask.lower() == '0':
+          options = ' -y'
+        options += ' --sites-subdir='+sites_folder
+        options += ' --account-name=admin'
+        options += ' --account-pass=admin'
+        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name']
+        run_drush('site-install ' + distribution + ' ' + options)
+        run_drush('en features -y')
+        with warn_only():
+          if 'deploymentModule' in settings:
+            run_drush('en -y '+settings['deploymentModule'])
 
       reset()
   else:
@@ -962,23 +1009,26 @@ def copySSHKeyToDocker():
   check_config()
   if not 'dockerKeyFile' in settings:
     print(red('missing dockerKeyFile in fabfile.yaml'))
-    exit(1)
+    return
 
   key_file = settings['dockerKeyFile']
+  with cd(env.config['rootFolder']), hide('commands', 'output'):
+    run('mkdir -p /root/.ssh')
+    if 'dockerKeyFile' in settings:
+      put(key_file, '/root/.ssh/id_rsa')
+      put(key_file+'.pub', '/root/.ssh/id_rsa.pub')
+      run('chmod 600 /root/.ssh/id_rsa')
+      run('chmod 644 /root/.ssh/id_rsa.pub')
+      put(key_file+'.pub', '/tmp')
+      run('cat /tmp/'+os.path.basename(key_file)+'.pub >> /root/.ssh/authorized_keys')
+      run('rm /tmp/'+os.path.basename(key_file)+'.pub')
+      print green('Copied keyfile to docker.')
 
-  run('mkdir -p /root/.ssh')
-  put(key_file, '/root/.ssh/id_rsa')
-  put(key_file+'.pub', '/root/.ssh/id_rsa.pub')
-  if 'dockerAuthorizedKeyFile' in settings:
-    authorized_keys_file = settings['dockerAuthorizedKeyFile']
-    put(authorized_keys_file, '/root/.ssh/authorized_keys')
-
-  run('chmod 600 /root/.ssh/id_rsa')
-  run('chmod 644 /root/.ssh/id_rsa.pub')
-  run('chmod 700 /root/.ssh')
-  put(key_file+'.pub', '/tmp')
-  run('cat /tmp/'+os.path.basename(key_file)+'.pub >> /root/.ssh/authorized_keys')
-  run('rm /tmp/'+os.path.basename(key_file)+'.pub')
+    if 'dockerAuthorizedKeyFile' in settings:
+      authorized_keys_file = settings['dockerAuthorizedKeyFile']
+      put(authorized_keys_file, '/root/.ssh/authorized_keys')
+      print green('Copied authorized keys to docker.')
+    run('chmod 700 /root/.ssh')
 
 
 
@@ -1052,6 +1102,70 @@ def expand_subtasks(tasks, task_name):
   return commands
 
 
+def docker_callback_fail_on_error(state, flag):
+  if flag == '1':
+    state['warnOnly'] = False
+  else:
+    state['warnOnly'] = True
+
+
+def docker_callback_echo(state, str, color = False):
+  if color == 'red':
+    print red(str)
+  elif color == 'green':
+    print green(str)
+  else:
+    print str
+
+
+def docker_callback_execute_host_task(state, task, *args):
+  check_config();
+
+  hostStr = env.config['user'] + '@' + env.config['host'] + ":" + str(env.config['port'])
+
+  if len(args) > 0:
+    execute(task, args, host=hostStr)
+  else:
+    execute(task, host=hostStr)
+
+
+@task
+def waitForServices():
+  check_config()
+  max_tries = 20
+  try_n = 0
+
+  while(True):
+    try_n += 1
+    try:
+      with cd(env.config['rootFolder']), hide('commands'):
+
+        output = run('supervisorctl status')
+        output = output.stdout.splitlines()
+        count_running = 0
+        count_services = 0;
+        for line in output:
+          if line.strip() != '':
+            count_services += 1
+            if line.find('RUNNING'):
+              count_running += 1
+        if count_services == count_running:
+          print green('Services up and running!')
+          break;
+
+    except:
+      # TODO:
+      # handle only relevant exceptions like
+      # fabric.exceptions.NetworkError
+
+      if (try_n < max_tries):
+        # Let's wait and try again...
+        print "Wait for 5 secs and try again."
+        time.sleep(5)
+      else:
+        print red("Supervisord not coming up at all")
+        break
+
 
 @task
 def docker(subtask=False):
@@ -1083,6 +1197,8 @@ def docker(subtask=False):
     exit(1)
 
   docker_configuration = resolve_inheritance(docker_configuration, all_docker_hosts)
+  if 'requires' in docker_configuration:
+    check_fabalicious_version(docker_configuration['requires'], 'docker-configuration ' + config_name)
 
   keys = ("host", "port", "user", "tasks", "rootFolder")
   validate_dict(keys, docker_configuration, 'dockerHosts-Configuraton '+config_name+' has missing key')
@@ -1133,23 +1249,61 @@ def docker(subtask=False):
   if 'password' in docker_configuration:
     env.passwords[host_str]= docker_configuration['password']
 
-  execute(run_script, docker_configuration['rootFolder'], parsed_commands, host=host_str)
+  callbacks = {
+    'fail_on_error':  docker_callback_fail_on_error,
+    'echo': docker_callback_echo,
+    'execute': docker_callback_execute_host_task
+  }
+
+  execute(run_script, docker_configuration['rootFolder'], parsed_commands, callbacks, host=host_str)
 
 
 
 @task
-def run_script(rootFolder=False, commands=False):
+def run_script(rootFolder=False, commands=False, callbacks=False):
   if not rootFolder:
     return;
-  warnOnly = True
+
+  pattern = re.compile('\%(\S*)\%')
+
+
+  state = { 'warnOnly': True }
+  # preflight
+  ok = True
+  for line in commands:
+    if pattern.search(line) != None:
+      print red('Found replacement-pattern in script-line %s, aborting ...' % line)
+      ok = False
+
+  if not ok:
+    return
+
   for line in commands:
     with cd(rootFolder):
-      if line.lower() == 'fail_on_error(1)':
-        warnOnly = False
-      elif line.lower() == 'fail_on_error(0)':
-        warnOnly = True
-      else:
-        if warnOnly:
+      handled = False
+      if callbacks:
+        start_p = line.find('(')
+        end_p = line.rfind(')')
+
+        if start_p >= 0 and end_p > 0:
+          func_name = line[0:start_p]
+
+          if func_name in callbacks:
+            arguments = False
+            func_args = line[start_p+1: end_p]
+            if func_args.strip() != '':
+              arguments = func_args.split(',')
+              arguments = map(lambda x: x.strip(), arguments)
+
+            if arguments:
+              callbacks[func_name](state, *arguments)
+            else:
+              callbacks[func_name](state)
+            handled = True
+
+      if not handled:
+
+        if state['warnOnly']:
           with warn_only():
             run(line)
         else:
@@ -1162,7 +1316,7 @@ def get_backups_list():
   if not env.config['supportsSSH']:
     return result;
 
-  with cd(env.config['backupFolder']), hide('output'), warn_only():
+  with cd(env.config['backupFolder']), hide('running', 'stdout', 'stderr', 'warnings'), warn_only():
     for ext in ('*.gz', '*.tgz', '*.sql'):
       output = run('ls -l ' + ext + ' 2>/dev/null')
       lines = output.stdout.splitlines()

@@ -27,7 +27,11 @@ On systems with a non-bash environment like lshell try the following settings in
 
     name: The name of your project
 
-    deploymentModule: the name of your drupal deployment-module
+    #optional
+    requires: the required version of fabalicous to handle this configuration, e.g. 0.18.2
+
+    #optional
+    deploymentModule: the name of your drupal deployment-module/Users/stephan/Documents/dev/web/multibasebox/projects/test/_tools/fabalicious/README.md
 
     # common commands are executed when resetting/deploying an installation,
     # for all hosts. if 'useForDevelopment' is set, then 'development' is used
@@ -77,6 +81,7 @@ On systems with a non-bash environment like lshell try the following settings in
         user: <user>
         port: <port>
         rootFolder: <path-where-your-docker-stuff-resides>
+        requires: optional, the required version of fabalicous to handle this configuration, e.g. 0.18.2
 
         # you can add as many subtasks you want to control your docker instances.
         # you can use the configuration of your hosts-part with %varname% as pattern,
@@ -114,6 +119,7 @@ On systems with a non-bash environment like lshell try the following settings in
         host: <host>
         port: <port>
         user: <your-ssh-user>
+        requires: optional, the required version of fabalicous to handle this configuration, e.g. 0.18.2
 
         # if you are using basebox for setting up a vagrant-setup, specify the
         # ip here
@@ -242,7 +248,7 @@ run a task
 * `copyFrom:<source-host>`: copies all files from `filesFolder` at source-host to target host, and imports a sql-dump from source-host.
 * `copyDBFrom:<source-host>`: copies only the DB from the source-host
 * `copyFilesFrom:<source-host>`: copies only the files from the source-host
-* `install`: will install a database in the docker-container. Works currently only when `supportsInstall=true`, `hasDrush=true` and `useForDevelopment=true`. Needs an additional host-setting: `database`-dictionary. If `hasDrush=true` the code will install drupal with profile minimal.  This task will overwrite your settings.php-file and databases, so be prepared!
+* `install:<distribution=minimal>,<ask=True>`: will install a database in the docker-container. Works currently only when `supportsInstall=true` and `useForDevelopment=true`. Needs an additional host-setting: `database`-dictionary. If `hasDrush=true` the code will install drupal with profile minimal, if the optional distribution-parameter is not set.  This task will overwrite your settings.php-file and databases, so be prepared! This task has two optional parameter: you can install another distribution when setting ``distribution`` according to your needs. If you set ``ask`` to (0|false) there will be no confimration dialog.
 * `behat:<name="Name of feature",format="pretty", out="", options="">`: run behat tests, the configuration needs a setting for `behat:run` which gets called to run the tests. You can add command-line-options to the command, the most used (name, format and out) are mirrored by fabalicious, as escaping all the commas is cumbersome.
 * `installBehat`: install behat, the configuration needs a setting for `behat:install` which gets called to install behat
 at.
