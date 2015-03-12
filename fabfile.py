@@ -737,7 +737,8 @@ def reset(withPasswordReset=False):
           run_drush('en -y ' + settings['deploymentModule'])
       run_drush('updb -y')
       with warn_only():
-      run_drush('fra -y')
+        run_drush('fra -y')
+
       run_common_commands()
       run_drush(' cc all')
 
