@@ -959,7 +959,7 @@ def drush(drush_command):
 
 
 @task
-def install(distribution='minimal', ask='True'):
+def install(distribution='minimal', ask='True', version=7):
   check_config()
   if env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'database' not in env.config:
@@ -993,7 +993,8 @@ def install(distribution='minimal', ask='True'):
         options += ' --account-pass=admin'
         options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name']
         run_drush('site-install ' + distribution + ' ' + options)
-        run_drush('en features -y')
+        if version <= 7:
+          run_drush('en features -y')
         with warn_only():
           if 'deploymentModule' in settings:
             run_drush('en -y '+settings['deploymentModule'])
