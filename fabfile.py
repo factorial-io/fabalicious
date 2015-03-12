@@ -750,7 +750,6 @@ def reset(withPasswordReset=False):
 
 
 def backup_sql(backup_file_name, config):
-  print env.host
   if(config['hasDrush']):
     with cd(config['siteFolder']):
       with warn_only():
@@ -761,9 +760,9 @@ def backup_sql(backup_file_name, config):
         if config['supportsZippedBackups']:
           _run('rm -f '+backup_file_name)
           _run('rm -f '+backup_file_name+'.gz')
-          run_drush('sql-dump ' + skip_tables + ' --gzip --result-file=' + backup_file_name, 'Create SQL dump')
+          run_drush('sql-dump ' + skip_tables + ' --gzip --result-file=' + backup_file_name, 'Create SQL dump at %s' % backup_file_name)
         else:
-          run_drush('sql-dump ' + skip_tables + ' --result-file=' + backup_file_name, 'Create SQL dump')
+          run_drush('sql-dump ' + skip_tables + ' --result-file=' + backup_file_name, 'Create SQL dump at %s' % backup_file_name)
 
 
 
@@ -946,7 +945,7 @@ def _copyDBFrom(config_name = False):
 
 
     # copy sql to target
-    _run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name_source+' '+sql_name_target+ ' >>/dev/null')
+    _run('scp -P '+str(source_ssh_port)+' '+ssh_no_strict_key_host_checking_params + " " + ssh_args+':'+sql_name_source+' '+sql_name_target+ ' >>/dev/null', 'Copy dump to %s' % current_config)
 
     # cleanup and remove file from source
     _run('ssh -p '+str(source_ssh_port)+' '+ssh_args+' rm ' + sql_name_source)
