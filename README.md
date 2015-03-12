@@ -58,7 +58,10 @@ On systems with a non-bash environment like lshell try the following settings in
 
     # hide specific output from the console. The standard is to hide all output and
     # show the output, when a command fails. For debugging purposes you can enable
-    # more output.
+    # more output like this:
+    hideOutput: ''
+
+    # The default settings which can be overwritten:
     hideOutput:
       - running
       - stdout
