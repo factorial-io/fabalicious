@@ -28,12 +28,15 @@ fabfile_basedir = False
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 
 
-def _run(cmd, msg = ''):
+def _run(cmd, msg = '', hide_output = None):
 
   if msg != '':
     print msg
 
-  with hide(*output_settings):
+  if not hide_output:
+    hide_output = output_settings
+
+  with hide(*hide_output):
     try:
       result = run(cmd)
 
@@ -658,11 +661,11 @@ def run_common_commands():
 
 
 
-def run_drush(cmd, msg = '', expand_command = True):
+def run_drush(cmd, msg = '', expand_command = True, hide_output = None):
   env.output_prefix = False
   if expand_command:
     cmd = 'drush ' + cmd
-  _run(cmd, msg)
+  _run(cmd, msg, hide_output)
   env.output_prefix = True
 
 
@@ -994,7 +997,7 @@ def drush(drush_command):
   check_config()
   if (env.config['hasDrush']):
     with cd(env.config['siteFolder']):
-      run_drush(drush_command, 'Running drush %s' % drush_command)
+      run_drush(drush_command, 'Running drush %s' % drush_command, True, ['running'])
 
 
 
