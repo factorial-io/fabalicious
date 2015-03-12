@@ -56,18 +56,6 @@ On systems with a non-bash environment like lshell try the following settings in
       - cache
       - views_cache
 
-    # hide specific output from the console. The standard is to hide all output and
-    # show the output, when a command fails. For debugging purposes you can enable
-    # more output like this:
-    hideOutput: ''
-
-    # The default settings which can be overwritten:
-    hideOutput:
-      - running
-      - stdout
-      - stderr
-      - warnings
-
     # custom parameters for git-commands (currently only pull supported)
     # if no custom parameters are set '--rebase' and '--no-edit' are used
     # here you can define the defaults for all configurations
