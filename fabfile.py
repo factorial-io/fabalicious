@@ -3,7 +3,6 @@
 
 from fabric.api import *
 from fabric.colors import green, red
-from fabric.state import output
 import datetime
 import yaml
 import subprocess, shlex, atexit, time
@@ -16,7 +15,6 @@ import sys
 
 settings = 0
 current_config = 'unknown'
-output_settings = ['running', 'stdout', 'stderr', 'warnings']
 
 env.forward_agent = True
 env.use_shell = False
@@ -26,31 +24,6 @@ fabfile_basedir = False
 
 
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
-
-
-def _run(cmd, msg = '', hide_output = None):
-
-  if msg != '':
-    print msg
-
-  if not hide_output:
-    hide_output = output_settings
-
-  with hide(*hide_output):
-    try:
-      result = run(cmd)
-
-      if result.return_code != 0:
-        print red('%s failed:' %s)
-        print result
-
-      return result
-    except:
-      print red('%s failed' % cmd)
-
-      if output['aborts']:
-        raise SystemExit('%s failed' % cmd);
-
 
 
 
@@ -88,7 +61,7 @@ class RemoteSSHTunnel:
       remote_cmd = 'ssh'
       cmd = 'ssh'
     remote_cmd = remote_cmd + ' -v -L %d:%s:%d %s@%s -A -N -M ' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
-    _run('rm -f ~/.ssh-tunnel-from-fabric')
+    run('rm -f ~/.ssh-tunnel-from-fabric')
 
     ssh_port = 22
     if 'port' in config:
@@ -98,7 +71,7 @@ class RemoteSSHTunnel:
     cmd = cmd + " '" + remote_cmd + "'"
 
     print("running remote tunnel")
-    # print(cmd);
+    print(cmd);
 
     self.p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -292,11 +265,8 @@ check_fabalicious_version.version = False
 def get_configuration(name):
   config = get_all_configurations()
   if name in config['hosts']:
-    global settings, output_settings
+    global settings
     settings = config
-    if 'hideOutput' in settings:
-      output_settings = settings['hideOutput']
-
     if not 'common' in settings:
       settings['common'] = { }
 
@@ -420,7 +390,7 @@ def get_docker_container_ip(docker_name, docker_host, docker_user, docker_port):
   cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (docker_port, docker_user, docker_host, docker_name)
 
   try:
-    with hide('output', 'running'):
+    with hide('output'):
       output = local(cmd, capture=True)
   except SystemExit:
     print red('Docker not running, can\'t get ip')
@@ -573,7 +543,7 @@ def check_config():
 
 
 def run_custom(config, run_key):
-  msg = "Running custom %s" % run_key
+
   replacements = {}
   for key in config:
     if type(config[key]) != type({}):
@@ -591,8 +561,7 @@ def run_custom(config, run_key):
           docker_task_name = result.group(1)
           docker(docker_task_name)
         else:
-          _run(line, msg)
-          msg = ''
+          run(line)
 
   env.output_prefix = True
 
@@ -636,7 +605,7 @@ def get_version():
     return 'unknown';
 
   with cd(env.config['gitRootFolder']):
-    with hide('warnings', 'output', 'commands'):
+    with hide('output', 'commands'):
       output = run('git describe --always')
       output = output.stdout.splitlines()
       return output[-1].replace('/', '-')
@@ -655,17 +624,17 @@ def run_common_commands():
   key = 'development' if env.config['useForDevelopment'] else 'deployment'
   if key in settings['common']:
     for line in settings['common'][key]:
-      _run(line)
+      run(line)
 
   env.output_prefix = True
 
 
 
-def run_drush(cmd, msg = '', expand_command = True, hide_output = None):
+def run_drush(cmd, expand_command = True):
   env.output_prefix = False
   if expand_command:
     cmd = 'drush ' + cmd
-  _run(cmd, msg, hide_output)
+  run(cmd)
   env.output_prefix = True
 
 
@@ -734,35 +703,36 @@ def reset(withPasswordReset=False):
     with cd(env.config['siteFolder']):
         if env.config['useForDevelopment'] == True:
           if withPasswordReset in [True, 'True', '1']:
-            run_drush('user-password admin --password="admin"', 'Reset password')
+            run_drush('user-password admin --password="admin"')
           with warn_only():
-            _run('chmod -R 777 ' + env.config['filesFolder'])
+            run('chmod -R 777 ' + env.config['filesFolder'])
         with warn_only():
           if 'deploymentModule' in settings:
-            run_drush('en -y ' + settings['deploymentModule'], 'Enable deployment-module')
-        run_drush('updb -y', 'Update database')
-        run_drush('fra -y', 'Revert features')
+            run_drush('en -y ' + settings['deploymentModule'])
+        run_drush('updb -y')
+        run_drush('fra -y')
         run_common_commands()
-        run_drush('cc all', 'Clear all caches')
+        run_drush(' cc all')
 
   run_custom(env.config, 'reset')
 
 
 
 def backup_sql(backup_file_name, config):
+  print env.host
   if(config['hasDrush']):
     with cd(config['siteFolder']):
       with warn_only():
         skip_tables = ''
         if 'sqlSkipTables' in settings and settings['sqlSkipTables'] != False:
           skip_tables = '--structure-tables-list=' + ','.join(settings['sqlSkipTables'])
-        _run('mkdir -p ' + config['backupFolder'])
+        run('mkdir -p ' + config['backupFolder'])
         if config['supportsZippedBackups']:
-          _run('rm -f '+backup_file_name)
-          _run('rm -f '+backup_file_name+'.gz')
-          run_drush('sql-dump ' + skip_tables + ' --gzip --result-file=' + backup_file_name, 'Create SQL dump at %s' % backup_file_name)
+          run('rm -f '+backup_file_name)
+          run('rm -f '+backup_file_name+'.gz')
+          run_drush('sql-dump ' + skip_tables + ' --gzip --result-file=' + backup_file_name)
         else:
-          run_drush('sql-dump ' + skip_tables + ' --result-file=' + backup_file_name, 'Create SQL dump at %s' % backup_file_name)
+          run_drush('sql-dump ' + skip_tables + ' --result-file=' + backup_file_name)
 
 
 
@@ -785,10 +755,10 @@ def backup(withFiles=True):
 
   if withFiles and withFiles != '0':
     with cd(env.config['filesFolder']):
-      _run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *')
+      run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *')
     if 'privateFilesFolder' in env.config:
       with cd(env.config['privateFilesFolder']):
-        _run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '_private.tgz *')
+        run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '_private.tgz *')
   else:
     print "Backup of files skipped per request..."
 
@@ -801,10 +771,6 @@ def backupDB():
   backup(False)
 
 
-def clean_working_copy():
-  with hide('running', 'output', 'warnings'), warn_only():
-    result = run('git diff --exit-code --quiet')
-    return result.return_code == 0
 
 @task
 def deploy(resetAfterwards=True):
@@ -823,28 +789,20 @@ def deploy(resetAfterwards=True):
 
   if env.config['supportsSSH']:
     with cd(env.config['gitRootFolder']):
-
-      # check for modified files
-      if not clean_working_copy():
-        print red("Working copy is not clean, aborting.\n")
-        result = _run('git status')
-        print result
-        exit(1)
-
-      _run('git fetch origin', 'Fetch origin from repository')
-      _run('git fetch --tags', 'Fetch all tags')
-      _run('git checkout '+branch, 'Checkout branch ' + branch)
+      run('git fetch origin')
+      run('git checkout '+branch)
+      run('git fetch --tags')
 
       git_options = ''
       if 'pull' in env.config['gitOptions']:
         git_options = ' '.join(env.config['gitOptions']['pull'])
 
-      _run('git pull '+ git_options + ' origin ' +branch, 'Pull latest changes')
+      run('git pull '+ git_options + ' origin ' +branch)
 
       if not env.config['ignoreSubmodules']:
-        _run('git submodule init')
-        _run('git submodule sync')
-        _run('git submodule update --init --recursive')
+        run('git submodule init')
+        run('git submodule sync')
+        run('git submodule update --init --recursive')
 
   run_custom(env.config, 'deploy')
 
@@ -889,7 +847,7 @@ def rsync(config_name, files_type = 'filesFolder'):
     rsync += env.config[files_type]
 
     with warn_only():
-      run(rsync, 'Run rsync')
+      run(rsync)
 
 
 
@@ -945,19 +903,19 @@ def _copyDBFrom(config_name = False):
 
 
     # copy sql to target
-    _run('scp -P '+str(source_ssh_port)+' '+ssh_no_strict_key_host_checking_params + " " + ssh_args+':'+sql_name_source+' '+sql_name_target+ ' >>/dev/null', 'Copy dump to %s' % current_config)
+    run('scp -P '+str(source_ssh_port)+' '+ssh_args+':'+sql_name_source+' '+sql_name_target+ ' >>/dev/null')
 
     # cleanup and remove file from source
-    _run('ssh -p '+str(source_ssh_port)+' '+ssh_args+' rm ' + sql_name_source)
+    run('ssh -p '+str(source_ssh_port)+' '+ssh_args+' rm ' + sql_name_source)
 
     # import sql into target
     with cd(env.config['siteFolder']):
       if source_config['supportsZippedBackups']:
-        run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', 'Import SQL-dump', False)
+        run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
       else:
-        run_drush('drush sql-cli < ' + sql_name_target, 'Import SQL-dump', False)
+        run_drush('drush sql-cli < ' + sql_name_target, False)
 
-      _run('rm '+sql_name_target)
+      run('rm '+sql_name_target)
 
 
 
@@ -996,12 +954,12 @@ def drush(drush_command):
   check_config()
   if (env.config['hasDrush']):
     with cd(env.config['siteFolder']):
-      run_drush(drush_command, 'Running drush %s' % drush_command, True, ['running'])
+      run_drush(drush_command)
 
 
 
 @task
-def install(distribution='minimal', ask='True', version='7'):
+def install(distribution='minimal', ask='True'):
   check_config()
   if env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'database' not in env.config:
@@ -1013,18 +971,18 @@ def install(distribution='minimal', ask='True', version='7'):
     print green('Installing fresh database for '+ current_config)
 
     o = env.config['database']
-    _run('mkdir -p '+env.config['siteFolder'])
+    run('mkdir -p '+env.config['siteFolder'])
     with cd(env.config['siteFolder']):
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
       mysql_cmd += 'GRANT ALL PRIVILEGES ON '+o['name']+'.* TO '+o['user']+'@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
 
-      _run('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"', 'create database')
+      run('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"')
       if env.config['hasDrush']:
         with warn_only():
-          _run('chmod u+w '+env.config['siteFolder'])
-          _run('chmod u+w '+env.config['siteFolder']+'/settings.php')
-          _run('rm -f '+env.config['siteFolder']+'/settings.php.old')
-          _run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old 2>/dev/null')
+          run('chmod u+w '+env.config['siteFolder'])
+          run('chmod u+w '+env.config['siteFolder']+'/settings.php')
+          run('rm -f '+env.config['siteFolder']+'/settings.php.old')
+          run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old 2>/dev/null')
 
         sites_folder = os.path.basename(env.config['siteFolder'])
         options = ''
@@ -1034,8 +992,7 @@ def install(distribution='minimal', ask='True', version='7'):
         options += ' --account-name=admin'
         options += ' --account-pass=admin'
         options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name']
-        options += ' --default-major="%d"' % version
-        run_drush('site-install ' + distribution + ' ' + options, 'Install drupal ' + version)
+        run_drush('site-install ' + distribution + ' ' + options)
         run_drush('en features -y')
         with warn_only():
           if 'deploymentModule' in settings:
@@ -1056,22 +1013,22 @@ def copySSHKeyToDocker():
 
   key_file = settings['dockerKeyFile']
   with cd(env.config['rootFolder']), hide('commands', 'output'):
-    _run('mkdir -p /root/.ssh')
+    run('mkdir -p /root/.ssh')
     if 'dockerKeyFile' in settings:
       put(key_file, '/root/.ssh/id_rsa')
       put(key_file+'.pub', '/root/.ssh/id_rsa.pub')
-      _run('chmod 600 /root/.ssh/id_rsa')
-      _run('chmod 644 /root/.ssh/id_rsa.pub')
+      run('chmod 600 /root/.ssh/id_rsa')
+      run('chmod 644 /root/.ssh/id_rsa.pub')
       put(key_file+'.pub', '/tmp')
-      _run('cat /tmp/'+os.path.basename(key_file)+'.pub >> /root/.ssh/authorized_keys')
-      _run('rm /tmp/'+os.path.basename(key_file)+'.pub')
+      run('cat /tmp/'+os.path.basename(key_file)+'.pub >> /root/.ssh/authorized_keys')
+      run('rm /tmp/'+os.path.basename(key_file)+'.pub')
       print green('Copied keyfile to docker.')
 
     if 'dockerAuthorizedKeyFile' in settings:
       authorized_keys_file = settings['dockerAuthorizedKeyFile']
       put(authorized_keys_file, '/root/.ssh/authorized_keys')
       print green('Copied authorized keys to docker.')
-    _run('chmod 700 /root/.ssh')
+    run('chmod 700 /root/.ssh')
 
 
 
@@ -1105,7 +1062,7 @@ def behat(preset=False, options='', name=False, format=False, out=False):
     exit(1)
   env.output_prefix = False
   with cd(env.config['gitRootFolder']):
-    _run(env.config['behat']['run'] + ' ' + options)
+    run(env.config['behat']['run'] + ' ' + options)
   env.output_prefix = True
 
 
@@ -1121,7 +1078,7 @@ def installBehat():
   env.output_prefix = False
   with cd(env.config['gitRootFolder']):
     for line in env.config['behat']['install']:
-      _run(line)
+      run(line)
   env.output_prefix = True
 
 
@@ -1183,7 +1140,7 @@ def waitForServices():
     try:
       with cd(env.config['rootFolder']), hide('commands'):
 
-        output = _run('supervisorctl status')
+        output = run('supervisorctl status')
         output = output.stdout.splitlines()
         count_running = 0
         count_services = 0;
@@ -1348,9 +1305,9 @@ def run_script(rootFolder=False, commands=False, callbacks=False):
 
         if state['warnOnly']:
           with warn_only():
-            _run(line)
+            run(line)
         else:
-          _run(line)
+          run(line)
 
 
 
@@ -1361,7 +1318,7 @@ def get_backups_list():
 
   with cd(env.config['backupFolder']), hide('running', 'stdout', 'stderr', 'warnings'), warn_only():
     for ext in ('*.gz', '*.tgz', '*.sql'):
-      output = _run('ls -l ' + ext + ' 2>/dev/null')
+      output = run('ls -l ' + ext + ' 2>/dev/null')
       lines = output.stdout.splitlines()
       for line in lines:
         tokens = line.split()
@@ -1446,21 +1403,21 @@ def restore(commit, drop=0):
     ts = datetime.datetime.now().strftime('%Y%m%d.%H%M%S')
     old_files_folder = env.config['filesFolder'] + '.' + ts + '.old'
     with warn_only():
-      _run('chmod -R u+x '+env.config['filesFolder'])
-      _run('rm -rf '+ old_files_folder)
-      _run('mv ' + env.config['filesFolder'] + ' '+old_files_folder)
+      run('chmod -R u+x '+env.config['filesFolder'])
+      run('rm -rf '+ old_files_folder)
+      run('mv ' + env.config['filesFolder'] + ' '+old_files_folder)
 
     tar_file = env.config['backupFolder'] + '/' + files['files']
-    _run('mkdir -p ' + env.config['filesFolder'])
+    run('mkdir -p ' + env.config['filesFolder'])
     with cd(env.config['filesFolder']):
-      _run('tar -xzvf ' + tar_file)
+      run('tar -xzvf ' + tar_file)
 
     print(green('files restored from ' + files['files']))
 
   # restore git
   with cd(env.config['gitRootFolder']):
 
-    _run('git checkout ' + result['commit'])
+    run('git checkout ' + result['commit'])
 
     print(green('source restored to ' + files['commit']))
 
@@ -1479,24 +1436,24 @@ def updateDrupalCore(version=7):
 
   # create new branch
   with cd(env.config['gitRootFolder']):
-    _run('git checkout -b "drupal-update"')
+    run('git checkout -b "drupal-update"')
 
   # download drupal
   with cd(env.config['rootFolder']):
-    _run('rm -rf /tmp/drupal-update')
-    _run('mkdir -p /tmp/drupal-update')
-    _run_drush('dl --destination="/tmp/drupal-update" --default-major="%d" drupal ' % version)
+    run('rm -rf /tmp/drupal-update')
+    run('mkdir -p /tmp/drupal-update')
+    run_drush('dl --destination="/tmp/drupal-update" --default-major="%d" drupal ' % version)
 
   # copy files to root-folder
   with(cd('/tmp/drupal-update')):
-    drupal_folder = _run('ls').stdout.strip()
+    drupal_folder = run('ls').stdout.strip()
     print drupal_folder
 
-    _run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, env.config['rootFolder']) )
+    run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, env.config['rootFolder']) )
 
   # remove temporary files
   with cd(env.config['rootFolder']):
-    _run('rm -rf /tmp/drupal-update')
+    run('rm -rf /tmp/drupal-update')
 
   print green("Updated drupal successfully to '%s'. Please review the changes in the new branch drupal-update." % drupal_folder)
 
@@ -1522,7 +1479,7 @@ def restoreSQLFromFile(full_file_name):
     else:
       run_drush('drush sql-cli < ' + sql_name_target, False)
 
-    _run('rm '+sql_name_target)
+    run('rm '+sql_name_target)
 
 
 
