@@ -1530,3 +1530,8 @@ def putFile(fileName):
   check_config()
   put(fileName, env.config['tmpFolder'])
 
+@task
+def getFile(remotePath, localPath='./'):
+  check_config()
+  get(remote_path=remotePath, local_path=localPath)
+
