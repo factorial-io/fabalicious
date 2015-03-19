@@ -1462,7 +1462,7 @@ def restore(commit, drop=0):
 
 
 @task
-def updateDrupalCore(version=7):
+def updateDrupalCore(version=7, branch="feature/drupal-update"):
   check_config()
   if not env.config['useForDevelopment']:
     print red('drupalUpdateCore not supported for staging/live environments ...')
@@ -1472,7 +1472,7 @@ def updateDrupalCore(version=7):
 
   # create new branch
   with cd(env.config['gitRootFolder']):
-    run_quietly('git checkout -b "drupal-update"')
+    run_quietly('git checkout -b "%s"' % branch)
 
   # download drupal
   with cd(env.config['rootFolder']):
@@ -1487,11 +1487,19 @@ def updateDrupalCore(version=7):
 
     run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, env.config['rootFolder']) )
 
+  # rename branch, if not customized
+  if branch == 'feature/drupal-update':
+    new_branch = 'feature/drupal-update-' + drupal_folder.replace('drupal-', '')
+    with cd(env.config['rootFolder']):
+      run_quietly('git branch -m "%s" "%s" ' % (branch, new_branch))
+
+    branch = new_branch
+
   # remove temporary files
   with cd(env.config['rootFolder']):
     run_quietly('rm -rf /tmp/drupal-update')
 
-  print green("Updated drupal successfully to '%s'. Please review the changes in the new branch drupal-update." % drupal_folder)
+  print green("Updated drupal successfully to '%s'. Please review the changes in the new branch %s." % (drupal_folder, branch))
 
 
 
