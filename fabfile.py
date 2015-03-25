@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from fabric.api import *
+from fabric.state import output, env
 from fabric.colors import green, red
 import datetime
 import yaml
@@ -89,6 +90,9 @@ class RemoteSSHTunnel:
 
 
 def run_quietly(cmd, msg = '', hide_output = None, may_fail=False):
+
+  if 'warn_only' in env and env['warn_only']:
+    may_fail = True
 
   if msg != '':
     print msg
@@ -826,7 +830,8 @@ def deploy(resetAfterwards=True):
         print red("Working copy is not clean, aborting.\n")
         run('git status')
         exit(1)
-      run_quietly('git fetch origin')
+      # run not quietly to see ssh-warnings, -confirms
+      run('git fetch origin')
       run_quietly('git checkout '+branch)
       run_quietly('git fetch --tags')
 
