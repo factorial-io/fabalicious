@@ -524,6 +524,8 @@ def apply_config(config, name):
   if 'docker' in config:
 
     docker_configuration = get_docker_configuration(config['docker']['configuration'], config)
+    docker_configuration = resolve_inheritance(docker_configuration, settings['dockerHosts'])
+
     if docker_configuration:
 
       host_str = docker_configuration['user'] + '@'+docker_configuration['host']+':'+str(docker_configuration['port'])
