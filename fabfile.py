@@ -996,7 +996,7 @@ def drush(drush_command):
 
 
 @task
-def install(distribution='minimal', ask='True'):
+def install(distribution='minimal', ask='True', version=7):
   check_config()
   if env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'database' not in env.config:
@@ -1032,7 +1032,8 @@ def install(distribution='minimal', ask='True'):
         run_drush('site-install ' + distribution + ' ' + options)
 
         with warn_only():
-          run_drush('en features -y')
+          if version <= 7:
+            run_drush('en features -y')
           if 'deploymentModule' in settings:
             run_drush('en -y '+settings['deploymentModule'])
 
