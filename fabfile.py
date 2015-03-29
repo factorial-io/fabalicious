@@ -1056,7 +1056,7 @@ def copySSHKeyToDocker():
     return
 
   key_file = settings['dockerKeyFile']
-  with cd(env.config['rootFolder']), hide('commands', 'output'):
+  with cd(env.config['rootFolder']), hide('commands', 'output'), lcd(fabfile_basedir):
     run('mkdir -p /root/.ssh')
     if 'dockerKeyFile' in settings:
       put(key_file, '/root/.ssh/id_rsa')
