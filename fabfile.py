@@ -1243,7 +1243,6 @@ def docker(subtask=False, **kwargs):
   for key in kwargs:
     replacements['%'+key+'%'] = str(kwargs[key])
 
-  print replacements
   pattern = re.compile('|'.join(re.escape(key) for key in replacements.keys()))
 
   for line in commands:
