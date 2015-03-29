@@ -524,6 +524,8 @@ def apply_config(config, name):
   if 'docker' in config:
 
     docker_configuration = get_docker_configuration(config['docker']['configuration'], config)
+    docker_configuration = resolve_inheritance(docker_configuration, settings['dockerHosts'])
+
     if docker_configuration:
 
       host_str = docker_configuration['user'] + '@'+docker_configuration['host']+':'+str(docker_configuration['port'])
@@ -706,8 +708,9 @@ def reset(withPasswordReset=False):
             run_drush('user-password admin --password="admin"')
           with warn_only():
             run('chmod -R 777 ' + env.config['filesFolder'])
-        if 'deploymentModule' in settings:
-          run_drush('en -y ' + settings['deploymentModule'])
+        with warn_only():
+          if 'deploymentModule' in settings:
+            run_drush('en -y ' + settings['deploymentModule'])
         run_drush('updb -y')
         run_drush('fra -y')
         run_common_commands()
@@ -724,7 +727,7 @@ def backup_sql(backup_file_name, config):
       with warn_only():
         skip_tables = ''
         if 'sqlSkipTables' in settings and settings['sqlSkipTables'] != False:
-          skip_tables = '--skip-tables-list=' + ','.join(settings['sqlSkipTables'])
+          skip_tables = '--structure-tables-list=' + ','.join(settings['sqlSkipTables'])
         run('mkdir -p ' + config['backupFolder'])
         if config['supportsZippedBackups']:
           run('rm -f '+backup_file_name)
@@ -958,7 +961,7 @@ def drush(drush_command):
 
 
 @task
-def install():
+def install(distribution='minimal', ask='True', version=7):
   check_config()
   if env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'database' not in env.config:
@@ -984,10 +987,19 @@ def install():
           run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old 2>/dev/null')
 
         sites_folder = os.path.basename(env.config['siteFolder'])
-        run_drush('site-install minimal  --sites-subdir='+sites_folder+' --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
-
-        if 'deploymentModule' in settings:
-          run_drush('en -y '+settings['deploymentModule'])
+        options = ''
+        if ask.lower() == 'false' or ask.lower() == '0':
+          options = ' -y'
+        options += ' --sites-subdir='+sites_folder
+        options += ' --account-name=admin'
+        options += ' --account-pass=admin'
+        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name']
+        run_drush('site-install ' + distribution + ' ' + options)
+        if version <= 7:
+          run_drush('en features -y')
+        with warn_only():
+          if 'deploymentModule' in settings:
+            run_drush('en -y '+settings['deploymentModule'])
 
       reset()
   else:
@@ -1292,7 +1304,7 @@ def get_backups_list():
   if not env.config['supportsSSH']:
     return result;
 
-  with cd(env.config['backupFolder']), hide('output', 'commands'), warn_only():
+  with cd(env.config['backupFolder']), hide('running', 'stdout', 'stderr', 'warnings'), warn_only():
     for ext in ('*.gz', '*.tgz', '*.sql'):
       output = run('ls -l ' + ext + ' 2>/dev/null')
       lines = output.stdout.splitlines()
