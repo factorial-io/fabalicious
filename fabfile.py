@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from fabric.api import *
+from fabric.state import output, env
 from fabric.colors import green, red
 import datetime
 import yaml
@@ -86,6 +87,33 @@ class RemoteSSHTunnel:
 
   def entrance(self):
     return 'localhost:%d' % self.local_port
+
+
+def run_quietly(cmd, msg = '', hide_output = None, may_fail=False):
+
+  if 'warn_only' in env and env['warn_only']:
+    may_fail = True
+
+  if msg != '':
+    print msg
+
+  if not hide_output:
+    hide_output = ['running', 'output', 'warnings']
+
+  with hide(*hide_output):
+    try:
+      result = run(cmd)
+
+      if not may_fail and result.return_code != 0:
+        print red('%s failed:' %s)
+        print result
+
+      return result
+    except:
+      print red('%s failed' % cmd)
+
+      if output['aborts']:
+        raise SystemExit('%s failed' % cmd);
 
 
 
@@ -524,6 +552,8 @@ def apply_config(config, name):
   if 'docker' in config:
 
     docker_configuration = get_docker_configuration(config['docker']['configuration'], config)
+    docker_configuration = resolve_inheritance(docker_configuration, settings['dockerHosts'])
+
     if docker_configuration:
 
       host_str = docker_configuration['user'] + '@'+docker_configuration['host']+':'+str(docker_configuration['port'])
@@ -553,7 +583,7 @@ def run_custom(config, run_key):
 
   env.output_prefix = False
   if run_key in config:
-    with cd(config['rootFolder']):
+    with cd(config['rootFolder']), hide('running'):
       for line in config[run_key]:
         line = pattern.sub(lambda x: replacements[x.group()], line)
         result = re.match(r'run_docker_task\((.*)\)', line)
@@ -605,7 +635,7 @@ def get_version():
     return 'unknown';
 
   with cd(env.config['gitRootFolder']):
-    with hide('output', 'commands'):
+    with hide('output', 'running'):
       output = run('git describe --always')
       output = output.stdout.splitlines()
       return output[-1].replace('/', '-')
@@ -624,7 +654,8 @@ def run_common_commands():
   key = 'development' if env.config['useForDevelopment'] else 'deployment'
   if key in settings['common']:
     for line in settings['common'][key]:
-      run(line)
+      with hide('running'):
+        run(line)
 
   env.output_prefix = True
 
@@ -634,7 +665,8 @@ def run_drush(cmd, expand_command = True):
   env.output_prefix = False
   if expand_command:
     cmd = 'drush ' + cmd
-  run(cmd)
+  with hide('running'):
+    run(cmd)
   env.output_prefix = True
 
 
@@ -677,7 +709,7 @@ def config(config_name='local'):
 
 @task
 def getProperty(in_key):
-  with hide('output','running','warnings'):
+  with hide('output', 'running', 'warnings'):
     check_config()
     keys = in_key.split('/')
     c = env.config
@@ -701,34 +733,36 @@ def reset(withPasswordReset=False):
 
   if env.config['hasDrush'] == True:
     with cd(env.config['siteFolder']):
-        if env.config['useForDevelopment'] == True:
-          if withPasswordReset in [True, 'True', '1']:
-            run_drush('user-password admin --password="admin"')
-          with warn_only():
-            run('chmod -R 777 ' + env.config['filesFolder'])
+      if env.config['useForDevelopment'] == True:
+        if withPasswordReset in [True, 'True', '1']:
+          run_drush('user-password admin --password="admin"')
+        with warn_only():
+          run_quietly('chmod -R 777 ' + env.config['filesFolder'])
+      with warn_only():
         if 'deploymentModule' in settings:
           run_drush('en -y ' + settings['deploymentModule'])
-        run_drush('updb -y')
+      run_drush('updb -y')
+      with warn_only():
         run_drush('fra -y')
-        run_common_commands()
-        run_drush(' cc all')
+
+      run_common_commands()
+      run_drush(' cc all')
 
   run_custom(env.config, 'reset')
 
 
 
 def backup_sql(backup_file_name, config):
-  print env.host
   if(config['hasDrush']):
     with cd(config['siteFolder']):
       with warn_only():
         skip_tables = ''
         if 'sqlSkipTables' in settings and settings['sqlSkipTables'] != False:
-          skip_tables = '--skip-tables-list=' + ','.join(settings['sqlSkipTables'])
-        run('mkdir -p ' + config['backupFolder'])
+          skip_tables = '--structure-tables-list=' + ','.join(settings['sqlSkipTables'])
+        run_quietly('mkdir -p ' + config['backupFolder'])
         if config['supportsZippedBackups']:
-          run('rm -f '+backup_file_name)
-          run('rm -f '+backup_file_name+'.gz')
+          run_quietly('rm -f '+backup_file_name)
+          run_quietly('rm -f '+backup_file_name+'.gz')
           run_drush('sql-dump ' + skip_tables + ' --gzip --result-file=' + backup_file_name)
         else:
           run_drush('sql-dump ' + skip_tables + ' --result-file=' + backup_file_name)
@@ -754,10 +788,10 @@ def backup(withFiles=True):
 
   if withFiles and withFiles != '0':
     with cd(env.config['filesFolder']):
-      run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *')
+      run_quietly('tar '+exclude_files_str+' -czPf ' + backup_file_name + '.tgz *', 'Backing up files')
     if 'privateFilesFolder' in env.config:
       with cd(env.config['privateFilesFolder']):
-        run('tar '+exclude_files_str+' -czPf ' + backup_file_name + '_private.tgz *')
+        run_quietly('tar '+exclude_files_str+' -czPf ' + backup_file_name + '_private.tgz *', 'Backup up private files')
   else:
     print "Backup of files skipped per request..."
 
@@ -769,7 +803,10 @@ def backup(withFiles=True):
 def backupDB():
   backup(False)
 
-
+def clean_working_copy():
+  with hide('running', 'output', 'warnings'), warn_only():
+    result = run('git diff --exit-code --quiet')
+    return result.return_code == 0
 
 @task
 def deploy(resetAfterwards=True):
@@ -788,20 +825,26 @@ def deploy(resetAfterwards=True):
 
   if env.config['supportsSSH']:
     with cd(env.config['gitRootFolder']):
+
+      if not clean_working_copy():
+        print red("Working copy is not clean, aborting.\n")
+        run('git status')
+        exit(1)
+      # run not quietly to see ssh-warnings, -confirms
       run('git fetch origin')
-      run('git checkout '+branch)
-      run('git fetch --tags')
+      run_quietly('git checkout '+branch)
+      run_quietly('git fetch --tags')
 
       git_options = ''
       if 'pull' in env.config['gitOptions']:
         git_options = ' '.join(env.config['gitOptions']['pull'])
 
-      run('git pull '+ git_options + ' origin ' +branch)
+      run_quietly('git pull '+ git_options + ' origin ' +branch, 'Pulling '+ branch)
 
       if not env.config['ignoreSubmodules']:
-        run('git submodule init')
-        run('git submodule sync')
-        run('git submodule update --init --recursive')
+        run_quietly('git submodule init')
+        run_quietly('git submodule sync')
+        run_quietly('git submodule update --init --recursive')
 
   run_custom(env.config, 'deploy')
 
@@ -914,7 +957,7 @@ def _copyDBFrom(config_name = False):
       else:
         run_drush('drush sql-cli < ' + sql_name_target, False)
 
-      run('rm '+sql_name_target)
+      run_quietly('rm '+sql_name_target)
 
 
 
@@ -958,7 +1001,7 @@ def drush(drush_command):
 
 
 @task
-def install():
+def install(distribution='minimal', ask='True', version=7):
   check_config()
   if env.config['useForDevelopment'] and env.config['supportsInstalls']:
     if 'database' not in env.config:
@@ -970,24 +1013,34 @@ def install():
     print green('Installing fresh database for '+ current_config)
 
     o = env.config['database']
-    run('mkdir -p '+env.config['siteFolder'])
+    run_quietly('mkdir -p '+env.config['siteFolder'])
     with cd(env.config['siteFolder']):
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
       mysql_cmd += 'GRANT ALL PRIVILEGES ON '+o['name']+'.* TO '+o['user']+'@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
 
-      run('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"')
+      run_quietly('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"', 'Creating database')
       if env.config['hasDrush']:
         with warn_only():
-          run('chmod u+w '+env.config['siteFolder'])
-          run('chmod u+w '+env.config['siteFolder']+'/settings.php')
-          run('rm -f '+env.config['siteFolder']+'/settings.php.old')
-          run('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old 2>/dev/null')
+          run_quietly('chmod u+w '+env.config['siteFolder'])
+          run_quietly('chmod u+w '+env.config['siteFolder']+'/settings.php')
+          run_quietly('rm -f '+env.config['siteFolder']+'/settings.php.old')
+          run_quietly('mv '+env.config['siteFolder']+'/settings.php '+env.config['siteFolder']+'/settings.php.old 2>/dev/null')
 
         sites_folder = os.path.basename(env.config['siteFolder'])
-        run_drush('site-install minimal  --sites-subdir='+sites_folder+' --site-name="'+settings['name']+'" --account-name=admin --account-pass=admin --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name'])
+        options = ''
+        if ask.lower() == 'false' or ask.lower() == '0':
+          options = ' -y'
+        options += ' --sites-subdir='+sites_folder
+        options += ' --account-name=admin'
+        options += ' --account-pass=admin'
+        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name']
+        run_drush('site-install ' + distribution + ' ' + options)
 
-        if 'deploymentModule' in settings:
-          run_drush('en -y '+settings['deploymentModule'])
+        with warn_only():
+          if version <= 7:
+            run_drush('en features -y')
+          if 'deploymentModule' in settings:
+            run_drush('en -y '+settings['deploymentModule'])
 
       reset()
   else:
@@ -1293,12 +1346,12 @@ def run_script(rootFolder=False, commands=False, callbacks=False):
             handled = True
 
       if not handled:
-
-        if state['warnOnly']:
-          with warn_only():
+        with hide('running'):
+          if state['warnOnly']:
+            with warn_only():
+              run(line)
+          else:
             run(line)
-        else:
-          run(line)
 
 
 
@@ -1307,7 +1360,7 @@ def get_backups_list():
   if not env.config['supportsSSH']:
     return result;
 
-  with cd(env.config['backupFolder']), hide('output', 'commands'), warn_only():
+  with cd(env.config['backupFolder']), hide('running', 'output', 'warnings'), warn_only():
     for ext in ('*.gz', '*.tgz', '*.sql'):
       output = run('ls -l ' + ext + ' 2>/dev/null')
       lines = output.stdout.splitlines()
@@ -1394,14 +1447,14 @@ def restore(commit, drop=0):
     ts = datetime.datetime.now().strftime('%Y%m%d.%H%M%S')
     old_files_folder = env.config['filesFolder'] + '.' + ts + '.old'
     with warn_only():
-      run('chmod -R u+x '+env.config['filesFolder'])
-      run('rm -rf '+ old_files_folder)
-      run('mv ' + env.config['filesFolder'] + ' '+old_files_folder)
+      run_quietly('chmod -R u+x '+env.config['filesFolder'])
+      run_quietly('rm -rf '+ old_files_folder)
+      run_quietly('mv ' + env.config['filesFolder'] + ' '+old_files_folder)
 
     tar_file = env.config['backupFolder'] + '/' + files['files']
-    run('mkdir -p ' + env.config['filesFolder'])
+    run_quietly('mkdir -p ' + env.config['filesFolder'])
     with cd(env.config['filesFolder']):
-      run('tar -xzvf ' + tar_file)
+      run_quietly('tar -xzvf ' + tar_file, 'Unpacking files')
 
     print(green('files restored from ' + files['files']))
 
@@ -1417,7 +1470,7 @@ def restore(commit, drop=0):
 
 
 @task
-def updateDrupalCore(version=7):
+def updateDrupalCore(version=7, branch="feature/drupal-update"):
   check_config()
   if not env.config['useForDevelopment']:
     print red('drupalUpdateCore not supported for staging/live environments ...')
@@ -1427,26 +1480,34 @@ def updateDrupalCore(version=7):
 
   # create new branch
   with cd(env.config['gitRootFolder']):
-    run('git checkout -b "drupal-update"')
+    run_quietly('git checkout -b "%s"' % branch)
 
   # download drupal
   with cd(env.config['rootFolder']):
-    run('rm -rf /tmp/drupal-update')
-    run('mkdir -p /tmp/drupal-update')
+    run_quietly('rm -rf /tmp/drupal-update')
+    run_quietly('mkdir -p /tmp/drupal-update')
     run_drush('dl --destination="/tmp/drupal-update" --default-major="%d" drupal ' % version)
 
   # copy files to root-folder
-  with(cd('/tmp/drupal-update')):
+  with(cd('/tmp/drupal-update')), hide('running'):
     drupal_folder = run('ls').stdout.strip()
-    print drupal_folder
+    # print drupal_folder
 
     run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, env.config['rootFolder']) )
 
+  # rename branch, if not customized
+  if branch == 'feature/drupal-update':
+    new_branch = 'feature/drupal-update-' + drupal_folder.replace('drupal-', '')
+    with cd(env.config['rootFolder']):
+      run_quietly('git branch -m "%s" "%s" ' % (branch, new_branch))
+
+    branch = new_branch
+
   # remove temporary files
   with cd(env.config['rootFolder']):
-    run('rm -rf /tmp/drupal-update')
+    run_quietly('rm -rf /tmp/drupal-update')
 
-  print green("Updated drupal successfully to '%s'. Please review the changes in the new branch drupal-update." % drupal_folder)
+  print green("Updated drupal successfully to '%s'. Please review the changes in the new branch %s." % (drupal_folder, branch))
 
 
 
@@ -1470,7 +1531,7 @@ def restoreSQLFromFile(full_file_name):
     else:
       run_drush('drush sql-cli < ' + sql_name_target, False)
 
-    run('rm '+sql_name_target)
+    run_quietly('rm '+sql_name_target)
 
 
 
@@ -1484,4 +1545,9 @@ def ssh():
 def putFile(fileName):
   check_config()
   put(fileName, env.config['tmpFolder'])
+
+@task
+def getFile(remotePath, localPath='./'):
+  check_config()
+  get(remote_path=remotePath, local_path=localPath)
 
