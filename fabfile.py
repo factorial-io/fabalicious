@@ -1170,7 +1170,7 @@ def waitForServices():
 
 
 @task
-def docker(subtask=False):
+def docker(subtask=False, **kwargs):
   if not subtask:
     print red('Missing subtask for task docker.')
     exit(1)
@@ -1240,6 +1240,10 @@ def docker(subtask=False):
   for key in env.config['docker']:
     replacements['%'+key+'%'] = str(env.config['docker'][key])
 
+  for key in kwargs:
+    replacements['%'+key+'%'] = str(kwargs[key])
+
+  print replacements
   pattern = re.compile('|'.join(re.escape(key) for key in replacements.keys()))
 
   for line in commands:
