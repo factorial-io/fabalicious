@@ -327,6 +327,10 @@ def get_configuration(name):
         'session'
       ]
 
+    if not 'slack' in settings:
+      settings['slack'] = {}
+    settings['slack'] = data_merge( { 'notifyOn': [], 'username': 'Fabalicious', 'icon_emoji': ':tada:'}, settings['slack'])
+
     host_config = config['hosts'][name]
     host_config = resolve_inheritance(host_config, config['hosts'])
     if 'requires' in host_config:
@@ -394,7 +398,10 @@ def get_configuration(name):
     if not 'behat' in host_config:
       host_config['behat'] = { 'presets': dict() }
 
+    if 'slack' in host_config:
+      host_config['slack'] = data_merge(settings['slack'], host_config['slack'])
 
+    host_config['config_name'] = name
     return host_config
 
   print(red('Configuraton '+name+' not found \n'))
@@ -670,6 +677,29 @@ def run_drush(cmd, expand_command = True):
   env.output_prefix = True
 
 
+def slack(config, type, message):
+  if 'slack' not in config:
+    return
+
+  slack_config = config['slack']
+  if type not in slack_config['notifyOn']:
+    return
+
+  try:
+    __import__('imp').find_module('slacker')
+    from slacker import Slacker
+
+    slack = Slacker(slack_config['token'])
+
+    # Send a message to #general channel
+    username = '%s (%s)' % (slack_config['username'], config['config_name'])
+    slack.chat.post_message(slack_config['channel'], message, username=username, icon_emoji=slack_config['icon_emoji'])
+
+  except ImportError:
+    print red('Please install slacker on this machine: pip install slacker.')
+
+
+
 
 @task
 def list():
@@ -749,6 +779,7 @@ def reset(withPasswordReset=False):
       run_drush(' cc all')
 
   run_custom(env.config, 'reset')
+  slack(env.config, 'Reset finished')
 
 
 
@@ -796,6 +827,8 @@ def backup(withFiles=True):
     print "Backup of files skipped per request..."
 
   run_custom(env.config, 'backup')
+
+  slack(env.config, 'backup', 'Backup finished to ' + backup_file_name)
 
 
 
@@ -847,6 +880,9 @@ def deploy(resetAfterwards=True):
         run_quietly('git submodule update --init --recursive')
 
   run_custom(env.config, 'deploy')
+
+  slack(env.config, 'deploy', 'Deployment finished to ' + env.config['host'])
+
 
   if resetAfterwards and resetAfterwards != '0':
     reset()
@@ -997,6 +1033,8 @@ def drush(drush_command):
   if (env.config['hasDrush']):
     with cd(env.config['siteFolder']):
       run_drush(drush_command)
+
+  slack(env.config, "run drush " + drush_command)
 
 
 
