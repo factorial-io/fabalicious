@@ -13,6 +13,7 @@ import copy
 import glob
 import urllib2
 import sys
+import json
 
 settings = 0
 current_config = 'unknown'
@@ -692,8 +693,13 @@ def slack(config, type, message):
     slack = Slacker(slack_config['token'])
 
     # Send a message to #general channel
-    username = '%s (%s)' % (slack_config['username'], config['config_name'])
-    slack.chat.post_message(slack_config['channel'], message, username=username, icon_emoji=slack_config['icon_emoji'])
+    username = slack_config['username']
+    attachments = json.dumps([{
+      'fallback': message,
+      'text': message,
+      'color': 'good'
+    }])
+    slack.chat.post_message(slack_config['channel'], 'Configuration: ' + config['config_name'], username=username, attachments=attachments, icon_emoji=slack_config['icon_emoji'])
 
   except ImportError:
     print red('Please install slacker on this machine: pip install slacker.')
@@ -779,7 +785,7 @@ def reset(withPasswordReset=False):
       run_drush(' cc all')
 
   run_custom(env.config, 'reset')
-  slack(env.config, 'Reset finished')
+  slack(env.config, 'reset', 'Reset finished.')
 
 
 
@@ -881,7 +887,7 @@ def deploy(resetAfterwards=True):
 
   run_custom(env.config, 'deploy')
 
-  slack(env.config, 'deploy', 'Deployment finished to ' + env.config['host'])
+  slack(env.config, 'deploy', 'Deployment finished sucessfully')
 
 
   if resetAfterwards and resetAfterwards != '0':
