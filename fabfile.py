@@ -878,7 +878,7 @@ def deploy(resetAfterwards=True):
       if 'pull' in env.config['gitOptions']:
         git_options = ' '.join(env.config['gitOptions']['pull'])
 
-      run_quietly('git pull '+ git_options + ' origin ' +branch, 'Pulling '+ branch)
+      run('git pull -q '+ git_options + ' origin ' +branch)
 
       if not env.config['ignoreSubmodules']:
         run_quietly('git submodule init')
