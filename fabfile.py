@@ -831,7 +831,7 @@ def deploy(resetAfterwards=True):
         run('git status')
         exit(1)
       # run not quietly to see ssh-warnings, -confirms
-      run('git fetch origin')
+      run('git fetch -q origin')
       run_quietly('git checkout '+branch)
       run_quietly('git fetch --tags')
 
