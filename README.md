@@ -56,6 +56,21 @@ On systems with a non-bash environment like lshell try the following settings in
       - cache
       - views_cache
 
+    # Integration with slack. Note that you can set these variables also per host
+    # they are get merged, with precedence of host-variables.
+    # notifyOn has a list of tasks which sends a notification to slack
+    # you'll need to install the slacker-modul for python.
+
+    slack:
+      token: <your-slack-api-token>
+      channel: <channel-name>
+      username: <username, optional>
+      icon_emoji: <name of icon, optional>
+      nofifyOn:
+        - backup
+        - reset
+        - deploy
+
     # custom parameters for git-commands (currently only pull supported)
     # if no custom parameters are set '--rebase' and '--no-edit' are used
     # here you can define the defaults for all configurations
