@@ -66,10 +66,12 @@ On systems with a non-bash environment like lshell try the following settings in
       channel: <channel-name>
       username: <username, optional>
       icon_emoji: <name of icon, optional>
+      gitWebUrl: <URL to the git-web-repository, '%commit%' gets replaced with the current version, optional>
       nofifyOn:
         - backup
         - reset
         - deploy
+        - always
 
     # custom parameters for git-commands (currently only pull supported)
     # if no custom parameters are set '--rebase' and '--no-edit' are used
@@ -275,7 +277,7 @@ at.
 * `ssh`: create a remote shell.
 * `putFile:<filename>` copy a file to the remote host into the tmp-folder.
 * `getFile:<filename>:localPath=<path>` copy a file from the remote host to the local host at `<path>`.
-
+* `slack:<message>` send a message via slack.
 
 ## Advanced topics
 

@@ -683,7 +683,7 @@ def slack(config, type, message):
     return
 
   slack_config = config['slack']
-  if type not in slack_config['notifyOn']:
+  if type != 'always' and type not in slack_config['notifyOn']:
     return
 
   try:
@@ -694,18 +694,45 @@ def slack(config, type, message):
 
     # Send a message to #general channel
     username = slack_config['username']
-    attachments = json.dumps([{
+    version = get_version()
+    version_link = None
+
+    attachments = [{
       'fallback': message,
-      'text': message,
-      'color': 'good'
-    }])
-    slack.chat.post_message(slack_config['channel'], 'Configuration: ' + config['config_name'], username=username, attachments=attachments, icon_emoji=slack_config['icon_emoji'])
+      'color': 'good',
+      'fields': [
+        {
+          'title': 'Configuration',
+          'short': True,
+          'value': config['config_name'],
+        },
+        {
+          'title': 'Branch / Version',
+          'short': True,
+          'value': config['branch'] + ' / ' + version,
+        },
+
+      ]
+    }]
+
+    if 'gitWebUrl' in slack_config:
+      version_link = slack_config['gitWebUrl'].replace('%commit%', version)
+      attachments[0]['fields'].append({
+        'title': 'Git',
+        'value': version_link,
+      })
+
+    attachments = json.dumps(attachments)
+
+    slack.chat.post_message(slack_config['channel'], message, username=username, attachments=attachments, icon_emoji=slack_config['icon_emoji'])
 
   except ImportError:
     print red('Please install slacker on this machine: pip install slacker.')
 
 
-
+@task
+def notify(message):
+  slack(env.config, 'always', message)
 
 @task
 def list():
