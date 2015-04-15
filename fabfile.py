@@ -1323,11 +1323,15 @@ def docker(subtask=False, **kwargs):
       print red('Could not get docker-ip-address.')
       exit(1)
 
+    public_ip = '<your-public-ip-address>'
+    if 'public_ip' in kwargs:
+      public_ip = kwargs['public_ip']
+
     print "To connect to your docker-instance, please use the following ssh-command, and leave the terminal-window open:"
     print
-    print "ssh -L<your-public-ip-address>:8888:%s -p %s %s@%s" % (ip, docker_configuration['port'], docker_configuration['user'], docker_configuration['host'])
+    print "ssh -L%s:8888:%s:80 -p %s %s@%s" % (public_ip, ip, docker_configuration['port'], docker_configuration['user'], docker_configuration['host'])
     print
-    print "Then you can connect to your instance via http://<your-public-ip-address>:8888"
+    print "Then you can connect to your instance via http://%s:8888" % public_ip
     exit()
 
   if subtask not in docker_configuration['tasks']:
