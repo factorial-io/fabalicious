@@ -1067,7 +1067,6 @@ def drush(drush_command):
     with cd(env.config['siteFolder']):
       run_drush(drush_command)
 
-  slack(env.config, "run drush " + drush_command)
 
 
 
