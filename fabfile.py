@@ -12,6 +12,7 @@ import copy
 import glob
 import urllib2
 import sys
+import hashlib
 
 settings = 0
 current_config = 'unknown'
@@ -128,10 +129,57 @@ def load_configuration(input_file):
   if 'requires' in data:
     check_fabalicious_version(data['requires'], 'file ' + input_file)
 
+  if os.path.splitext(input_file)[1] == '.lock':
+    return data;
+
+  # create one big data-object
+
+  if 'dockerHosts' in data:
+    for config_name in data['dockerHosts']:
+      host = data['dockerHosts'][config_name]
+      host = resolve_inheritance(host, data['dockerHosts'])
+      data['dockerHosts'][config_name] = host
+      if 'requires' in host:
+        check_fabalicious_version(host['requires'], 'docker-configuration ' + config_name)
+
+  global settings
+  settings = data
+  if 'hosts' in data:
+    for config_name in data['hosts']:
+      host = data['hosts'][config_name]
+      host = resolve_inheritance(host, data['hosts'])
+      data['hosts'][config_name] = host
+
+      if 'requires' in host:
+        check_fabalicious_version(host['requires'], 'host ' + config_name)
+
+      if 'docker' in host:
+        docker_config_name = host['docker']['configuration']
+        new_docker_config_name = hashlib.md5(docker_config_name).hexdigest()
+
+        docker_config = get_docker_configuration(docker_config_name, host)
+        data['dockerHosts'][new_docker_config_name] = docker_config
+        host['docker']['configuration'] = new_docker_config_name
+
+
+
+  output_file_name = os.path.dirname(input_file) + '/fabfile.yaml.lock'
+
+  with open(output_file_name, 'w') as outfile:
+    outfile.write( yaml.dump(data, default_flow_style=False) )
+
   # print json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
 
   return data
 
+def internet_on():
+  try:
+    response=urllib2.urlopen('http://www.google.com',timeout=2)
+    return True
+  except urllib2.URLError as err:
+    pass
+
+  return False
 
 
 def get_all_configurations():
@@ -139,9 +187,15 @@ def get_all_configurations():
 
   start_folder = os.path.dirname(os.path.realpath(__file__))
   max_levels = 3
+  from_cache = False
 
   # Find our configuration-file:
   candidates = ['fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
+
+  if not internet_on():
+    print "No internet available, trying to read from lock-file ..."
+    candidates = ['fabfile.yaml.lock'] + candidates
+
   while max_levels >= 0:
     for candidate in candidates:
       try:
@@ -300,7 +354,6 @@ def get_configuration(name):
       ]
 
     host_config = config['hosts'][name]
-    host_config = resolve_inheritance(host_config, config['hosts'])
     if 'requires' in host_config:
       check_fabalicious_version(host_config['requires'], 'host-configuration ' + name)
 
@@ -376,12 +429,12 @@ def get_configuration(name):
 
 
 def find_between( s, first, last ):
-    try:
-        start = s.index( first ) + len( first )
-        end = s.index( last, start )
-        return s[start:end]
-    except ValueError:
-        return ""
+  try:
+    start = s.index( first ) + len( first )
+    end = s.index( last, start )
+    return s[start:end]
+  except ValueError:
+    return ""
 
 
 
@@ -524,7 +577,6 @@ def apply_config(config, name):
   if 'docker' in config:
 
     docker_configuration = get_docker_configuration(config['docker']['configuration'], config)
-    docker_configuration = resolve_inheritance(docker_configuration, settings['dockerHosts'])
 
     if docker_configuration:
 
@@ -1197,10 +1249,6 @@ def docker(subtask=False, **kwargs):
     print('Available configurations: ' +  ', '.join(all_docker_hosts.keys()))
 
     exit(1)
-
-  docker_configuration = resolve_inheritance(docker_configuration, all_docker_hosts)
-  if 'requires' in docker_configuration:
-    check_fabalicious_version(docker_configuration['requires'], 'docker-configuration ' + config_name)
 
   keys = ("host", "port", "user", "tasks", "rootFolder")
   validate_dict(keys, docker_configuration, 'dockerHosts-Configuraton '+config_name+' has missing key')
