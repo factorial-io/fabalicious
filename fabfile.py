@@ -370,16 +370,12 @@ def get_configuration(name):
         'cache_field',
         'cache_filter',
         'cache_form',
-        'cache_libraries',
         'cache_menu',
-        'cache_metatag',
         'cache_page',
         'cache_path',
-        'cache_token',
         'cache_update',
         'cache_views',
         'cache_views_data',
-        'session'
       ]
 
     if not 'slack' in settings:
@@ -872,16 +868,21 @@ def backup_sql(backup_file_name, config):
   if(config['hasDrush']):
     with cd(config['siteFolder']):
       with warn_only():
-        skip_tables = ''
+        dump_options = ''
         if 'sqlSkipTables' in settings and settings['sqlSkipTables'] != False:
-          skip_tables = '--structure-tables-list=' + ','.join(settings['sqlSkipTables'])
+          dump_options = '--structure-tables-list=' + ','.join(settings['sqlSkipTables'])
+
         run_quietly('mkdir -p ' + config['backupFolder'])
+        run('rm -f '+backup_file_name)
+        if config['supportsZippedBackups']:
+          run('rm -f '+backup_file_name+'.gz')
+
+      # fail on error:
         if config['supportsZippedBackups']:
           run_quietly('rm -f '+backup_file_name)
           run_quietly('rm -f '+backup_file_name+'.gz')
-          run_drush('sql-dump ' + skip_tables + ' --gzip --result-file=' + backup_file_name)
-        else:
-          run_drush('sql-dump ' + skip_tables + ' --result-file=' + backup_file_name)
+        dump_options += ' --gzip'
+      run_drush('sql-dump ' + dump_options + ' --result-file=' + backup_file_name)
 
 
 
