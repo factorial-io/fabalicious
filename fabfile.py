@@ -873,15 +873,11 @@ def backup_sql(backup_file_name, config):
           dump_options = '--structure-tables-list=' + ','.join(settings['sqlSkipTables'])
 
         run_quietly('mkdir -p ' + config['backupFolder'])
-        run('rm -f '+backup_file_name)
+        run_quietly('rm -f '+backup_file_name)
         if config['supportsZippedBackups']:
-          run('rm -f '+backup_file_name+'.gz')
-
-      # fail on error:
-        if config['supportsZippedBackups']:
-          run_quietly('rm -f '+backup_file_name)
           run_quietly('rm -f '+backup_file_name+'.gz')
-        dump_options += ' --gzip'
+          dump_options += ' --gzip'
+
       run_drush('sql-dump ' + dump_options + ' --result-file=' + backup_file_name)
 
 
