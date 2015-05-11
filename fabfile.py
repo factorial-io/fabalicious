@@ -15,6 +15,7 @@ import urllib2
 import sys
 import hashlib
 import json
+import getpass
 
 settings = 0
 current_config = 'unknown'
@@ -741,7 +742,7 @@ def slack(config, type, message):
     slack = Slacker(slack_config['token'])
 
     # Send a message to #general channel
-    username = slack_config['username']
+    username = slack_config['username'] + ' (' + getpass.getuser() + ')'
     version = get_version()
     version_link = None
 
@@ -759,7 +760,6 @@ def slack(config, type, message):
           'short': True,
           'value': config['branch'] + ' / ' + version,
         },
-
       ]
     }]
 
