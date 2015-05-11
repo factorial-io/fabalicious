@@ -183,13 +183,14 @@ def load_configuration(input_file):
       if 'requires' in host:
         check_fabalicious_version(host['requires'], 'host ' + config_name)
 
-      if 'docker' in host:
+      if 'docker' in host and 'configuration' in host['docker']:
         docker_config_name = host['docker']['configuration']
         new_docker_config_name = hashlib.md5(docker_config_name).hexdigest()
 
         docker_config = get_docker_configuration(docker_config_name, host)
-        data['dockerHosts'][new_docker_config_name] = docker_config
-        host['docker']['configuration'] = new_docker_config_name
+        if (docker_config):
+          data['dockerHosts'][new_docker_config_name] = docker_config
+          host['docker']['configuration'] = new_docker_config_name
 
 
 
