@@ -132,9 +132,9 @@ def load_all_yamls_from_dir(path):
       key = os.path.splitext(key)[0]
       result[key] = data
 
-    except IOError:
+    except IOError as e:
       print red('Could not read from %s' % file)
-
+      print red(e)
   return result
 
 
