@@ -133,7 +133,7 @@ def load_all_yamls_from_dir(path):
       result[key] = data
 
     except IOError:
-      print red('Could not read from %' % file)
+      print red('Could not read from %s' % file)
 
   return result
 
@@ -235,7 +235,7 @@ def get_all_configurations():
           return load_configuration(start_folder + '/' + candidate)
 
       except IOError:
-        print "could not read from % " % (start_folder + '/' + candidate)
+        print "could not read from %s " % (start_folder + '/' + candidate)
 
     max_levels = max_levels - 1
     start_folder = os.path.dirname(start_folder)
