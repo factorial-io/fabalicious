@@ -195,9 +195,11 @@ def load_configuration(input_file):
 
 
   output_file_name = os.path.dirname(input_file) + '/fabfile.yaml.lock'
-
-  with open(output_file_name, 'w') as outfile:
-    outfile.write( yaml.dump(data, default_flow_style=False) )
+  try:
+    with open(output_file_name, 'w') as outfile:
+      outfile.write( yaml.dump(data, default_flow_style=False) )
+  except IOError as e:
+    print "Warning, could not safe fafile.yaml.lock: %s" % e
 
   # print json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
 
@@ -205,9 +207,9 @@ def load_configuration(input_file):
 
 def internet_on():
   try:
-    response=urllib2.urlopen('http://www.google.com',timeout=2)
+    urllib2.urlopen('http://www.google.com',timeout=2)
     return True
-  except urllib2.URLError as err:
+  except urllib2.URLError:
     pass
 
   return False
@@ -275,7 +277,6 @@ def resolve_inheritance(config, all_configs):
   if 'inheritsFrom' not in config:
     return config
 
-  base_config = False
   inherits_from = config['inheritsFrom']
   config.pop('inheritsFrom', None)
 
