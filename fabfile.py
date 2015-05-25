@@ -362,6 +362,9 @@ def get_configuration(name):
     if not "useShell" in settings:
       settings['useShell'] = True
 
+    if not "disableKnownHosts" in settings:
+      settings['disableKnownHosts'] = False
+
     if not "gitOptions" in settings:
       settings['gitOptions'] = { 'pull' : [ '--no-edit', '--rebase'] }
 
@@ -407,6 +410,7 @@ def get_configuration(name):
       'gitOptions': settings['gitOptions'],
       'branch': 'master',
       'useShell': settings['useShell'],
+      'disableKnownHosts': settings['disableKnownHosts'],
       'usePty': settings['usePty']
     }
 
@@ -591,6 +595,7 @@ def apply_config(config, name):
 
   env.use_shell = config['useShell']
   env.always_use_pty = config['usePty']
+  env.disable_known_hosts = config['disableKnownHosts']
 
   # print "use_shell: %i, use_pty: %i" % (env.use_shell, env.always_use_pty)
 
