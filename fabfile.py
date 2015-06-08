@@ -966,12 +966,10 @@ def deploy(resetAfterwards=True):
 
   run_custom(env.config, 'deploy')
 
-  slack(env.config, 'deploy', 'Deployment finished sucessfully')
-
-
   if resetAfterwards and resetAfterwards != '0':
     reset()
 
+  slack(env.config, 'deploy', 'Deployment finished sucessfully')
 
 
 @task
