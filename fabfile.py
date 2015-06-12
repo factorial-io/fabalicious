@@ -780,7 +780,7 @@ def slack(config, type, message):
     attachments = json.dumps(attachments)
 
     slack.chat.post_message(slack_config['channel'], message, username=username, attachments=attachments, icon_emoji=slack_config['icon_emoji'])
-
+    print green('send notification to %s' % slack_config['channel'])
   except ImportError:
     print red('Please install slacker on this machine: pip install slacker.')
 
