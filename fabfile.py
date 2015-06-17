@@ -18,6 +18,7 @@ import json
 import getpass
 
 settings = 0
+verbose_output = False
 current_config = 'unknown'
 
 env.forward_agent = True
@@ -93,7 +94,7 @@ class RemoteSSHTunnel:
 
 
 def run_quietly(cmd, msg = '', hide_output = None, may_fail=False):
-
+  global verbose_output
   if 'warn_only' in env and env['warn_only']:
     may_fail = True
 
@@ -102,6 +103,10 @@ def run_quietly(cmd, msg = '', hide_output = None, may_fail=False):
 
   if not hide_output:
     hide_output = ['running', 'output', 'warnings']
+
+  if verbose_output:
+    hide_output=[]
+
 
   with hide(*hide_output):
     try:
@@ -726,10 +731,15 @@ def run_common_commands():
 
 
 def run_drush(cmd, expand_command = True):
+  global verbose_output
   env.output_prefix = False
   if expand_command:
     cmd = 'drush ' + cmd
-  with hide('running'):
+  args = ['running']
+  if verbose_output:
+    args = []
+
+  with hide(*args):
     run(cmd)
   env.output_prefix = True
 
@@ -955,8 +965,8 @@ def deploy(resetAfterwards=True):
         exit(1)
       # run not quietly to see ssh-warnings, -confirms
       run('git fetch -q origin')
-      run_quietly('git checkout '+branch)
-      run_quietly('git fetch --tags')
+      run('git checkout '+branch)
+      run('git fetch --tags')
 
       git_options = ''
       if 'pull' in env.config['gitOptions']:
@@ -965,9 +975,9 @@ def deploy(resetAfterwards=True):
       run('git pull -q '+ git_options + ' origin ' +branch)
 
       if not env.config['ignoreSubmodules']:
-        run_quietly('git submodule init')
-        run_quietly('git submodule sync')
-        run_quietly('git submodule update --init --recursive')
+        run('git submodule init')
+        run('git submodule sync')
+        run('git submodule update --init --recursive')
 
   run_custom(env.config, 'deploy')
 
@@ -1678,3 +1688,7 @@ def getFile(remotePath, localPath='./'):
   check_config()
   get(remote_path=remotePath, local_path=localPath)
 
+@task
+def verbose():
+  global verbose_output
+  verbose_output = True
