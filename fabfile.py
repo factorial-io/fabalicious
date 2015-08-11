@@ -1065,7 +1065,7 @@ def _copyDBFrom(config_name = False):
       ssh_args = " " + ssh_no_strict_key_host_checking_params + ssh_args
 
     sql_name_source = source_config['tmpFolder'] + config_name + '.sql'
-    sql_name_target = target_config['tmpFolder'] + config_name + '.sql'
+    sql_name_target = target_config['tmpFolder'] + config_name + '_target.sql'
 
     # drush has no predictable behaviour
     if source_config['supportsZippedBackups']:
