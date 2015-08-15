@@ -1377,23 +1377,19 @@ def docker(subtask=False, **kwargs):
   keys = ("host", "port", "user", "tasks", "rootFolder")
   validate_dict(keys, docker_configuration, 'dockerHosts-Configuraton '+config_name+' has missing key')
 
-  if subtask == "show_remote_access":
+  if subtask == "startRemoteAccess":
     ip = get_docker_container_ip(env.config['docker']['name'], docker_configuration['host'], docker_configuration['user'], docker_configuration['port'])
 
     if not ip:
       print red('Could not get docker-ip-address.')
       exit(1)
 
-    public_ip = '<your-public-ip-address>'
+    public_ip = '0.0.0.0'
     if 'public_ip' in kwargs:
       public_ip = kwargs['public_ip']
-
-    print "To connect to your docker-instance, please use the following ssh-command, and leave the terminal-window open:"
-    print
-    print "ssh -L%s:8888:%s:80 -p %s %s@%s" % (public_ip, ip, docker_configuration['port'], docker_configuration['user'], docker_configuration['host'])
-    print
-    print "Then you can connect to your instance via http://%s:8888" % public_ip
-    exit()
+    print green("I am about to start the port forwarding via SSH. If you are finished, just type exit after the prompt.")
+    local("ssh -L%s:8888:%s:80 -p %s %s@%s" % (public_ip, ip, docker_configuration['port'], docker_configuration['user'], docker_configuration['host']))
+    exit(0)
 
   if subtask not in docker_configuration['tasks']:
     print(red('Could not find subtask %s in dockerHosts-configuration %s' % (subtask, config_name)))
