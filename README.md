@@ -23,10 +23,64 @@ On systems with a non-bash environment like lshell try the following settings in
     usePty: false
 
 
+## Usage
+
+list all configurations:
+
+    cd <where-your-fabfile-is>
+    fab list
+
+list a specific configuration:
+
+    cd <where-your-fabfile-is>
+    fab about:hostA
+
+list all available tasks:
+
+    cd <where-your-fabfile-is>
+    fab --list
+
+run a task
+
+    cd <where-your-fabfile-is>
+    fab config:hostA <task-name>
+
+##Available tasks:
+
+* `version`: get the current version of the source (= git describe)
+* `reset`: reset the drupal-installation, clear the caches, run update, reset all features, enable deploy-module and its dependencies
+* `backup`: tar all files, dump the database and copy them to the backup-directory.
+* `backupDB`: backup the DB tp the backups-directory only
+* `listBackups`: list all previously made backups
+* `restore:<commit|partial-filename>` will restore files and/or DB from given commit or partial filename and reset git's HEAD to given revision.
+* `deploy`: update the installation by pulling the newest source from git and running the reset-task afterwards
+* `copyFrom:<source-host>`: copies all files from `filesFolder` at source-host to target host, and imports a sql-dump from source-host.
+* `copyDBFrom:<source-host>`: copies only the DB from the source-host
+* `copyFilesFrom:<source-host>`: copies only the files from the source-host
+* `install:<distribution=minimal>,<ask=True>`: will install a database in the docker-container. Works currently only when `supportsInstall=true` and `useForDevelopment=true`. Needs an additional host-setting: `database`-dictionary. If `hasDrush=true` the code will install drupal with profile minimal, if the optional distribution-parameter is not set.  This task will overwrite your settings.php-file and databases, so be prepared! This task has two optional parameter: you can install another distribution when setting ``distribution`` according to your needs. If you set ``ask`` to (0|false) there will be no confimration dialog.
+* `behat:<name="Name of feature",format="pretty", out="", options="">`: run behat tests, the configuration needs a setting for `behat:run` which gets called to run the tests. You can add command-line-options to the command, the most used (name, format and out) are mirrored by fabalicious, as escaping all the commas is cumbersome.
+* `installBehat`: install behat, the configuration needs a setting for `behat:install` which gets called to install behat at.
+* `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
+* `docker:<subtask>`: runs a set of scripts on the host-machine to control docker-instances.
+* `copySSHKeysToDocker`: copies stored ssh-keys into a docker-image. You'll need to set `dockerKeyFile`. If there's a setting for `dockerAuthorizedKeyFile` the authorized_key-file will also copied into the docker. This will help with docker-to-docker-communication via SSH.
+* `updateDrupalCore:<version=x>`: This task will create a new branch, download the latest stable release from drupal, and move all files to your webRoot. After that you can review the new code, commit it and marge it into your existing branch. Why not use drush for this? In my testings it didn't work reliable, sometimes the update went smooth, sometimes it doesn't do anything.
+* `restoreSQLFromFile:<file-name>`: will copy file-name to the remote host and import it via drush.
+* `ssh`: create a remote shell.
+* `putFile:<filename>` copy a file to the remote host into the tmp-folder.
+* `getFile:<filename>:localPath=<path>` copy a file from the remote host to the local host at `<path>`.
+* `notify:<message>` send a message via slack.
+
+
 ##fabfile.yaml
 
     name: The name of your project
-    deploymentModule: the name of your drupal deployment-module
+
+    #optional
+    requires: the required version of fabalicous to handle this configuration, e.g. 0.18.2
+
+    #optional
+    deploymentModule: the name of your drupal deployment-module/Users/stephan/Documents/dev/web/multibasebox/projects/test/_tools/fabalicious/README.md
+
     # common commands are executed when resetting/deploying an installation,
     # for all hosts. if 'useForDevelopment' is set, then 'development' is used
     common:
@@ -42,6 +96,30 @@ On systems with a non-bash environment like lshell try the following settings in
 
     # optional, defaults to true
     usePty: <boolean>
+
+    # optional, a list of tables to skip, when dumping to sql,
+    # set to False, if you want to dump all tables. If nothing is set,
+    # fabalicious will skip common drupal cache-tables.
+    sqlSkipTables:
+      - cache
+      - views_cache
+
+    # Integration with slack. Note that you can set these variables also per host
+    # they are get merged, with precedence of host-variables.
+    # notifyOn has a list of tasks which sends a notification to slack
+    # you'll need to install the slacker-modul for python.
+
+    slack:
+      token: <your-slack-api-token>
+      channel: <channel-name>
+      username: <username, optional>
+      icon_emoji: <name of icon, optional>
+      gitWebUrl: <URL to the git-web-repository, '%commit%' gets replaced with the current version, optional>
+      nofifyOn:
+        - backup
+        - reset
+        - deploy
+        - always
 
     # custom parameters for git-commands (currently only pull supported)
     # if no custom parameters are set '--rebase' and '--no-edit' are used
@@ -68,6 +146,7 @@ On systems with a non-bash environment like lshell try the following settings in
         user: <user>
         port: <port>
         rootFolder: <path-where-your-docker-stuff-resides>
+        requires: optional, the required version of fabalicous to handle this configuration, e.g. 0.18.2
 
         # you can add as many subtasks you want to control your docker instances.
         # you can use the configuration of your hosts-part with %varname% as pattern,
@@ -105,6 +184,7 @@ On systems with a non-bash environment like lshell try the following settings in
         host: <host>
         port: <port>
         user: <your-ssh-user>
+        requires: optional, the required version of fabalicous to handle this configuration, e.g. 0.18.2
 
         # if you are using basebox for setting up a vagrant-setup, specify the
         # ip here
@@ -188,8 +268,10 @@ On systems with a non-bash environment like lshell try the following settings in
         # add custom parameters to git-commands:
         gitOptions:
           pull:
-            -- <parameter 1>
-            -- <parameter 2>
+            - <parameter 1>
+            - <parameter 2>
+            # e.g.:
+            - --rebase
 
       hostB:
         # you can "include" the configuration of another host via inheritsFrom
@@ -197,46 +279,130 @@ On systems with a non-bash environment like lshell try the following settings in
         inheritsFrom: <key>
         ...
 
-## Usage
 
-list all configurations:
+## Advanced topics
 
-    cd <where-your-fabfile-is>
-    fab list
+### Storing your hosts and dockerHosts configuration in separate files
 
-list a specific configuration:
+Instead of storing all your information in one fabfile.yaml you can create a folder named ``fabalicious`` and store global information in ``index.yaml``, dockerHosts-configuration in ``dockerHosts`` and host-configuration in the folder ``hosts``. The filename acts as the key for the included configuration. Here's an example:
 
-    cd <where-your-fabfile-is>
-    fab about:hostA
+    fabalicious
+    ├── dockerHosts
+    │   ├── default.yaml
+    │   ├── local.yaml
+    │   ├── mbb.yaml
+    │   └── dev-server.yaml
+    ├── hosts
+    │   ├── local.yaml
+    │   ├── mbb.yaml
+    │   ├── dev.host.server2.de.yaml
+    │   ├── stage.host.server2.de.yaml
+    │   └── live.host.server2.de.yaml
+    └── index.yaml
 
-list all available tasks:
+dockerHosts has 4 configurations: ``default``, ``local``, ``mbb``, and ``dev-server``. Hosts as 5 configurations named ``local``, ``mbb``, ``dev.host.server2.de``, ``stage.host.server2.de``, and ``live.host.server2.de.yaml``.
 
-    cd <where-your-fabfile-is>
-    fab --list
+Here's an example of ``local.yaml``: (Note the missing key)
 
-run a task
+    host: drupal.dev
+    port: 222
+    user: root
+    password: root
+    rootFolder: /var/www
+    siteFolder: /sites/default
+    filesFolder: /sites/default/files
+    backupFolder: /var/www/backups
+    useForDevelopment: true
+    branch: develop
+    hasDrush: true
+    supportsInstalls: true
+    vagrant:
+      ip: 33.33.33.21
+    docker:
+      name: drupal
+      configuration: local
+    database:
+      name: drupal_cms
+      user: root
+      pass: admin
 
-    cd <where-your-fabfile-is>
-    fab config:hostA <task-name>
+If your fabalicious-folder is part of your web-directory, add an ``.htaccess``-file to your fabalicious-folder:
 
-##Available tasks:
+    <FilesMatch ".(yaml|yml)$">
+      deny from all
+    </FilesMatch>
 
-* `version`: get the current version of the source (= git describe)
-* `reset`: reset the drupal-installation, clear the caches, run update, reset all features, enable deploy-module and its dependencies
-* `backup`: tar all files, dump the database and copy them to the backup-directory.
-* `backupDB`: backup the DB tp the backups-directory only
-* `listBackups`: list all previously made backups
-* `restore:<commit|partial-filename>` will restore files and/or DB from given commit or partial filename and reset git's HEAD to given revision.
-* `deploy`: update the installation by pulling the newest source from git and running the reset-task afterwards
-* `copyFrom:<source-host>`: copies all files from `filesFolder` at source-host to target host, and imports a sql-dump from source-host.
-* `copyDBFrom:<source-host>`: copies only the DB from the source-host
-* `copyFilesFrom:<source-host>`: copies only the files from the source-host
-* `install`: will install drupal with profile minimal. Works currently only when `supportsInstall=true`, `hasDrush=true` and `useForDevelopment=true`. Needs an additional host-setting: `database`-dictionary. This task will overwrite your settings.php-file and databases, so be prepared!
-* `behat:<name="Name of feature",format="pretty", out="", options="">`: run behat tests, the configuration needs a setting for `behat:run` which gets called to run the tests. You can add command-line-options to the command, the most used (name, format and out) are mirrored by fabalicious, as escaping all the commas is cumbersome.
-* `installBehat`: install behat, the configuration needs a setting for `behat:install` which gets called to install behat
-at.
-* `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
-* `docker:<subtask>`: runs a set of scripts on the host-machine to control docker-instances.
-* `copySSHKeysToDocker`: copies stored ssh-keys into a docker-image. You'll need to set `dockerKeyFile`. If there's a setting for `dockerAuthorizedKeyFile` the authorized_key-file will also copied into the docker. This will help with docker-to-docker-communication via SSH.
-* `updateDrupalCore:<version=x>`: This task will create a new branch, download the latest stable release from drupal, and move all files to your webRoot. After that you can review the new code, commit it and marge it into your existing branch. Why not use drush for this? In my testings it didn't work reliable, sometimes the update went smooth, sometimes it doesn't do anything.
 
+### Include dockerHosts-configuration from outside the fabfile.yaml/ fabalicious-folder
+
+To prevent copy-/pasting configuration from one project to another you can reference files from outside your fabalicious-folder/ -file. You can reference files from your file-system (relative to the location of your fabfile.yaml / fabalicious-folder) or remote-files via http/https.
+
+Reference the external file in your host-configuration via
+
+    mbb:
+      host: ...
+      ...
+      docker:
+        configuration: ./path/to/the/external/config-file.yaml
+
+or
+
+    mbb:
+      host: ...
+      ...
+      docker:
+        configuration: ../../../global-config/path/to/the/external/config-file.yaml
+
+or
+
+    mbb:
+      host: ...
+      ...
+      docker:
+        configuration: http://external.host.tld/path/to/the/external/config-file.yaml
+
+### Inheritance
+
+Besides including external files there's another mechanism to include configuration-data: Inheritance.
+If a ``host``, a ``dockerHost`` or the fabfile itself has the key ``inheritsFrom``, then the given key is used as a base-configuration. Here's a simple example:
+
+    hosts:
+      default:
+          port: 22
+          host: localhost
+          user: default
+      example1:
+          inheritsFrom: default
+          port: 23
+      example2:
+          inheritsFrom: example1
+          user: example2
+
+``example1`` will store the merged configuration from ``default`` with the configuration of ``example1``. ``example2``is a merge of all three configurations: ``example2`` with ``example1`` with ``default``.
+
+    hosts:
+      example1:
+        port: 23
+        host: localhost
+        user: default
+      example2:
+        port: 23
+        host: localhost
+        user: example2
+
+
+You can even reference external files to inherit from:
+
+    hosts:
+      fileExample:
+        inheritsFrom: ./path/to/config/file.yaml
+      httpExapme:
+        inheritsFrom: http://my.tld/path/to/config_file.yaml
+
+This mechanism works also for the fabfile.yaml / index.yaml itself, and is not limited to one entry:
+
+    name: test fabfile
+
+    inheritsFrom:
+      - ./mbb.yaml
+      - ./drupal.yaml
