@@ -4,6 +4,6 @@
     "type": "factorial-tools",
     "license": "MIT",
     "require": {
-        "composer/installers": "1.*"
+        "factorial-io/factorial-tools-installer-plugin": "1.*"
     }
 }
