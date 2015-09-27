@@ -2,5 +2,8 @@
     "name": "factorial-io/fabalicious",
     "description": "deployment system based on fabric",
     "type": "factorial-tools",
-    "license": "MIT"
+    "license": "MIT",
+    "require": {
+        "composer/installers": "1.*"
+    }
 }
