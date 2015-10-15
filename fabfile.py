@@ -1688,3 +1688,20 @@ def getFile(remotePath, localPath='./'):
 def verbose():
   global verbose_output
   verbose_output = True
+
+@task
+def getSQLDump():
+  check_config()
+
+  file_name = env.config['config_name'] + "--" + time.strftime("%Y%m%d-%H%M%S") + '.sql'
+
+  print green('Get SQL dump from %s' % env.config['config_name'])
+
+  file_name = '/tmp/' + file_name
+  backup_sql(file_name, env.config)
+  if env.config['supportsZippedBackups']:
+    file_name += '.gz'
+  getFile(file_name)
+  run('rm ' + file_name);
+
+
