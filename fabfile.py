@@ -576,9 +576,11 @@ def get_configuration_via_http(config_file_name):
 
 def get_docker_configuration(config_name, config):
   if config_name[0:7] == 'http://' or config_name[0:8] == 'https://':
-    return get_configuration_via_http(config_name)
+    data = get_configuration_via_http(config_name)
+    return resolve_inheritance(data, {})
   elif config_name[0:1] == '.':
-    return get_configuration_via_file(config_name)
+    data = get_configuration_via_file(config_name)
+    return resolve_inheritance(data, {})
   else:
     all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
     config_name = config['docker']['configuration']
