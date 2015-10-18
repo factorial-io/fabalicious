@@ -463,6 +463,10 @@ def get_configuration(name):
     if 'slack' in host_config:
       host_config['slack'] = data_merge(settings['slack'], host_config['slack'])
 
+    if 'database' in host_config:
+      if 'host' not in host_config['database']:
+        host_config['database']['host'] = 'localhost'
+
     host_config['config_name'] = name
     return host_config
 
@@ -1144,7 +1148,7 @@ def install(distribution='minimal', ask='True', version=7):
       print red('missing database-dictionary in config '+current_config)
       exit(1)
 
-    validate_dict(['user', 'pass', 'name'], env.config['database'], 'Missing database configuration: ')
+    validate_dict(['user', 'pass', 'name', 'host'], env.config['database'], 'Missing database configuration: ')
 
     print green('Installing fresh database for '+ current_config)
 
@@ -1154,7 +1158,7 @@ def install(distribution='minimal', ask='True', version=7):
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
       mysql_cmd += 'GRANT ALL PRIVILEGES ON '+o['name']+'.* TO '+o['user']+'@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
 
-      run_quietly('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"', 'Creating database')
+      run_quietly('mysql -h ' + o['host'] + ' -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"', 'Creating database')
       if env.config['hasDrush']:
         with warn_only():
           run_quietly('chmod u+w '+env.config['siteFolder'])
@@ -1169,7 +1173,7 @@ def install(distribution='minimal', ask='True', version=7):
         options += ' --sites-subdir='+sites_folder
         options += ' --account-name=admin'
         options += ' --account-pass=admin'
-        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name']
+        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@' + o['host'] + '/' +o ['name']
         run_drush('site-install ' + distribution + ' ' + options)
 
         with warn_only():
