@@ -48,7 +48,7 @@ class SSHTunnel:
     atexit.register(self.p.kill)
     while not 'Entering interactive session' in self.p.stderr.readline():
       if time.time() > start_time + timeout:
-        raise "SSH tunnel timed out"
+        raise Exception("SSH tunnel timed out")
   def entrance(self):
     return 'localhost:%d' % self.local_port
 
@@ -86,7 +86,7 @@ class RemoteSSHTunnel:
     atexit.register(self.p.kill)
     while not 'Entering interactive session' in self.p.stderr.readline():
       if time.time() > start_time + timeout:
-        raise "SSH tunnel timed out"
+        raise Exception("SSH tunnel timed out")
 
 
   def entrance(self):
