@@ -66,7 +66,7 @@ class RemoteSSHTunnel:
       remote_cmd = 'ssh'
       cmd = 'ssh'
     remote_cmd = remote_cmd + ' -v -L %d:%s:%d %s@%s -A -N -M ' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
-    run('rm -f ~/.ssh-tunnel-from-fabric')
+    run_quietly('rm -f ~/.ssh-tunnel-from-fabric')
 
     ssh_port = 22
     if 'port' in config:
@@ -491,7 +491,7 @@ def get_docker_container_ip(docker_name, docker_host, docker_user, docker_port):
   cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (docker_port, docker_user, docker_host, docker_name)
 
   try:
-    with hide('output'):
+    with hide('running', 'output'):
       output = local(cmd, capture=True)
   except SystemExit:
     print red('Docker not running, can\'t get ip')
