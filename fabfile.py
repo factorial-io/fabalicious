@@ -405,6 +405,7 @@ def get_configuration(name):
       'supportsSSH': True,
       'useForDevelopment': False,
       'hasDrush': False,
+      'needsComposer': False,
       'ignoreSubmodules': False,
       'supportsBackups': True,
       'supportsCopyFrom': True,
@@ -984,6 +985,8 @@ def deploy(resetAfterwards=True):
         run('git submodule init')
         run('git submodule sync')
         run('git submodule update --init --recursive')
+      if env.config['needsComposer']:
+        run('composer install')
 
   run_custom(env.config, 'deploy')
 
