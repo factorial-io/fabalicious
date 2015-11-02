@@ -20,16 +20,11 @@ import getpass
 settings = 0
 verbose_output = False
 current_config = 'unknown'
-
 env.forward_agent = True
 env.use_shell = False
-
 fabfile_basedir = False
-
-
-
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q'
-
+check_fabalicious_version.version = False
 
 
 class SSHTunnel:
@@ -51,8 +46,6 @@ class SSHTunnel:
         raise Exception("SSH tunnel timed out")
   def entrance(self):
     return 'localhost:%d' % self.local_port
-
-
 
 class RemoteSSHTunnel:
   def __init__(self, config, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=15):
@@ -92,7 +85,6 @@ class RemoteSSHTunnel:
   def entrance(self):
     return 'localhost:%d' % self.local_port
 
-
 def run_quietly(cmd, msg = '', hide_output = None, may_fail=False):
   global verbose_output
   if 'warn_only' in env and env['warn_only']:
@@ -123,8 +115,6 @@ def run_quietly(cmd, msg = '', hide_output = None, may_fail=False):
       if output['aborts']:
         raise SystemExit('%s failed' % cmd);
 
-
-
 def load_all_yamls_from_dir(path):
   result = {}
   files = glob.glob(path+'/*.yaml') + glob.glob(path+'/*.yml')
@@ -141,8 +131,6 @@ def load_all_yamls_from_dir(path):
       print red('Could not read from %s' % file)
       print red(e)
   return result
-
-
 
 def load_configuration(input_file):
   # print "Reading configuration from %s" % input_file
@@ -219,7 +207,6 @@ def internet_on():
 
   return False
 
-
 def get_all_configurations():
   global fabfile_basedir
 
@@ -251,8 +238,6 @@ def get_all_configurations():
   print(red('could not find suitable configuration file!'))
   exit(1)
 
-
-
 def validate_dict(keys, dict, message):
   validated = True
   for key in keys:
@@ -262,8 +247,6 @@ def validate_dict(keys, dict, message):
 
   if not validated:
     exit(1)
-
-
 
 def data_merge(a, b):
   output = {}
@@ -276,7 +259,6 @@ def data_merge(a, b):
   for item, value in b.iteritems():
     output[item] = copy.deepcopy(value)
   return output
-
 
 def resolve_inheritance(config, all_configs):
   if 'inheritsFrom' not in config:
@@ -295,7 +277,6 @@ def resolve_inheritance(config, all_configs):
   else:
     config['inheritsFrom'] = inherits_from
     return resolve_inheritance_impl(config, all_configs)
-
 
 def resolve_inheritance_impl(config, all_configs):
   if 'inheritsFrom' not in config:
@@ -349,9 +330,6 @@ def check_fabalicious_version(required_version, msg):
     print red('The %s needs %s as minimum app-version.' % (msg, required_version))
     print red('You are currently using %s. Please update your fabalicious installation.' % current_version)
     exit(1)
-
-
-check_fabalicious_version.version = False
 
 def get_configuration(name):
   config = get_all_configurations()
@@ -475,8 +453,6 @@ def get_configuration(name):
   list()
   exit(1)
 
-
-
 def find_between( s, first, last ):
   try:
     start = s.index( first ) + len( first )
@@ -484,8 +460,6 @@ def find_between( s, first, last ):
     return s[start:end]
   except ValueError:
     return ""
-
-
 
 def get_docker_container_ip(docker_name, docker_host, docker_user, docker_port):
 
@@ -501,8 +475,6 @@ def get_docker_container_ip(docker_name, docker_host, docker_user, docker_port):
   ip_address = find_between(output.stdout, '"IPAddress": "', '"')
 
   return ip_address
-
-
 
 def create_ssh_tunnel(config, tunnel_config, remote=False):
   o = tunnel_config
@@ -529,8 +501,6 @@ def create_ssh_tunnel(config, tunnel_config, remote=False):
     tunnel = SSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'], strictHostKeyChecking)
 
   return tunnel
-
-
 
 def get_configuration_via_file(config_file_name):
   global fabfile_basedir
@@ -561,8 +531,6 @@ def get_configuration_via_file(config_file_name):
 
   return data
 
-
-
 def get_configuration_via_http(config_file_name):
   try:
     # print "Reading configuration from %s" % config_file_name
@@ -576,8 +544,6 @@ def get_configuration_via_http(config_file_name):
       raise
 
   return False
-
-
 
 def get_docker_configuration(config_name, config):
   if config_name[0:7] == 'http://' or config_name[0:8] == 'https://':
@@ -593,8 +559,6 @@ def get_docker_configuration(config_name, config):
       return all_docker_hosts[config_name]
 
   return False
-
-
 
 def apply_config(config, name):
 
@@ -637,16 +601,12 @@ def apply_config(config, name):
       if 'password' in docker_configuration:
         env.passwords[host_str]= docker_configuration['password']
 
-
-
 def check_config():
   if 'config' in env:
     return True
 
   print(red('no config set! Please use fab config:<your-config> <task>'))
   exit(1)
-
-
 
 def run_custom(config, run_key):
 
@@ -671,8 +631,6 @@ def run_custom(config, run_key):
 
   env.output_prefix = True
 
-
-
 def get_settings(key, subkey):
   if key in settings:
     if subkey in settings[key]:
@@ -680,15 +638,11 @@ def get_settings(key, subkey):
 
   return False
 
-
-
 def header():
   if header.sended not in locals() and header.sended != 1:
     print(green("Fabalicious deployment scripts\n"))
     header.sended = 1
 header.sended = 0
-
-
 
 def check_source_config(config_name = False):
   check_config()
@@ -704,8 +658,6 @@ def check_source_config(config_name = False):
 
   return source_config
 
-
-
 def get_version():
   if not env.config['supportsSSH']:
     return 'unknown';
@@ -716,13 +668,9 @@ def get_version():
       output = output.stdout.splitlines()
       return output[-1].replace('/', '-')
 
-
-
 def get_backup_file_name(config, config_name):
   i = datetime.datetime.now()
   return config['backupFolder'] + "/" +get_version()+ '--' + config_name + "--"+i.strftime('%Y-%m-%d--%H-%M-%S')
-
-
 
 def run_common_commands():
   env.output_prefix = False
@@ -734,8 +682,6 @@ def run_common_commands():
         run(line)
 
   env.output_prefix = True
-
-
 
 def run_drush(cmd, expand_command = True):
   global verbose_output
@@ -749,7 +695,6 @@ def run_drush(cmd, expand_command = True):
   with hide(*args):
     run(cmd)
   env.output_prefix = True
-
 
 def slack(config, type, message):
   if 'slack' not in config:
@@ -801,7 +746,6 @@ def slack(config, type, message):
   except ImportError:
     print red('Please install slacker on this machine: pip install slacker.')
 
-
 @task
 def notify(message):
   slack(env.config, 'always', message)
@@ -812,8 +756,6 @@ def list():
   print("Found configurations for: "+ config['name']+"\n")
   for key, value in config['hosts'].items():
     print '- ' + key
-
-
 
 @task
 def about(config_name=False):
@@ -834,13 +776,10 @@ def about(config_name=False):
       else:
         print(key.ljust(25) + ': '+ str(value))
 
-
-
 @task
 def config(config_name='local'):
   config = get_configuration(config_name)
   apply_config(config, config_name)
-
 
 @task
 def getProperty(in_key):
@@ -857,7 +796,6 @@ def getProperty(in_key):
 
   print c
   exit(0)
-
 
 @task
 def reset(withPasswordReset=False):
@@ -886,8 +824,6 @@ def reset(withPasswordReset=False):
   run_custom(env.config, 'reset')
   slack(env.config, 'reset', 'Reset finished.')
 
-
-
 def backup_sql(backup_file_name, config):
   if(config['hasDrush']):
     with cd(config['siteFolder']):
@@ -903,8 +839,6 @@ def backup_sql(backup_file_name, config):
           dump_options += ' --gzip'
 
       run_drush('sql-dump ' + dump_options + ' --result-file=' + backup_file_name)
-
-
 
 @task
 def backup(withFiles=True):
@@ -936,8 +870,6 @@ def backup(withFiles=True):
 
   slack(env.config, 'backup', 'Backup finished to ' + backup_file_name)
 
-
-
 @task
 def backupDB():
   backup(False)
@@ -946,7 +878,6 @@ def clean_working_copy():
   with hide('running', 'output', 'warnings'), warn_only():
     result = run('git diff --exit-code --quiet')
     return result.return_code == 0
-
 
 @task
 def deploy(resetAfterwards=True):
@@ -995,12 +926,9 @@ def deploy(resetAfterwards=True):
 
   slack(env.config, 'deploy', 'Deployment finished sucessfully')
 
-
 @task
 def version():
   print green(settings['name'] + ' @ ' + current_config+' tagged with: ' + get_version())
-
-
 
 def rsync(config_name, files_type = 'filesFolder'):
 
@@ -1034,15 +962,11 @@ def rsync(config_name, files_type = 'filesFolder'):
     with warn_only():
       run(rsync)
 
-
-
 def _copyFilesFrom(config_name = False):
   rsync(config_name)
   source_config = check_source_config(config_name)
   if 'privateFilesFolder' in env.config and 'privateFilesFolder' in source_config:
     rsync(source_config, 'privateFilesFolder')
-
-
 
 def _copyDBFrom(config_name = False):
   source_config = check_source_config(config_name)
@@ -1102,8 +1026,6 @@ def _copyDBFrom(config_name = False):
 
       run_quietly('rm '+sql_name_target)
 
-
-
 @task
 def copyFrom(config_name = False, copyFiles = True, copyDB = True):
   source_config = check_source_config(config_name)
@@ -1120,19 +1042,13 @@ def copyFrom(config_name = False, copyFiles = True, copyDB = True):
   if copyDB:
     reset(withPasswordReset=True)
 
-
-
 @task
 def copyFilesFrom(config_name = False):
   copyFrom(config_name, True, False)
 
-
-
 @task
 def copyDBFrom(config_name = False):
   copyFrom(config_name, False, True)
-
-
 
 @task
 def drush(drush_command):
@@ -1140,8 +1056,6 @@ def drush(drush_command):
   if (env.config['hasDrush']):
     with cd(env.config['siteFolder']):
       run_drush(drush_command)
-
-
 
 @task
 def install(distribution='minimal', ask='True', version=7):
@@ -1189,8 +1103,6 @@ def install(distribution='minimal', ask='True', version=7):
   else:
     print red('Aborting; missing hasDrush, useForDevelopment or supportsInstalls in  '+current_config)
 
-
-
 @task
 def copySSHKeyToDocker():
   check_config()
@@ -1216,8 +1128,6 @@ def copySSHKeyToDocker():
       put(authorized_keys_file, '/root/.ssh/authorized_keys')
       print green('Copied authorized keys to docker.')
     run('chmod 700 /root/.ssh')
-
-
 
 @task
 def behat(preset=False, options='', name=False, format=False, out=False):
@@ -1252,8 +1162,6 @@ def behat(preset=False, options='', name=False, format=False, out=False):
     run(env.config['behat']['run'] + ' ' + options)
   env.output_prefix = True
 
-
-
 @task
 def installBehat():
   check_config()
@@ -1267,8 +1175,6 @@ def installBehat():
     for line in env.config['behat']['install']:
       run(line)
   env.output_prefix = True
-
-
 
 def expand_subtasks(tasks, task_name):
   commands = []
@@ -1288,13 +1194,11 @@ def expand_subtasks(tasks, task_name):
 
   return commands
 
-
 def docker_callback_fail_on_error(state, flag):
   if flag == '1':
     state['warnOnly'] = False
   else:
     state['warnOnly'] = True
-
 
 def docker_callback_echo(state, str, color = False):
   if color == 'red':
@@ -1303,7 +1207,6 @@ def docker_callback_echo(state, str, color = False):
     print green(str)
   else:
     print str
-
 
 def docker_callback_execute_host_task(state, task, *args):
   check_config();
@@ -1314,7 +1217,6 @@ def docker_callback_execute_host_task(state, task, *args):
     execute(task, args, host=hostStr)
   else:
     execute(task, host=hostStr)
-
 
 @task
 def waitForServices():
@@ -1352,7 +1254,6 @@ def waitForServices():
       else:
         print red("Supervisord not coming up at all")
         break
-
 
 @task
 def docker(subtask=False, **kwargs):
@@ -1443,8 +1344,6 @@ def docker(subtask=False, **kwargs):
 
   execute(run_script, docker_configuration['rootFolder'], parsed_commands, callbacks, host=host_str)
 
-
-
 @task
 def run_script(rootFolder=False, commands=False, callbacks=False):
   if not rootFolder:
@@ -1495,8 +1394,6 @@ def run_script(rootFolder=False, commands=False, callbacks=False):
           else:
             run(line)
 
-
-
 def get_backups_list():
   result = []
   if not env.config['supportsSSH']:
@@ -1526,8 +1423,6 @@ def get_backups_list():
 
   return result
 
-
-
 @task
 def listBackups():
   check_config()
@@ -1537,8 +1432,6 @@ def listBackups():
   for result in results:
 
     print "{date} {time}  |  {commit:<30}  |  {file}".format(**result)
-
-
 
 @task
 def restore(commit, drop=0):
@@ -1609,8 +1502,6 @@ def restore(commit, drop=0):
 
   reset()
 
-
-
 @task
 def updateDrupalCore(version=7, branch="feature/drupal-update"):
   check_config()
@@ -1651,8 +1542,6 @@ def updateDrupalCore(version=7, branch="feature/drupal-update"):
 
   print green("Updated drupal successfully to '%s'. Please review the changes in the new branch %s." % (drupal_folder, branch))
 
-
-
 @task
 def restoreSQLFromFile(full_file_name):
   check_config()
@@ -1674,8 +1563,6 @@ def restoreSQLFromFile(full_file_name):
       run_drush('drush sql-cli < ' + sql_name_target, False)
 
     run_quietly('rm '+sql_name_target)
-
-
 
 @task
 def ssh():
