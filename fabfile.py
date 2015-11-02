@@ -24,7 +24,6 @@ env.forward_agent = True
 env.use_shell = False
 fabfile_basedir = False
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q'
-check_fabalicious_version.version = False
 
 
 class SSHTunnel:
@@ -330,6 +329,7 @@ def check_fabalicious_version(required_version, msg):
     print red('The %s needs %s as minimum app-version.' % (msg, required_version))
     print red('You are currently using %s. Please update your fabalicious installation.' % current_version)
     exit(1)
+check_fabalicious_version.version = False
 
 def get_configuration(name):
   config = get_all_configurations()
@@ -1600,4 +1600,28 @@ def getSQLDump():
   getFile(file_name)
   run('rm ' + file_name);
 
+@task
+def copyBackupsToLocal(target=False, keepNumFiles = 10):
+  if not target:
+    target = './remoteBackups/' + current_config + "/"
 
+  files = get_backups_list()
+  existing = []
+  missing = []
+  for file in files:
+    if file['type'] == 'sql':
+      if os.path.isfile(target + file['file']):
+        existing.append(file)
+      else:
+        missing.append(file)
+
+  print "Missing", missing
+  print "Existing", existing
+
+  for file in missing:
+    local('mkdir -p %s' % target)
+    sourceFile = env.config['backupFolder'] + "/" + file['file']
+    targetFile = target + file['file']
+    print sourceFile + " -> " + targetFile
+    get(remote_path=sourceFile, local_path=targetFile)
+    existing.append(file)
