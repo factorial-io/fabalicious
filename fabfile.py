@@ -18,6 +18,7 @@ import json
 import getpass
 
 settings = 0
+verbose_output = False
 current_config = 'unknown'
 
 env.forward_agent = True
@@ -27,7 +28,7 @@ fabfile_basedir = False
 
 
 
-ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q'
 
 
 
@@ -47,7 +48,7 @@ class SSHTunnel:
     atexit.register(self.p.kill)
     while not 'Entering interactive session' in self.p.stderr.readline():
       if time.time() > start_time + timeout:
-        raise "SSH tunnel timed out"
+        raise Exception("SSH tunnel timed out")
   def entrance(self):
     return 'localhost:%d' % self.local_port
 
@@ -65,7 +66,7 @@ class RemoteSSHTunnel:
       remote_cmd = 'ssh'
       cmd = 'ssh'
     remote_cmd = remote_cmd + ' -v -L %d:%s:%d %s@%s -A -N -M ' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
-    run('rm -f ~/.ssh-tunnel-from-fabric')
+    run_quietly('rm -f ~/.ssh-tunnel-from-fabric')
 
     ssh_port = 22
     if 'port' in config:
@@ -85,7 +86,7 @@ class RemoteSSHTunnel:
     atexit.register(self.p.kill)
     while not 'Entering interactive session' in self.p.stderr.readline():
       if time.time() > start_time + timeout:
-        raise "SSH tunnel timed out"
+        raise Exception("SSH tunnel timed out")
 
 
   def entrance(self):
@@ -93,7 +94,7 @@ class RemoteSSHTunnel:
 
 
 def run_quietly(cmd, msg = '', hide_output = None, may_fail=False):
-
+  global verbose_output
   if 'warn_only' in env and env['warn_only']:
     may_fail = True
 
@@ -102,6 +103,10 @@ def run_quietly(cmd, msg = '', hide_output = None, may_fail=False):
 
   if not hide_output:
     hide_output = ['running', 'output', 'warnings']
+
+  if verbose_output:
+    hide_output=[]
+
 
   with hide(*hide_output):
     try:
@@ -400,6 +405,7 @@ def get_configuration(name):
       'supportsSSH': True,
       'useForDevelopment': False,
       'hasDrush': False,
+      'needsComposer': False,
       'ignoreSubmodules': False,
       'supportsBackups': True,
       'supportsCopyFrom': True,
@@ -458,6 +464,10 @@ def get_configuration(name):
     if 'slack' in host_config:
       host_config['slack'] = data_merge(settings['slack'], host_config['slack'])
 
+    if 'database' in host_config:
+      if 'host' not in host_config['database']:
+        host_config['database']['host'] = 'localhost'
+
     host_config['config_name'] = name
     return host_config
 
@@ -482,7 +492,7 @@ def get_docker_container_ip(docker_name, docker_host, docker_user, docker_port):
   cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (docker_port, docker_user, docker_host, docker_name)
 
   try:
-    with hide('output'):
+    with hide('running', 'output'):
       output = local(cmd, capture=True)
   except SystemExit:
     print red('Docker not running, can\'t get ip')
@@ -571,9 +581,11 @@ def get_configuration_via_http(config_file_name):
 
 def get_docker_configuration(config_name, config):
   if config_name[0:7] == 'http://' or config_name[0:8] == 'https://':
-    return get_configuration_via_http(config_name)
+    data = get_configuration_via_http(config_name)
+    return resolve_inheritance(data, {})
   elif config_name[0:1] == '.':
-    return get_configuration_via_file(config_name)
+    data = get_configuration_via_file(config_name)
+    return resolve_inheritance(data, {})
   else:
     all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
     config_name = config['docker']['configuration']
@@ -726,10 +738,15 @@ def run_common_commands():
 
 
 def run_drush(cmd, expand_command = True):
+  global verbose_output
   env.output_prefix = False
   if expand_command:
     cmd = 'drush ' + cmd
-  with hide('running'):
+  args = ['running']
+  if verbose_output:
+    args = []
+
+  with hide(*args):
     run(cmd)
   env.output_prefix = True
 
@@ -955,8 +972,8 @@ def deploy(resetAfterwards=True):
         exit(1)
       # run not quietly to see ssh-warnings, -confirms
       run('git fetch -q origin')
-      run_quietly('git checkout '+branch)
-      run_quietly('git fetch --tags')
+      run('git checkout '+branch)
+      run('git fetch --tags')
 
       git_options = ''
       if 'pull' in env.config['gitOptions']:
@@ -965,9 +982,11 @@ def deploy(resetAfterwards=True):
       run('git pull -q '+ git_options + ' origin ' +branch)
 
       if not env.config['ignoreSubmodules']:
-        run_quietly('git submodule init')
-        run_quietly('git submodule sync')
-        run_quietly('git submodule update --init --recursive')
+        run('git submodule init')
+        run('git submodule sync')
+        run('git submodule update --init --recursive')
+      if env.config['needsComposer']:
+        run('composer install')
 
   run_custom(env.config, 'deploy')
 
@@ -1055,7 +1074,7 @@ def _copyDBFrom(config_name = False):
       ssh_args = " " + ssh_no_strict_key_host_checking_params + ssh_args
 
     sql_name_source = source_config['tmpFolder'] + config_name + '.sql'
-    sql_name_target = target_config['tmpFolder'] + config_name + '.sql'
+    sql_name_target = target_config['tmpFolder'] + config_name + '_target.sql'
 
     # drush has no predictable behaviour
     if source_config['supportsZippedBackups']:
@@ -1132,7 +1151,7 @@ def install(distribution='minimal', ask='True', version=7):
       print red('missing database-dictionary in config '+current_config)
       exit(1)
 
-    validate_dict(['user', 'pass', 'name'], env.config['database'], 'Missing database configuration: ')
+    validate_dict(['user', 'pass', 'name', 'host'], env.config['database'], 'Missing database configuration: ')
 
     print green('Installing fresh database for '+ current_config)
 
@@ -1142,7 +1161,7 @@ def install(distribution='minimal', ask='True', version=7):
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
       mysql_cmd += 'GRANT ALL PRIVILEGES ON '+o['name']+'.* TO '+o['user']+'@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
 
-      run_quietly('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"', 'Creating database')
+      run_quietly('mysql -h ' + o['host'] + ' -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"', 'Creating database')
       if env.config['hasDrush']:
         with warn_only():
           run_quietly('chmod u+w '+env.config['siteFolder'])
@@ -1157,7 +1176,7 @@ def install(distribution='minimal', ask='True', version=7):
         options += ' --sites-subdir='+sites_folder
         options += ' --account-name=admin'
         options += ' --account-pass=admin'
-        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name']
+        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@' + o['host'] + '/' +o ['name']
         run_drush('site-install ' + distribution + ' ' + options)
 
         with warn_only():
@@ -1367,23 +1386,19 @@ def docker(subtask=False, **kwargs):
   keys = ("host", "port", "user", "tasks", "rootFolder")
   validate_dict(keys, docker_configuration, 'dockerHosts-Configuraton '+config_name+' has missing key')
 
-  if subtask == "show_remote_access":
+  if subtask == "startRemoteAccess":
     ip = get_docker_container_ip(env.config['docker']['name'], docker_configuration['host'], docker_configuration['user'], docker_configuration['port'])
 
     if not ip:
       print red('Could not get docker-ip-address.')
       exit(1)
 
-    public_ip = '<your-public-ip-address>'
+    public_ip = '0.0.0.0'
     if 'public_ip' in kwargs:
       public_ip = kwargs['public_ip']
-
-    print "To connect to your docker-instance, please use the following ssh-command, and leave the terminal-window open:"
-    print
-    print "ssh -L%s:8888:%s:80 -p %s %s@%s" % (public_ip, ip, docker_configuration['port'], docker_configuration['user'], docker_configuration['host'])
-    print
-    print "Then you can connect to your instance via http://%s:8888" % public_ip
-    exit()
+    print green("I am about to start the port forwarding via SSH. If you are finished, just type exit after the prompt.")
+    local("ssh -L%s:8888:%s:80 -p %s %s@%s" % (public_ip, ip, docker_configuration['port'], docker_configuration['user'], docker_configuration['host']))
+    exit(0)
 
   if subtask not in docker_configuration['tasks']:
     print(red('Could not find subtask %s in dockerHosts-configuration %s' % (subtask, config_name)))
@@ -1677,4 +1692,25 @@ def putFile(fileName):
 def getFile(remotePath, localPath='./'):
   check_config()
   get(remote_path=remotePath, local_path=localPath)
+
+@task
+def verbose():
+  global verbose_output
+  verbose_output = True
+
+@task
+def getSQLDump():
+  check_config()
+
+  file_name = env.config['config_name'] + "--" + time.strftime("%Y%m%d-%H%M%S") + '.sql'
+
+  print green('Get SQL dump from %s' % env.config['config_name'])
+
+  file_name = '/tmp/' + file_name
+  backup_sql(file_name, env.config)
+  if env.config['supportsZippedBackups']:
+    file_name += '.gz'
+  getFile(file_name)
+  run('rm ' + file_name);
+
 
