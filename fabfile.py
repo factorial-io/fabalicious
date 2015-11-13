@@ -1540,10 +1540,7 @@ def listBackups():
 
 
 
-@task
-def restore(commit, drop=0):
-  check_config()
-
+def get_backup_files_for_commit(commit):
   results = get_backups_list()
   files = { 'sql': False, 'files': False, 'commit': False }
   found = False
@@ -1566,6 +1563,33 @@ def restore(commit, drop=0):
     print red('Could not find requested backup ' + commit+'!')
     list_backups();
     exit(1)
+
+  return files
+
+@task
+def getBackup(commit):
+  check_config()
+  files = get_backup_files_for_commit(commit)
+  print files
+  print env.config
+
+  to_copy = []
+  if 'sql' in files:
+    to_copy.append(files['sql'])
+
+  if 'files' in files:
+    to_copy.append(files['files'])
+
+  for file in to_copy:
+    remotePath = env.config['backupFolder'] + "/" + file
+    localPath = './' + file
+
+    get(remote_path=remotePath, local_path=localPath)
+
+@task
+def restore(commit, drop=0):
+  check_config()
+  files = get_backup_files_for_commit(commit)
 
   # restore sql
   if files['sql']:
