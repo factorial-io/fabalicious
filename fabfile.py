@@ -1570,8 +1570,6 @@ def get_backup_files_for_commit(commit):
 def getBackup(commit):
   check_config()
   files = get_backup_files_for_commit(commit)
-  print files
-  print env.config
 
   to_copy = []
   if 'sql' in files:
