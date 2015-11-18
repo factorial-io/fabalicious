@@ -33,7 +33,7 @@ ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKno
 
 
 class SSHTunnel:
-  def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=15):
+  def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=45):
     self.local_port = local_port
 
     if not strictHostKeyChecking:
@@ -55,7 +55,7 @@ class SSHTunnel:
 
 
 class RemoteSSHTunnel:
-  def __init__(self, config, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=15):
+  def __init__(self, config, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=45):
     self.local_port = local_port
     self.bridge_host = bridge_host
     self.bridge_user = bridge_user
