@@ -279,7 +279,7 @@ def data_merge(a, b):
 
 
 def resolve_inheritance(config, all_configs):
-  if 'inheritsFrom' not in config:
+  if not config or 'inheritsFrom' not in config:
     return config
 
   inherits_from = config['inheritsFrom']
