@@ -1577,7 +1577,7 @@ def getBackup(commit):
   if 'sql' in files:
     to_copy.append(files['sql'])
 
-  if 'files' in files:
+  if 'files' in files and files['files']:
     to_copy.append(files['files'])
 
   for file in to_copy:
@@ -1683,16 +1683,15 @@ def restoreSQLFromFile(full_file_name):
   sql_name_target = env.config['tmpFolder'] + 'manual_upload.sql'
 
   fileName, fileExtension = os.path.splitext(full_file_name)
-
-  if fileExtension == 'gz':
+  zipped = fileExtension == '.gz'
+  if zipped:
     sql_name_target += '.gz'
-
 
   put(full_file_name, sql_name_target)
 
   # import sql into target
   with cd(env.config['siteFolder']):
-    if fileExtension == 'gz':
+    if zipped:
       run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
     else:
       run_drush('drush sql-cli < ' + sql_name_target, False)
