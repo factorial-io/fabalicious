@@ -1627,7 +1627,7 @@ def restore(commit, drop=0):
   # restore git
   with cd(env.config['gitRootFolder']):
 
-    run('git checkout ' + result['commit'])
+    run('git checkout ' + files['commit'])
 
     print(green('source restored to ' + files['commit']))
 
