@@ -1406,7 +1406,7 @@ def docker(subtask=False, **kwargs):
   parsed_commands = []
 
   replacements = {}
-  for key in ('user', 'host', 'port', 'branch', 'rootFolder'):
+  for key in ('user', 'host', 'port', 'branch', 'rootFolder', 'gitRootFolder'):
     if key in env.config:
       replacements['%guest.'+key+'%'] = str(env.config[key])
   for key in ('user', 'host', 'port', 'rootFolder'):
