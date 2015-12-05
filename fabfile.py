@@ -28,12 +28,12 @@ fabfile_basedir = False
 
 
 
-ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q'
 
 
 
 class SSHTunnel:
-  def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=15):
+  def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=45):
     self.local_port = local_port
 
     if not strictHostKeyChecking:
@@ -55,7 +55,7 @@ class SSHTunnel:
 
 
 class RemoteSSHTunnel:
-  def __init__(self, config, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=15):
+  def __init__(self, config, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=45):
     self.local_port = local_port
     self.bridge_host = bridge_host
     self.bridge_user = bridge_user
@@ -66,7 +66,7 @@ class RemoteSSHTunnel:
       remote_cmd = 'ssh'
       cmd = 'ssh'
     remote_cmd = remote_cmd + ' -v -L %d:%s:%d %s@%s -A -N -M ' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
-    run('rm -f ~/.ssh-tunnel-from-fabric')
+    run_quietly('rm -f ~/.ssh-tunnel-from-fabric')
 
     ssh_port = 22
     if 'port' in config:
@@ -279,7 +279,7 @@ def data_merge(a, b):
 
 
 def resolve_inheritance(config, all_configs):
-  if 'inheritsFrom' not in config:
+  if not config or 'inheritsFrom' not in config:
     return config
 
   inherits_from = config['inheritsFrom']
@@ -464,6 +464,10 @@ def get_configuration(name):
     if 'slack' in host_config:
       host_config['slack'] = data_merge(settings['slack'], host_config['slack'])
 
+    if 'database' in host_config:
+      if 'host' not in host_config['database']:
+        host_config['database']['host'] = 'localhost'
+
     host_config['config_name'] = name
     return host_config
 
@@ -488,7 +492,7 @@ def get_docker_container_ip(docker_name, docker_host, docker_user, docker_port):
   cmd = 'ssh -p %d %s@%s docker inspect %s | grep IPAddress' % (docker_port, docker_user, docker_host, docker_name)
 
   try:
-    with hide('output'):
+    with hide('running', 'output'):
       output = local(cmd, capture=True)
   except SystemExit:
     print red('Docker not running, can\'t get ip')
@@ -577,9 +581,11 @@ def get_configuration_via_http(config_file_name):
 
 def get_docker_configuration(config_name, config):
   if config_name[0:7] == 'http://' or config_name[0:8] == 'https://':
-    return get_configuration_via_http(config_name)
+    data = get_configuration_via_http(config_name)
+    return resolve_inheritance(data, {})
   elif config_name[0:1] == '.':
-    return get_configuration_via_file(config_name)
+    data = get_configuration_via_file(config_name)
+    return resolve_inheritance(data, {})
   else:
     all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
     config_name = config['docker']['configuration']
@@ -987,6 +993,8 @@ def deploy(resetAfterwards=True):
   if resetAfterwards and resetAfterwards != '0':
     reset()
 
+  run_custom(env.config, 'deployFinished')
+
   slack(env.config, 'deploy', 'Deployment finished sucessfully')
 
 
@@ -1145,7 +1153,7 @@ def install(distribution='minimal', ask='True', version=7):
       print red('missing database-dictionary in config '+current_config)
       exit(1)
 
-    validate_dict(['user', 'pass', 'name'], env.config['database'], 'Missing database configuration: ')
+    validate_dict(['user', 'pass', 'name', 'host'], env.config['database'], 'Missing database configuration: ')
 
     print green('Installing fresh database for '+ current_config)
 
@@ -1155,7 +1163,7 @@ def install(distribution='minimal', ask='True', version=7):
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS '+o['name']+'; '
       mysql_cmd += 'GRANT ALL PRIVILEGES ON '+o['name']+'.* TO '+o['user']+'@localhost IDENTIFIED BY \''+o['pass']+'\'; FLUSH PRIVILEGES;'
 
-      run_quietly('mysql -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"', 'Creating database')
+      run_quietly('mysql -h ' + o['host'] + ' -u '+o['user']+' --password='+o['pass']+' -e "'+mysql_cmd+'"', 'Creating database')
       if env.config['hasDrush']:
         with warn_only():
           run_quietly('chmod u+w '+env.config['siteFolder'])
@@ -1170,7 +1178,7 @@ def install(distribution='minimal', ask='True', version=7):
         options += ' --sites-subdir='+sites_folder
         options += ' --account-name=admin'
         options += ' --account-pass=admin'
-        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@localhost/'+o['name']
+        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@' + o['host'] + '/' +o ['name']
         run_drush('site-install ' + distribution + ' ' + options)
 
         with warn_only():
@@ -1534,10 +1542,7 @@ def listBackups():
 
 
 
-@task
-def restore(commit, drop=0):
-  check_config()
-
+def get_backup_files_for_commit(commit):
   results = get_backups_list()
   files = { 'sql': False, 'files': False, 'commit': False }
   found = False
@@ -1560,6 +1565,31 @@ def restore(commit, drop=0):
     print red('Could not find requested backup ' + commit+'!')
     list_backups();
     exit(1)
+
+  return files
+
+@task
+def getBackup(commit):
+  check_config()
+  files = get_backup_files_for_commit(commit)
+
+  to_copy = []
+  if 'sql' in files:
+    to_copy.append(files['sql'])
+
+  if 'files' in files and files['files']:
+    to_copy.append(files['files'])
+
+  for file in to_copy:
+    remotePath = env.config['backupFolder'] + "/" + file
+    localPath = './' + file
+
+    get(remote_path=remotePath, local_path=localPath)
+
+@task
+def restore(commit, drop=0):
+  check_config()
+  files = get_backup_files_for_commit(commit)
 
   # restore sql
   if files['sql']:
@@ -1653,16 +1683,15 @@ def restoreSQLFromFile(full_file_name):
   sql_name_target = env.config['tmpFolder'] + 'manual_upload.sql'
 
   fileName, fileExtension = os.path.splitext(full_file_name)
-
-  if fileExtension == 'gz':
+  zipped = fileExtension == '.gz'
+  if zipped:
     sql_name_target += '.gz'
-
 
   put(full_file_name, sql_name_target)
 
   # import sql into target
   with cd(env.config['siteFolder']):
-    if fileExtension == 'gz':
+    if zipped:
       run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
     else:
       run_drush('drush sql-cli < ' + sql_name_target, False)
@@ -1691,3 +1720,20 @@ def getFile(remotePath, localPath='./'):
 def verbose():
   global verbose_output
   verbose_output = True
+
+@task
+def getSQLDump():
+  check_config()
+
+  file_name = env.config['config_name'] + "--" + time.strftime("%Y%m%d-%H%M%S") + '.sql'
+
+  print green('Get SQL dump from %s' % env.config['config_name'])
+
+  file_name = '/tmp/' + file_name
+  backup_sql(file_name, env.config)
+  if env.config['supportsZippedBackups']:
+    file_name += '.gz'
+  getFile(file_name)
+  run('rm ' + file_name);
+
+
