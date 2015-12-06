@@ -63,3 +63,13 @@ def ssh():
   with cd(configuration.current('rootFolder')):
     open_shell()
 
+@task
+def putFile(fileName):
+  configuration.check()
+  put(fileName, configuration.current('tmpFolder'))
+
+@task
+def getFile(remotePath, localPath='./'):
+  configuration.check()
+  get(remote_path=remotePath, local_path=localPath)
+
