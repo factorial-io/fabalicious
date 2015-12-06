@@ -55,4 +55,11 @@ def list():
 def reset(**kvargs):
   configuration.check()
   print green('Resetting '+ configuration.getSettings('name') + "@" + configuration.current('config_name'))
+  methods.runTask(configuration.current(), 'reset', **kvargs)
+
+@task
+def ssh():
+  configuration.check()
+  with cd(configuration.current('rootFolder')):
+    open_shell()
 
