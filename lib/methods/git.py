@@ -14,6 +14,11 @@ class GitMethod(BaseMethod):
         result = output[-1].replace('/', '-')
         return result
 
+  def backupPrepare(self, config, **kwargs):
+    version = self.getVersion(config)
+    # inject version to basename.
+    kwargs['baseName'].insert(1, version)
+
 
 
 

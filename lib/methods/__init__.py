@@ -3,7 +3,8 @@ from types import TypeType
 from base import BaseMethod
 from git import GitMethod
 from drush import DrushMethod
-
+from ssh import SSHMethod
+from composer import ComposerMethod
 cache = {}
 
 class Factory(object):

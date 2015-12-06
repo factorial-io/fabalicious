@@ -6,6 +6,7 @@ from fabric.state import output, env
 from fabric.colors import green, red
 import os.path
 import time
+import datetime
 import sys
 
 # Import or modules.
@@ -89,4 +90,15 @@ def getSQLDump():
   getFile(file_name)
   run('rm ' + file_name);
 
+@task
+def backup(withFiles = True):
+  configuration.check()
+  print green('backing up files and database of "%s" @ "%s"' % (configuration.getSettings('name'), configuration.current('config_name')))
+  i = datetime.datetime.now()
+  basename = [
+    configuration.current('config_name'),
+    i.strftime('%Y-%m-%d--%H-%M-%S')
+  ]
+
+  methods.runTask(configuration.current(), 'backup', withFiles=withFiles, baseName = basename)
 

@@ -251,6 +251,12 @@ def check_fabalicious_version(required_version, msg):
 check_fabalicious_version.version = False
 
 def get_configuration(name):
+  unsupported = {
+    'needsComposer': 'Unsupported, please add "composer" to your "needs" ',
+    'hasDrush': 'Unsupported, please add "drush7" or "drush8" to your "needs"',
+    'supportsSSH': 'Unsupported, please add "ssh" to your "needs"'
+  }
+
   config = get_all_configurations()
   if name in config['hosts']:
     global settings
@@ -289,6 +295,9 @@ def get_configuration(name):
     if not 'slack' in settings:
       settings['slack'] = {}
     settings['slack'] = data_merge( { 'notifyOn': [], 'username': 'Fabalicious', 'icon_emoji': ':tada:'}, settings['slack'])
+    if 'needs' not in settings:
+      settings['needs'] = ['ssh', 'git', 'drush7']
+
 
     host_config = config['hosts'][name]
     if 'requires' in host_config:
@@ -299,10 +308,7 @@ def get_configuration(name):
 
     # add defaults
     defaults = {
-      'supportsSSH': True,
       'useForDevelopment': False,
-      'hasDrush': False,
-      'needsComposer': False,
       'ignoreSubmodules': False,
       'supportsBackups': True,
       'supportsCopyFrom': True,
@@ -314,7 +320,8 @@ def get_configuration(name):
       'branch': 'master',
       'useShell': settings['useShell'],
       'disableKnownHosts': settings['disableKnownHosts'],
-      'usePty': settings['usePty']
+      'usePty': settings['usePty'],
+      'needs': settings['needs']
     }
 
     for key in defaults:
@@ -322,7 +329,7 @@ def get_configuration(name):
         host_config[key] = defaults[key]
 
     # check keys again
-    if host_config['supportsSSH']:
+    if 'ssh' in host_config['needs']:
       keys = ("rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
       validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
 
@@ -332,7 +339,7 @@ def get_configuration(name):
       host_config['gitOptions'] = data_merge(settings['gitOptions'], host_config['gitOptions'])
 
     else:
-      # disable other settings, when supportsSSH is false
+      # disable other settings, when ssh is not available
       keys = ( 'useForDevelopment', 'ignoreSubmodules', 'supportsBackups', 'supportsCopyFrom', 'supportsInstalls')
       for key in keys:
         host_config[key] = False
@@ -365,10 +372,13 @@ def get_configuration(name):
       if 'host' not in host_config['database']:
         host_config['database']['host'] = 'localhost'
 
-    if 'needs' not in host_config:
-      host_config['needs'] = ['git', 'drush7']
 
     host_config['config_name'] = name
+
+    for key in unsupported:
+      if key in host_config:
+        print red(key + ' ' + unsupported[key])
+
     return host_config
 
   print(red('Configuraton '+name+' not found \n'))
@@ -479,7 +489,7 @@ def apply(config, name):
 
   # print "use_shell: %i, use_pty: %i" % (env.use_shell, env.always_use_pty)
 
-  if not config['supportsSSH']:
+  if 'ssh' not in config['needs']:
     return;
 
   if 'port' in config:

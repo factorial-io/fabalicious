@@ -1,6 +1,7 @@
 from base import BaseMethod
 from fabric.api import *
 from fabric.state import output, env
+from fabric.colors import green, red
 from lib import configuration
 
 class DrushMethod(BaseMethod):
@@ -59,7 +60,13 @@ class DrushMethod(BaseMethod):
       self.run_drush('sql-dump ' + dump_options + ' --result-file=' + backup_file_name)
 
 
-
+  def backup(self, config, **kwargs):
+    baseName = kwargs['baseName']
+    filename = config['backupFolder'] + "/" + '--'.join(baseName) + ".sql"
+    self.backupSql(config, filename)
+    if config['supportsZippedBackups']:
+      filename += '.gz'
+    print green('Database dump at "%s"' % filename)
 
 
 
