@@ -366,7 +366,7 @@ def get_configuration(name):
         host_config['database']['host'] = 'localhost'
 
     if 'needs' not in host_config:
-      host_config['needs'] = ['git', 'drush7', 'mysql', 'rsync']
+      host_config['needs'] = ['git', 'drush7']
 
     host_config['config_name'] = name
     return host_config
@@ -536,7 +536,7 @@ def getAll():
 
 def getSettings(key = False):
   if key:
-    return settings[key]
+    return settings[key] if key in settings else False
   else:
     return settings
 
