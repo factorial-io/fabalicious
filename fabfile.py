@@ -46,6 +46,12 @@ def version():
   print green('%s @ %s tagged with: %s' % (configuration.getSettings('name'), configuration.current('config_name'), version))
 
 @task
+def drush(drush_command):
+  configuration.check(['drush7', 'drush8'])
+  methods.call('drush', 'drush', configuration.current(), command=drush_command)
+
+
+@task
 def list():
   config = configuration.getAll()
   print('Found configurations for "%s":' % config['name']+"\n")

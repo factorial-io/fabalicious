@@ -517,14 +517,19 @@ def apply(config, name):
 
 
 
-def check(method = False):
+def check(methods= False):
   if 'config' in env:
-    if method:
-      if method in env.config['needs']:
-        return True
-      else:
-        print red('Config "%s" does not support method "%s"' % (env.config['config_name'], method))
-        exit(1)
+    if methods:
+      found = False
+      if isinstance(methods, str):
+        methods = [ methods ]
+      for method in methods:
+        if method in env.config['needs']:
+          found = True
+      if not found:
+          print red('Config "%s" does not support method "%s"' % (env.config['config_name'], ', '.join(methods)))
+          exit(1)
+      return True
     else:
       return True
 
