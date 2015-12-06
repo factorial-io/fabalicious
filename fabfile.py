@@ -40,3 +40,11 @@ def getProperty(in_key):
 @task
 def version():
   methods.call('git', 'getVersion', configuration.current())
+
+@task
+def list():
+  config = configuration.getAll()
+  print("Found configurations for: "+ config['name']+"\n")
+  for key, value in config['hosts'].items():
+    print '- ' + key
+

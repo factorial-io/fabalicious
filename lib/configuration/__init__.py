@@ -518,3 +518,7 @@ def get(name):
 def current():
   return env.config
 
+def getAll():
+  return get_all_configurations()
+
+
