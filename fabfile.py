@@ -13,6 +13,7 @@ sys.path.append(root_folder)
 from lib import methods
 from lib import configuration
 
+configuration.fabfile_basedir = root_folder
 
 @task
 def config(configName='local'):

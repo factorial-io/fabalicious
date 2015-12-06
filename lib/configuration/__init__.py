@@ -3,6 +3,9 @@ from fabric.state import output, env
 from fabric.colors import green, red
 import os.path
 import urllib2
+import yaml
+import copy
+import hashlib
 
 settings = 0
 verbose_output = False
@@ -112,7 +115,12 @@ def internet_on():
 def get_all_configurations():
   global fabfile_basedir
 
-  start_folder = os.path.dirname(os.path.realpath(__file__))
+
+  if fabfile_basedir:
+    start_folder = fabfile_basedir
+  else:
+    start_folder = os.path.dirname(os.path.realpath(__file__))
+
   max_levels = 3
   from_cache = False
 
@@ -224,7 +232,7 @@ def check_fabalicious_version(required_version, msg):
 
     app_folder = os.path.dirname(os.path.realpath(file))
 
-    with hide('output'):
+    with hide('output', 'commands'):
       output = local('cd %s; git describe --always' % app_folder, capture=True)
       output = output.stdout.splitlines()
       check_fabalicious_version.version = output[-1].replace('/', '-')
