@@ -44,7 +44,6 @@ class DrushMethod(BaseMethod):
     env.output_prefix = True
 
   def backupSql(self, config, backup_file_name):
-    print config
     with cd(config['siteFolder']):
       with warn_only():
         dump_options = ''
