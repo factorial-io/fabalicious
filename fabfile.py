@@ -24,15 +24,15 @@ def config(configName='local'):
 
 @task
 def getProperty(in_key):
+  configuration.check()
   with hide('output', 'running', 'warnings'):
-    configuration.check()
     keys = in_key.split('/')
     c = configuration.current()
     for key in keys:
       if key in c:
         c = c[key]
       else:
-        print red('property %s not found!' % in_key)
+        print red('property "%s" not found!' % in_key)
         exit(1)
 
   print c
@@ -48,15 +48,17 @@ def version():
 @task
 def list():
   config = configuration.getAll()
-  print("Found configurations for: "+ config['name']+"\n")
-  for key, value in config['hosts'].items():
+  print('Found configurations for "%s":' % config['name']+"\n")
+  keys = config['hosts']
+  keys = sorted(keys)
+  for key in keys:
     print '- ' + key
 
 
 @task
 def reset(**kvargs):
   configuration.check()
-  print green('Resetting '+ configuration.getSettings('name') + "@" + configuration.current('config_name'))
+  print green('Resetting %s @ %s' % (configuration.getSettings('name'), configuration.current('config_name')))
   methods.runTask(configuration.current(), 'reset', **kvargs)
 
 @task
@@ -79,7 +81,7 @@ def getFile(remotePath, localPath='./'):
 def getSQLDump():
   configuration.check()
 
-  file_name = configuration.current('config_name') + "--" + time.strftime("%Y%m%d-%H%M%S") + '.sql'
+  file_name = '--'.join([configuration.current('config_name'), time.strftime("%Y%m%d-%H%M%S")]) + '.sql'
 
   print green('Get SQL dump from %s' % configuration.current('config_name'))
 
@@ -100,5 +102,5 @@ def backup(withFiles = True):
     i.strftime('%Y-%m-%d--%H-%M-%S')
   ]
 
-  methods.runTask(configuration.current(), 'backup', withFiles=withFiles, baseName = basename)
+  methods.runTask(configuration.current(), 'backup', withFiles = withFiles, baseName = basename)
 
