@@ -8,6 +8,7 @@ class ComposerMethod(BaseMethod):
 
 
   def resetPrepare(self, config):
-    self.run_quietly('composer install')
+    with cd(config['gitRootFolder']):
+      self.run_quietly('composer install')
 
 

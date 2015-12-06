@@ -1,5 +1,6 @@
 from fabric.api import *
 from fabric.state import output, env
+from fabric.colors import green, red
 
 
 class BaseMethod(object):
