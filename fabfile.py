@@ -39,7 +39,9 @@ def getProperty(in_key):
 
 @task
 def version():
-  methods.call('git', 'getVersion', configuration.current())
+  configuration.check('git')
+  version = methods.call('git', 'getVersion', configuration.current())
+  print green('%s @ %s tagged with: %s' % (configuration.getSettings('name'), configuration.current('config_name'), version))
 
 @task
 def list():
@@ -47,4 +49,10 @@ def list():
   print("Found configurations for: "+ config['name']+"\n")
   for key, value in config['hosts'].items():
     print '- ' + key
+
+
+@task
+def reset(**kvargs):
+  configuration.check()
+  print green('Resetting '+ configuration.getSettings('name') + "@" + configuration.current('config_name'))
 

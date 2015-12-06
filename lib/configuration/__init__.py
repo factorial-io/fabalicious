@@ -365,6 +365,9 @@ def get_configuration(name):
       if 'host' not in host_config['database']:
         host_config['database']['host'] = 'localhost'
 
+    if 'needs' not in host_config:
+      host_config['needs'] = ['git', 'drush7', 'mysql', 'rsync']
+
     host_config['config_name'] = name
     return host_config
 
@@ -504,9 +507,16 @@ def apply(config, name):
 
 
 
-def check():
+def check(method = False):
   if 'config' in env:
-    return True
+    if method:
+      if method in env.config['needs']:
+        return True
+      else:
+        print red('Config "%s" does not support method "%s"' % (env.config['config_name'], method))
+        exit(1)
+    else:
+      return True
 
   print(red('no config set! Please use fab config:<your-config> <task>'))
   exit(1)
@@ -515,10 +525,18 @@ def check():
 def get(name):
   return get_configuration(name)
 
-def current():
-  return env.config
+def current(key = False):
+  if key:
+    return env.config[key]
+  else:
+    return env.config
 
 def getAll():
   return get_all_configurations()
 
+def getSettings(key = False):
+  if key:
+    return settings[key]
+  else:
+    return settings
 
