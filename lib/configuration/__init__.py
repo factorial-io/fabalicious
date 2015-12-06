@@ -232,7 +232,7 @@ def check_fabalicious_version(required_version, msg):
 
     app_folder = os.path.dirname(os.path.realpath(file))
 
-    with hide('output', 'commands'):
+    with hide('output', 'running'):
       output = local('cd %s; git describe --always' % app_folder, capture=True)
       output = output.stdout.splitlines()
       check_fabalicious_version.version = output[-1].replace('/', '-')
