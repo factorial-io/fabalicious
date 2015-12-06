@@ -5,6 +5,7 @@ from fabric.api import *
 from fabric.state import output, env
 from fabric.colors import green, red
 import os.path
+import time
 import sys
 
 # Import or modules.
@@ -72,4 +73,20 @@ def putFile(fileName):
 def getFile(remotePath, localPath='./'):
   configuration.check()
   get(remote_path=remotePath, local_path=localPath)
+
+@task
+def getSQLDump():
+  configuration.check()
+
+  file_name = configuration.current('config_name') + "--" + time.strftime("%Y%m%d-%H%M%S") + '.sql'
+
+  print green('Get SQL dump from %s' % configuration.current('config_name'))
+
+  file_name = '/tmp/' + file_name
+  methods.runTask(configuration.current(), 'backupSql', backup_file_name = file_name)
+  if configuration.current('supportsZippedBackups'):
+    file_name += '.gz'
+  getFile(file_name)
+  run('rm ' + file_name);
+
 

@@ -43,6 +43,21 @@ class DrushMethod(BaseMethod):
       run(cmd)
     env.output_prefix = True
 
+  def backupSql(self, config, backup_file_name):
+    print config
+    with cd(config['siteFolder']):
+      with warn_only():
+        dump_options = ''
+        if configuration.getSettings('sqlSkipTables'):
+          dump_options = '--structure-tables-list=' + ','.join(configuration.getSettings('sqlSkipTables'))
+
+        self.run_quietly('mkdir -p ' + config['backupFolder'])
+        self.run_quietly('rm -f '+backup_file_name)
+        if config['supportsZippedBackups']:
+          self.run_quietly('rm -f '+backup_file_name+'.gz')
+          dump_options += ' --gzip'
+
+      self.run_drush('sql-dump ' + dump_options + ' --result-file=' + backup_file_name)
 
 
 
