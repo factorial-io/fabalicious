@@ -35,7 +35,7 @@ class DrushMethod(BaseMethod):
       with warn_only():
         if configuration.getSettings('deploymentModule'):
           self.run_drush('en -y ' + configuration.getSettings('deploymentModule'))
-      # self.run_drush('updb -y')
+      self.run_drush('updb -y')
       with warn_only():
         if self.methodName == 'drush8':
           if uuid:
