@@ -125,18 +125,28 @@ class ScriptMethod(BaseMethod):
     self.runScriptImpl(config['rootFolder'], commands, callbacks, environment)
 
 
-  def checkPrePostFlight(self,taskName, configuration, **kwargs):
-    if taskName in configuration:
-      script = configuration[taskName]
-      self.runScript(configuration, script=script)
+  def runTaskSpecificScript(self, taskName, config, **kwargs):
+    print "run specific task " + taskName + " " + config['type']
+
+    if taskName in config:
+      script = config[taskName]
+    else:
+      common_scripts = configuration.getSettings('common')
+      type = config['type']
+      if taskName in common_scripts and type in common_scripts[taskName]:
+        script = common_scripts[taskName][type]
+
+    if script:
+      self.runScript(config, script=script)
+
 
 
   def preflight(self, taskName, configuration, **kwargs):
-    self.checkPrePostFlight(taskName + "Prepare", configuration, **kwargs)
+    self.runTaskSpecificScript(taskName + "Prepare", configuration, **kwargs)
 
 
   def postflight(self, taskName, configuration, **kwargs):
-    self.checkPrePostFlight(taskName + "Finished", configuration, **kwargs)
+    self.runTaskSpecificScript(taskName + "Finished", configuration, **kwargs)
 
 
 

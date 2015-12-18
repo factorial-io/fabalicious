@@ -127,5 +127,9 @@ def docker(command = False):
   configuration.check()
   methods.call('docker', 'runCommand', configuration.current(), command = command)
 
+@task
+def deploy():
+  configuration.check()
+  methods.runTask(configuration.current(), 'deploy')
 
 

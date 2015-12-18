@@ -39,12 +39,13 @@ class DrushMethod(BaseMethod):
       with warn_only():
         if self.methodName == 'drush8':
           if uuid:
-            self.run_drush('cset system.site uuid %s -y', uuid)
+            self.run_drush('cset system.site uuid %s -y' % uuid)
           self.run_drush('config-import staging -y')
         else:
           self.run_drush('fra -y')
 
-        self.runCommonScripts(config)
+        fn = self.factory.get('script', 'runTaskSpecificScript')
+        fn('reset', config, **kwargs)
 
         if self.methodName == 'drush8':
           self.run_drush('cr')
@@ -94,5 +95,9 @@ class DrushMethod(BaseMethod):
       filename += '.gz'
     print green('Database dump at "%s"' % filename)
 
+
+  def deployPrepare(self, config, **kwargs):
+    if config['type'] != 'dev':
+      self.backup(config, ** kwargs)
 
 
