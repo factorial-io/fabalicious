@@ -10,6 +10,13 @@ class DrushMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'drush7' or methodName == 'drush8' or methodName == 'drush'
 
+  def runCommonScripts(self, config):
+   common_scripts = configuration.getSettings('common')
+   if common_scripts and config['type'] in common_scripts:
+     script = common_scripts[config['type']]
+     self.factory.call('script', 'runScript', config, script = script)
+
+
   def reset(self, config, **kwargs):
     if self.methodName == 'drush8':
       uuid = config['uuid'] if 'uuid' in config else False
@@ -19,8 +26,8 @@ class DrushMethod(BaseMethod):
       if not uuid:
         print red('No uuid found in fabfile.yaml. config-import may fail!')
 
-    with cd(env.config['siteFolder']):
-      if config['useForDevelopment'] == True:
+    with cd(config['siteFolder']):
+      if config['type'] == 'dev':
         if 'withPasswordReset' in kwargs and kwargs['withPasswordReset'] in [True, 'True', '1']:
           self.run_drush('user-password admin --password="admin"')
         with warn_only():
@@ -36,6 +43,8 @@ class DrushMethod(BaseMethod):
           self.run_drush('config-import staging -y')
         else:
           self.run_drush('fra -y')
+
+        self.runCommonScripts(config)
 
         if self.methodName == 'drush8':
           self.run_drush('cr')

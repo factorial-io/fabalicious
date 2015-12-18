@@ -254,7 +254,8 @@ def get_configuration(name):
   unsupported = {
     'needsComposer': 'Unsupported, please add "composer" to your "needs" ',
     'hasDrush': 'Unsupported, please add "drush7" or "drush8" to your "needs"',
-    'supportsSSH': 'Unsupported, please add "ssh" to your "needs"'
+    'supportsSSH': 'Unsupported, please add "ssh" to your "needs"',
+    'useForDevelopment': 'Unsupported, please use "type" with dev|prod|stage as value.'
   }
 
   config = get_all_configurations()
@@ -312,7 +313,7 @@ def get_configuration(name):
 
     # add defaults
     defaults = {
-      'useForDevelopment': False,
+      'type': 'prod',
       'ignoreSubmodules': False,
       'supportsBackups': True,
       'supportsCopyFrom': True,
@@ -345,7 +346,7 @@ def get_configuration(name):
 
     else:
       # disable other settings, when ssh is not available
-      keys = ( 'useForDevelopment', 'ignoreSubmodules', 'supportsBackups', 'supportsCopyFrom', 'supportsInstalls')
+      keys = ( 'ignoreSubmodules', 'supportsBackups', 'supportsCopyFrom', 'supportsInstalls')
       for key in keys:
         host_config[key] = False
 

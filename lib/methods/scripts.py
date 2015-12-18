@@ -1,6 +1,7 @@
 from base import BaseMethod
 from fabric.api import *
 from fabric.colors import green, red
+from lib import configuration
 import re
 
 class ScriptMethod(BaseMethod):
@@ -108,6 +109,8 @@ class ScriptMethod(BaseMethod):
     callbacks = kwargs['callbacks'] if 'callbacks' in kwargs else {}
     variables = kwargs['variables'] if 'variables' in kwargs else {}
     environment = kwargs['environment'] if 'environment' in kwargs else {}
+    if 'environment' in config:
+      environment = configuration.data_merge(config['environment'], environment)
     variables['host'] = config
 
     callbacks['execute'] = self.executeCallback
