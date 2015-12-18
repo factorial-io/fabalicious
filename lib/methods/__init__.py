@@ -48,11 +48,20 @@ def callImpl(methodName, taskName, configuration, optional, **kwargs):
 def call(methodName, taskName, configuration, **kwargs):
   return callImpl(methodName, taskName, configuration, False, **kwargs)
 
+def preflight(task, taskName, configuration, **kwargs):
+  for methodName in configuration['needs']:
+    fn = get(methodName, task)
+    if fn:
+      fn(taskName, configuration, **kwargs)
+
+
 
 def runTask(configuration, taskName, **kwargs):
+  preflight('preflight', taskName, configuration, **kwargs)
   runTaskImpl(configuration['needs'], taskName + "Prepare", configuration, **kwargs);
   runTaskImpl(configuration['needs'], taskName, configuration, **kwargs);
   runTaskImpl(configuration['needs'], taskName + "Finished", configuration, **kwargs);
+  preflight('postflight', taskName, configuration, **kwargs)
 
 
 def runTaskImpl(methodNames, taskName, configuration, **kwargs):

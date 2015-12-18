@@ -16,6 +16,13 @@ class BaseMethod(object):
     self.factory = factory
 
 
+  def preflight(self, task, config, **kwargs):
+    pass
+
+  def postflight(self, task, config, **kwargs):
+    pass
+
+
   def run_quietly(self, cmd, msg = '', hide_output = None, may_fail=False):
     if 'warn_only' in env and env['warn_only']:
       may_fail = True

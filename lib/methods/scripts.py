@@ -9,6 +9,7 @@ class ScriptMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'script'
 
+
   def runScriptImpl(self, rootFolder, commands, callbacks= {}, environment = {}):
 
     pattern = re.compile('\%(\S*)\%')
@@ -122,6 +123,20 @@ class ScriptMethod(BaseMethod):
     environment = self.expandEnvironment(environment, replacements)
 
     self.runScriptImpl(config['rootFolder'], commands, callbacks, environment)
+
+
+  def checkPrePostFlight(self,taskName, configuration, **kwargs):
+    if taskName in configuration:
+      script = configuration[taskName]
+      self.runScript(configuration, script=script)
+
+
+  def preflight(self, taskName, configuration, **kwargs):
+    self.checkPrePostFlight(taskName + "Prepare", configuration, **kwargs)
+
+
+  def postflight(self, taskName, configuration, **kwargs):
+    self.checkPrePostFlight(taskName + "Finished", configuration, **kwargs)
 
 
 
