@@ -83,8 +83,46 @@ class DockerMethod(BaseMethod):
         print green('Copied authorized keys to docker.')
       run('chmod 700 /root/.ssh')
 
+  def waitForServices(self, config, **kwargs):
+    host_string = join_host_strings(config['user'], config['host'], config['port'])
+    max_tries = 20
+    try_n = 0
+
+    while(True):
+      try_n += 1
+      try:
+        with cd(config['rootFolder']), hide('commands'), _settings( host_string=host_string ):
+
+          output = run('supervisorctl status')
+          output = output.stdout.splitlines()
+          count_running = 0
+          count_services = 0;
+          for line in output:
+            if line.strip() != '':
+              count_services += 1
+              if line.find('RUNNING'):
+                count_running += 1
+          if count_services == count_running:
+            print green('Services up and running!')
+            break;
+
+      except:
+        # TODO:
+        # handle only relevant exceptions like
+        # fabric.exceptions.NetworkError
+
+        if (try_n < max_tries):
+          # Let's wait and try again...
+          print "Wait for 5 secs and try again."
+          time.sleep(5)
+        else:
+          print red("Supervisord not coming up at all")
+          break
+
+
 
   def runCommand(self, config, **kwargs):
+    internal_commands = ['copySSHKeys', 'startRemoteAccess', 'waitForServices']
     command = kwargs['command']
     if not command:
       print red('Missing command for docker-task.')
@@ -102,8 +140,9 @@ class DockerMethod(BaseMethod):
       exit(1)
 
     if command not in docker_config['tasks']:
-      print red('Can\'t find subtask "%s" in "%s"' % ( command, ', '.join(docker_config['tasks'].keys())))
-
+      available_commands = internal_commands + docker_config['tasks'].keys()
+      print red('Can\'t find subtask "%s" in "%s"' % ( command, ', '.join(available_commands)))
+      exit(1)
     script = docker_config['tasks'][command]
 
     script_fn = self.factory.get('script', 'runScript')

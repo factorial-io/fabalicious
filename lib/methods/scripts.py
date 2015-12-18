@@ -52,12 +52,11 @@ class ScriptMethod(BaseMethod):
             handled = True
 
         if not handled:
-          with hide('running'):
-            if state['warnOnly']:
-              with warn_only():
-                run(line)
-            else:
+          if state['warnOnly']:
+            with warn_only():
               run(line)
+          else:
+            run(line)
 
   def expandVariablesImpl(self, prefix, variables, result):
     for key in variables:
@@ -91,6 +90,19 @@ class ScriptMethod(BaseMethod):
     return parsed_environment
 
 
+  def executeCallback(self, context, command, *args, **kwargs):
+    execute(command, *args)
+
+  def runTaskCallback(self, context, *args, **kwargs):
+    print red('run_task is not supported anymore, use "execute(docker, <your_task>)"');
+
+  def failOnErrorCallback(self, context, flag):
+    if flag == '1':
+      context['warnOnly'] = False
+    else:
+      context['warnOnly'] = True
+
+
   def runScript(self, config, **kwargs):
     script = kwargs['script']
     callbacks = kwargs['callbacks'] if 'callbacks' in kwargs else {}
@@ -98,13 +110,13 @@ class ScriptMethod(BaseMethod):
     environment = kwargs['environment'] if 'environment' in kwargs else {}
     variables['host'] = config
 
+    callbacks['execute'] = self.executeCallback
+    callbacks['run_task'] = self.runTaskCallback
+    callbacks['fail_on_error'] = self.failOnErrorCallback
 
     replacements = self.expandVariables(variables);
-    print(replacements)
     commands = self.expandCommands(script, replacements)
-
     environment = self.expandEnvironment(environment, replacements)
-    print environment
 
     self.runScriptImpl(config['rootFolder'], commands, callbacks, environment)
 
