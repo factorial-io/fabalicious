@@ -11,8 +11,9 @@ class BaseMethod(object):
   def supports(methodName):
     return False
 
-  def __init__(self, methodName):
+  def __init__(self, methodName, factory):
     self.methodName = methodName
+    self.factory = factory
 
 
   def run_quietly(self, cmd, msg = '', hide_output = None, may_fail=False):

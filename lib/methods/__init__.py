@@ -1,10 +1,13 @@
-import inspect
+import inspect, sys
 from types import TypeType
 from base import BaseMethod
 from git import GitMethod
 from drush import DrushMethod
 from ssh import SSHMethod
 from composer import ComposerMethod
+from scripts import ScriptMethod
+from docker import DockerMethod
+
 cache = {}
 
 class Factory(object):
@@ -15,33 +18,43 @@ class Factory(object):
     methodClasses = [j for (i,j) in globals().iteritems() if isinstance(j, TypeType) and issubclass(j, BaseMethod)]
     for methodClass in methodClasses:
       if methodClass.supports(name):
-        return methodClass(name)
+        return methodClass(name, sys.modules[__name__])
     #if research was unsuccessful, raise an error
     raise ValueError('No method supporting "%s" found.' % name)
 
-def callImpl(methodName, taskName, configuration, optional, **kvargs):
+
+def get(methodName, taskName):
   if methodName in cache:
     m = cache[methodName]
   else:
     m = Factory().get(methodName)
     cache[methodName] = m
 
-  print 'Running task "%s" on method "%s"' % (taskName, methodName)
   if hasattr(m, taskName) and inspect.ismethod(getattr(m, taskName)):
-    fn = getattr(m, taskName)
-    result = fn(configuration, **kvargs)
+    return getattr(m, taskName)
+
+  return False
+
+
+def callImpl(methodName, taskName, configuration, optional, **kwargs):
+  fn = get(methodName, taskName)
+  if fn:
+    result = fn(configuration, **kwargs)
     return result
   elif not optional:
     raise ValueError('Task "%s" in method "%s" not found!' % (taskName, methodName))
 
-def call(methodName, taskName, configuration, **kvargs):
-  return callImpl(methodName, taskName, configuration, False, **kvargs)
 
-def runTask(configuration, taskName, **kvargs):
-  runTaskImpl(configuration['needs'], taskName + "Prepare", configuration, **kvargs);
-  runTaskImpl(configuration['needs'], taskName, configuration, **kvargs);
-  runTaskImpl(configuration['needs'], taskName + "Finished", configuration, **kvargs);
+def call(methodName, taskName, configuration, **kwargs):
+  return callImpl(methodName, taskName, configuration, False, **kwargs)
 
-def runTaskImpl(methodNames, taskName, configuration, **kvargs):
+
+def runTask(configuration, taskName, **kwargs):
+  runTaskImpl(configuration['needs'], taskName + "Prepare", configuration, **kwargs);
+  runTaskImpl(configuration['needs'], taskName, configuration, **kwargs);
+  runTaskImpl(configuration['needs'], taskName + "Finished", configuration, **kwargs);
+
+
+def runTaskImpl(methodNames, taskName, configuration, **kwargs):
   for methodName in methodNames:
-    callImpl(methodName, taskName, configuration, True, **kvargs)
+    callImpl(methodName, taskName, configuration, True, **kwargs)

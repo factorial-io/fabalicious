@@ -295,8 +295,12 @@ def get_configuration(name):
     if not 'slack' in settings:
       settings['slack'] = {}
     settings['slack'] = data_merge( { 'notifyOn': [], 'username': 'Fabalicious', 'icon_emoji': ':tada:'}, settings['slack'])
+
     if 'needs' not in settings:
       settings['needs'] = ['ssh', 'git', 'drush7']
+
+    if 'scripts' not in settings:
+      settings['scripts'] = {}
 
 
     host_config = config['hosts'][name]
@@ -321,7 +325,8 @@ def get_configuration(name):
       'useShell': settings['useShell'],
       'disableKnownHosts': settings['disableKnownHosts'],
       'usePty': settings['usePty'],
-      'needs': settings['needs']
+      'needs': settings['needs'],
+      'scripts': {}
     }
 
     for key in defaults:
@@ -371,6 +376,9 @@ def get_configuration(name):
     if 'database' in host_config:
       if 'host' not in host_config['database']:
         host_config['database']['host'] = 'localhost'
+
+
+    config['needs'].append('script')
 
 
     host_config['config_name'] = name
@@ -554,4 +562,9 @@ def getSettings(key = False):
     return settings[key] if key in settings else False
   else:
     return settings
+
+
+def getBaseDir():
+  global fabfile_basedir
+  return fabfile_basedir
 

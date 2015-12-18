@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from fabric.api import *
-from fabric.state import output, env
 from fabric.colors import green, red
 import os.path
 import time
@@ -62,10 +61,10 @@ def list():
 
 
 @task
-def reset(**kvargs):
+def reset(**kwargs):
   configuration.check()
   print green('Resetting %s @ %s' % (configuration.getSettings('name'), configuration.current('config_name')))
-  methods.runTask(configuration.current(), 'reset', **kvargs)
+  methods.runTask(configuration.current(), 'reset', **kwargs)
 
 @task
 def ssh():
@@ -109,4 +108,24 @@ def backup(withFiles = True):
   ]
 
   methods.runTask(configuration.current(), 'backup', withFiles = withFiles, baseName = basename)
+
+
+@task
+def script(scriptKey = False):
+  configuration.check()
+  if scriptKey in configuration.current('scripts'):
+    methods.call('script', 'runScript', configuration.current(), script = configuration.current('scripts')[scriptKey])
+  elif scriptKey in configuration.getSettings('scripts'):
+    methods.call('script', 'runScript', configuration.current(), script = configuration.getSettings('scripts')[scriptKey])
+  else:
+    print red('Could not find any script named "%s" in fabfile.yaml' % scriptKey)
+    exit(1)
+
+
+@task
+def docker(command = False):
+  configuration.check()
+  methods.call('docker', 'runCommand', configuration.current(), command = command)
+
+
 

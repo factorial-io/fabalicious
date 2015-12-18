@@ -11,6 +11,14 @@ class DrushMethod(BaseMethod):
     return methodName == 'drush7' or methodName == 'drush8' or methodName == 'drush'
 
   def reset(self, config, **kwargs):
+    if self.methodName == 'drush8':
+      uuid = config['uuid'] if 'uuid' in config else False
+      if not uuid:
+        uuid = configuration.getSettings('uuid')
+
+      if not uuid:
+        print red('No uuid found in fabfile.yaml. config-import may fail!')
+
     with cd(env.config['siteFolder']):
       if config['useForDevelopment'] == True:
         if 'withPasswordReset' in kwargs and kwargs['withPasswordReset'] in [True, 'True', '1']:
@@ -23,6 +31,8 @@ class DrushMethod(BaseMethod):
       self.run_drush('updb -y')
       with warn_only():
         if self.methodName == 'drush8':
+          if uuid:
+            self.run_drush('cset system.site uuid %s -y', uuid)
           self.run_drush('config-import staging -y')
         else:
           self.run_drush('fra -y')
