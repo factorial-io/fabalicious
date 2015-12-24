@@ -65,10 +65,8 @@ class SlackMethod(BaseMethod):
 
   def notify(self, config, **kwargs):
     message= kwargs['message']
-    print 'Sending message per slack "%s"' % message
     self.sendMessage(config, 'always', message)
 
 
   def postflight(self, taskName, config, **kwargs):
-    print "check %s " % taskName
     self.sendMessage(config, taskName, 'Task "%s" sucessfully finished!"' % taskName)
