@@ -132,4 +132,7 @@ def deploy():
   configuration.check()
   methods.runTask(configuration.current(), 'deploy')
 
-
+@task
+def notify(message):
+  configuration.check()
+  methods.runTask(configuration.current(), 'notify', message=message)

@@ -15,6 +15,14 @@ class GitMethod(BaseMethod):
         result = output[-1].replace('/', '-')
         return result
 
+  def getCommitHash(self, config):
+    with cd(config['gitRootFolder']):
+      with hide('output', 'running'):
+        output = run('git rev-parse HEAD')
+        output = output.stdout.splitlines()
+        result = output[-1].replace('/', '-')
+        return result
+
 
   def backupPrepare(self, config, **kwargs):
     version = self.getVersion(config)

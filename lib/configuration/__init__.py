@@ -327,7 +327,8 @@ def get_configuration(name):
       'disableKnownHosts': settings['disableKnownHosts'],
       'usePty': settings['usePty'],
       'needs': settings['needs'],
-      'scripts': {}
+      'scripts': {},
+      'slack': {}
     }
 
     for key in defaults:
@@ -371,8 +372,7 @@ def get_configuration(name):
     if not 'behat' in host_config:
       host_config['behat'] = { 'presets': dict() }
 
-    if 'slack' in host_config:
-      host_config['slack'] = data_merge(settings['slack'], host_config['slack'])
+    host_config['slack'] = data_merge(settings['slack'], host_config['slack'])
 
     if 'database' in host_config:
       if 'host' not in host_config['database']:
