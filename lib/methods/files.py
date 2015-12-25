@@ -23,11 +23,13 @@ class FilesMethod(BaseMethod):
     baseName = kwargs['baseName']
     filename = config['backupFolder'] + "/" + '--'.join(baseName) + ".tgz"
     source_folders = kwargs['sourceFolders'] if 'sourceFolders' in kwargs else []
-    source_folders.append(config['filesFolder'])
+
+    if 'filesFolder' in config:
+      source_folders.append(config['filesFolder'])
     if 'privateFilesFolder' in config:
       source_folders.append(config['privateFilesFolder'])
 
-
-    self.tarFiles(config, filename, source_folders, 'backup')
-    print green('Files dumped into "%s"' % filename)
+    if len(source_folders) > 0:
+      self.tarFiles(config, filename, source_folders, 'backup')
+      print green('Files dumped into "%s"' % filename)
 
