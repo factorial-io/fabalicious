@@ -298,7 +298,7 @@ def get_configuration(name):
     settings['slack'] = data_merge( { 'notifyOn': [], 'username': 'Fabalicious', 'icon_emoji': ':tada:'}, settings['slack'])
 
     if 'needs' not in settings:
-      settings['needs'] = ['ssh', 'git', 'drush7']
+      settings['needs'] = ['ssh', 'git', 'drush7', 'files']
 
     if 'scripts' not in settings:
       settings['scripts'] = {}

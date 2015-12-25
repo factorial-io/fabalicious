@@ -8,6 +8,7 @@ from composer import ComposerMethod
 from scripts import ScriptMethod
 from docker import DockerMethod
 from slack import SlackMethod
+from files import FilesMethod
 
 cache = {}
 
