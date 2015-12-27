@@ -41,7 +41,8 @@ class BaseMethod(object):
 
   def get_backup_result(self, config, file, hash, method):
     tokens = hash.split('--')
-
+    if len(tokens) < 3:
+      return False
     # be backwards compatible.
     if tokens[0] != config['config_name']:
       tokens[0], tokens[1] = tokens[1], tokens[0]

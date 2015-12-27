@@ -3,6 +3,7 @@ from fabric.api import *
 from fabric.state import output, env
 from fabric.colors import green, red
 from lib import configuration
+import re
 
 class DrushMethod(BaseMethod):
 
@@ -98,8 +99,10 @@ class DrushMethod(BaseMethod):
   def listBackups(self, config, results, **kwargs):
     files = self.list_remote_files(config['backupFolder'], ['*.sql', '*.sql.gz'])
     for file in files:
-      hash = file.split('.')[0]
-      results.append(self.get_backup_result(config, file, hash, 'drush'))
+      hash = re.sub('\.(sql\.gz|\.sql)$', '', file)
+      backup_result = self.get_backup_result(config, file, hash, 'drush')
+      if backup_result:
+        results.append(backup_result)
 
   def restore(self, config, files=False, cleanupBeforeRestore=False, **kwargs):
 

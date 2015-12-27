@@ -3,6 +3,7 @@ from fabric.api import *
 from fabric.colors import green, red
 import datetime
 import os.path
+import re
 from lib import configuration
 
 class FilesMethod(BaseMethod):
@@ -41,8 +42,10 @@ class FilesMethod(BaseMethod):
   def listBackups(self, config, results, **kwargs):
     files = self.list_remote_files(config['backupFolder'], ['*.tgz'])
     for file in files:
-      hash = file.split('.')[0]
-      results.append(self.get_backup_result(config, file, hash, 'files'))
+      hash = re.sub('\.tgz$', '', file)
+      backup_result = self.get_backup_result(config, file, hash, 'files')
+      if backup_result:
+        results.append(backup_result)
 
   def restore(self, config, files=False, cleanupBeforeRestore=False, **kwargs):
 
