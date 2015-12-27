@@ -1,6 +1,8 @@
 from base import BaseMethod
 from fabric.api import *
 from fabric.colors import green, red
+import datetime
+import os.path
 from lib import configuration
 
 class FilesMethod(BaseMethod):
@@ -42,4 +44,26 @@ class FilesMethod(BaseMethod):
       hash = file.split('.')[0]
       results.append(self.get_backup_result(config, file, hash, 'files'))
 
+  def restore(self, config, files=False, cleanupBeforeRestore=False, **kwargs):
+
+    file = self.get_backup_result_for_method(files, 'files')
+    if not file:
+      return
+
+    # move current files folder to backup
+    ts = datetime.datetime.now().strftime('%Y%m%d.%H%M%S')
+    old_files_folder = config['filesFolder'] + '.' + ts + '.old'
+    with warn_only():
+      self.run_quietly('chmod u+w ' + os.path.dirname(config['filesFolder']))
+      self.run_quietly('chmod -R u+x '+config['filesFolder'])
+      self.run_quietly('rm -rf '+ old_files_folder)
+      self.run_quietly('mv ' + config['filesFolder'] + ' '+old_files_folder)
+
+    tar_file = config['backupFolder'] + '/' + file['file']
+    self.run_quietly('mkdir -p ' + config['filesFolder'])
+    self.run_quietly('chmod -R 777 ' + config['filesFolder'])
+    with cd(config['filesFolder']):
+      self.run_quietly('tar -xzPf ' + tar_file, 'Unpacking files')
+
+    print(green('files restored from ' + file['file']))
 

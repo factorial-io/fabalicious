@@ -192,6 +192,14 @@ def getBackup(commit):
     get(remote_path=remotePath, local_path=localPath)
 
 
+@task
+def restore(commit, cleanupBeforeRestore=0):
+  configuration.check()
+  files = get_backup_files(commit)
+  methods.runTask(configuration.current(), 'restore', files = files, cleanupBeforeRestore = cleanupBeforeRestore)
+
+  reset()
+
 
 @task
 def script(scriptKey = False):

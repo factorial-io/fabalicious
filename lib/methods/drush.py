@@ -101,6 +101,26 @@ class DrushMethod(BaseMethod):
       hash = file.split('.')[0]
       results.append(self.get_backup_result(config, file, hash, 'drush'))
 
+  def restore(self, config, files=False, cleanupBeforeRestore=False, **kwargs):
+
+    file = self.get_backup_result_for_method(files, 'drush')
+    if not file:
+      return
+
+    with cd(config['siteFolder']):
+
+      if cleanupBeforeRestore:
+        self.run_drush('sql-drop')
+
+      sql_name_target = config['backupFolder'] + '/' + file['file']
+      if config['supportsZippedBackups']:
+        self.run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
+      else:
+        self.run_drush('drush sql-cli < ' + sql_name_target, False)
+
+      print(green('SQL restored from ' + file['file']))
+
+
 
   def deployPrepare(self, config, **kwargs):
     if config['type'] != 'dev':

@@ -19,8 +19,10 @@ class BaseMethod(object):
   def preflight(self, task, config, **kwargs):
     pass
 
+
   def postflight(self, task, config, **kwargs):
     pass
+
 
   def list_remote_files(self, base_folder, patterns):
     result = []
@@ -35,6 +37,7 @@ class BaseMethod(object):
           if(len(tokens) >= 9):
             result.append(tokens[8])
     return result
+
 
   def get_backup_result(self, config, file, hash, method):
     tokens = hash.split('--')
@@ -52,6 +55,14 @@ class BaseMethod(object):
       'hash':   hash,
       'file':   file
     }
+
+
+  def get_backup_result_for_method(self, files, method):
+    file = filter(lambda f: f['method'] == method, files)
+    if len(file) != 1:
+      return False
+    return file[0]
+
 
   def run_quietly(self, cmd, msg = '', hide_output = None, may_fail=False):
     if 'warn_only' in env and env['warn_only']:
