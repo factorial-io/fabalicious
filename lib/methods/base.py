@@ -22,6 +22,22 @@ class BaseMethod(object):
   def postflight(self, task, config, **kwargs):
     pass
 
+  def list_remote_files(self, base_folder, patterns):
+    result = []
+    with cd(base_folder), hide('running', 'output', 'warnings'), warn_only():
+      for pattern in patterns:
+        cmd = 'ls -l ' + pattern + ' 2>/dev/null'
+        output = run(cmd)
+        lines = output.stdout.splitlines()
+        for line in lines:
+          tokens = line.split()
+
+          if(len(tokens) >= 9):
+            result.append(tokens[8])
+    return result
+
+
+
 
   def run_quietly(self, cmd, msg = '', hide_output = None, may_fail=False):
     if 'warn_only' in env and env['warn_only']:

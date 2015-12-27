@@ -111,6 +111,63 @@ def backup(withFiles = True):
 
 
 @task
+def listBackups(commit = False):
+  configuration.check()
+  results = []
+  if commit:
+    results = get_backup_files(commit)
+
+    print "\nFound last backup for %s and commit %s:" % (configuration.current('config_name'), commit)
+  else:
+    methods.runTask(configuration.current(), 'listBackups', results = results)
+    results = sorted(results, key = lambda l: (l['date'], l['time']))
+    print "\nFound backups for "+ configuration.current('config_name') + ":"
+  last_date = ''
+  for result in results:
+    if result['date'] == last_date:
+      result['date'] = '          '
+    else:
+      last_date = result['date']
+
+    print "{date} {time}  |  {commit:<30}  |  {method:<10}  |  {file}".format(**result)
+
+
+def get_backup_files(commit):
+  results = []
+  methods.runTask(configuration.current(), 'listBackups', results = results)
+  results = sorted(results, key = lambda l: (l['date'], l['time']))
+  # get latest hash for commit.
+  hash = False
+  for result in results:
+    if result['commit'] == commit:
+      hash = result['hash']
+
+  # search for hash.
+  if not hash:
+    for result in results:
+      if result['hash'] == commit:
+        hash = result['hash']
+
+  if not hash:
+    print red('Coud not find requested backup: %s' % commit)
+    listBackups()
+    exit()
+  else:
+    return filter(lambda r: r['hash'] == hash, results)
+
+@task
+def getBackup(commit):
+  configuration.check()
+  files = get_backup_files(commit)
+  for file in files:
+    remotePath = configuration.current('backupFolder') + "/" + file['file']
+    localPath = './' + file['file']
+
+    get(remote_path=remotePath, local_path=localPath)
+
+
+
+@task
 def script(scriptKey = False):
   configuration.check()
   if scriptKey in configuration.current('scripts'):

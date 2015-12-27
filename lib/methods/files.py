@@ -20,6 +20,9 @@ class FilesMethod(BaseMethod):
     self.run_quietly(cmd)
 
   def backup(self, config, **kwargs):
+    if 'withFiles' in kwargs and kwargs['withFiles'] != True:
+      return
+
     baseName = kwargs['baseName']
     filename = config['backupFolder'] + "/" + '--'.join(baseName) + ".tgz"
     source_folders = kwargs['sourceFolders'] if 'sourceFolders' in kwargs else []
@@ -32,4 +35,19 @@ class FilesMethod(BaseMethod):
     if len(source_folders) > 0:
       self.tarFiles(config, filename, source_folders, 'backup')
       print green('Files dumped into "%s"' % filename)
+
+  def listBackups(self, config, results, **kwargs):
+    files = self.list_remote_files(config['backupFolder'], ['*.tgz'])
+    for file in files:
+      hash = file.split('.')[0]
+      tokens = hash.split('--')
+      results.append({
+        'config': tokens[0],
+        'commit': tokens[1],
+        'date':   tokens[2],
+        'time':   tokens[3],
+        'method': 'files',
+        'hash':   hash,
+        'file':   file
+      })
 

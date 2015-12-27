@@ -126,7 +126,6 @@ class ScriptMethod(BaseMethod):
 
 
   def runTaskSpecificScript(self, taskName, config, **kwargs):
-    print "run specific task " + taskName + " " + config['type']
     script = False
     if taskName in config:
       script = config[taskName]

@@ -95,6 +95,21 @@ class DrushMethod(BaseMethod):
       filename += '.gz'
     print green('Database dump at "%s"' % filename)
 
+  def listBackups(self, config, results, **kwargs):
+    files = self.list_remote_files(config['backupFolder'], ['*.sql', '*.sql.gz'])
+    for file in files:
+      hash = file.split('.')[0]
+      tokens = hash.split('--')
+      results.append({
+        'config': tokens[0],
+        'commit': tokens[1],
+        'date':   tokens[2],
+        'time':   tokens[3],
+        'method': 'drush',
+        'file': file,
+        'hash': hash
+      })
+
 
   def deployPrepare(self, config, **kwargs):
     if config['type'] != 'dev':
