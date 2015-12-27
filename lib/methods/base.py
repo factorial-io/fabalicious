@@ -36,8 +36,22 @@ class BaseMethod(object):
             result.append(tokens[8])
     return result
 
+  def get_backup_result(self, config, file, hash, method):
+    tokens = hash.split('--')
 
+    # be backwards compatible.
+    if tokens[0] != config['config_name']:
+      tokens[0], tokens[1] = tokens[1], tokens[0]
 
+    return {
+      'config': tokens[0],
+      'commit': tokens[1],
+      'date':   tokens[2],
+      'time':   tokens[3],
+      'method': method,
+      'hash':   hash,
+      'file':   file
+    }
 
   def run_quietly(self, cmd, msg = '', hide_output = None, may_fail=False):
     if 'warn_only' in env and env['warn_only']:

@@ -40,14 +40,6 @@ class FilesMethod(BaseMethod):
     files = self.list_remote_files(config['backupFolder'], ['*.tgz'])
     for file in files:
       hash = file.split('.')[0]
-      tokens = hash.split('--')
-      results.append({
-        'config': tokens[0],
-        'commit': tokens[1],
-        'date':   tokens[2],
-        'time':   tokens[3],
-        'method': 'files',
-        'hash':   hash,
-        'file':   file
-      })
+      results.append(self.get_backup_result(config, file, hash, 'files'))
+
 
