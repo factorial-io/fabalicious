@@ -16,10 +16,12 @@ from lib import configuration
 
 configuration.fabfile_basedir = root_folder
 
+
 @task
 def config(configName='local'):
   c = configuration.get(configName)
   configuration.apply(c, configName)
+
 
 @task
 def getProperty(in_key):
@@ -39,10 +41,34 @@ def getProperty(in_key):
 
 
 @task
+def about(config_name=False):
+  if not config_name:
+    config = configuration.current()
+    config_name = configuration.current('config_name')
+  else:
+    config = configuration.get(config_name)
+  if config:
+    print("Configuration for " + config_name)
+    for key, value in config.items():
+      if isinstance(value, dict):
+        print(key)
+        for dict_key, dict_value in value.items():
+          print('  ' + dict_key.ljust(23) + ': '+ str(dict_value))
+      elif hasattr(value, "__len__") and not hasattr(value, 'strip'):
+          print key
+          for list_value in value:
+            print(' '.ljust(25) + ': '+ str(list_value))
+      else:
+        print(key.ljust(25) + ': '+ str(value))
+
+
+
+@task
 def version():
   configuration.check('git')
   version = methods.call('git', 'getVersion', configuration.current())
   print green('%s @ %s tagged with: %s' % (configuration.getSettings('name'), configuration.current('config_name'), version))
+
 
 @task
 def drush(drush_command):
