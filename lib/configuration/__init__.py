@@ -313,6 +313,7 @@ def get_configuration(name):
 
     # add defaults
     defaults = {
+      'port': 22,
       'type': 'prod',
       'ignoreSubmodules': False,
       'supportsBackups': True,
