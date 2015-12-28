@@ -39,6 +39,7 @@ def get(methodName, taskName):
 
 
 def callImpl(methodName, taskName, configuration, optional, **kwargs):
+  # print "calling %s@%s ..." % (methodName, taskName)
   fn = get(methodName, taskName)
   if fn:
     result = fn(configuration, **kwargs)
@@ -48,7 +49,11 @@ def callImpl(methodName, taskName, configuration, optional, **kwargs):
 
 
 def call(methodName, taskName, configuration, **kwargs):
-  return callImpl(methodName, taskName, configuration, False, **kwargs)
+  preflight('preflight', taskName, configuration, **kwargs)
+  result = callImpl(methodName, taskName, configuration, False, **kwargs)
+  preflight('postflight', taskName, configuration, **kwargs)
+  return result
+
 
 def preflight(task, taskName, configuration, **kwargs):
   for methodName in configuration['needs']:
