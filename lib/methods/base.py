@@ -47,6 +47,8 @@ class BaseMethod(object):
     if tokens[0] != config['config_name']:
       tokens[0], tokens[1] = tokens[1], tokens[0]
 
+    if tokens[0] != config['config_name']:
+      return False
     return {
       'config': tokens[0],
       'commit': tokens[1],
