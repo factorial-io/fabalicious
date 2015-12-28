@@ -50,7 +50,7 @@ class DockerMethod(BaseMethod):
     return False
 
 
-  def startRemoteAccess(self, config, **kwargs):
+  def startRemoteAccess(self, config, port="80", **kwargs):
     docker_config = self.getDockerConfig(config)
     if not docker_config:
       print red('No docker configuration found!')
@@ -66,7 +66,7 @@ class DockerMethod(BaseMethod):
     if 'ip' in kwargs:
       public_ip = kwargs['ip']
     print green("I am about to start the port forwarding via SSH. If you are finished, just type exit after the prompt.")
-    local("ssh -L%s:8888:%s:80 -p %s %s@%s" % (public_ip, ip, docker_config['port'], docker_config['user'], docker_config['host']))
+    local("ssh -L%s:8888:%s:%s -p %s %s@%s" % (public_ip, ip, port, docker_config['port'], docker_config['user'], docker_config['host']))
     exit(0)
 
 
@@ -88,7 +88,6 @@ class DockerMethod(BaseMethod):
         print green('Copied keyfile to docker.')
 
       if authorized_keys_file:
-        authorized_keys_file = settings['dockerAuthorizedKeyFile']
         put(authorized_keys_file, '/root/.ssh/authorized_keys')
         print green('Copied authorized keys to docker.')
       run('chmod 700 /root/.ssh')
@@ -160,4 +159,4 @@ class DockerMethod(BaseMethod):
     environment = docker_config['environment'] if 'environment' in docker_config else {}
     host_str = docker_config['user'] + '@'+docker_config['host']+':'+str(docker_config['port'])
 
-    execute(script_fn, config, script=script, variables=variables, environment=environment, host=host_str)
+    execute(script_fn, config, script=script, variables=variables, environment=environment, host=host_str, rootFolder = docker_config['rootFolder'])
