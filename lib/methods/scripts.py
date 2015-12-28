@@ -115,6 +115,7 @@ class ScriptMethod(BaseMethod):
     callbacks = kwargs['callbacks'] if 'callbacks' in kwargs else {}
     variables = kwargs['variables'] if 'variables' in kwargs else {}
     environment = kwargs['environment'] if 'environment' in kwargs else {}
+    root_folder = kwargs['rootFolder'] if 'rootFolder' in kwargs else config['rootFolder']
     if 'environment' in config:
       environment = configuration.data_merge(config['environment'], environment)
     variables['host'] = config
@@ -127,7 +128,7 @@ class ScriptMethod(BaseMethod):
     commands = self.expandCommands(script, replacements)
     environment = self.expandEnvironment(environment, replacements)
 
-    self.runScriptImpl(config['rootFolder'], commands, callbacks, environment, replacements)
+    self.runScriptImpl(root_folder, commands, callbacks, environment, replacements)
 
 
   def runTaskSpecificScript(self, taskName, config, **kwargs):

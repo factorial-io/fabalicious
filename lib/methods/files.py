@@ -4,6 +4,7 @@ from fabric.colors import green, red
 import datetime
 import os.path
 import re
+from lib import utils
 from lib import configuration
 
 class FilesMethod(BaseMethod):
@@ -70,3 +71,35 @@ class FilesMethod(BaseMethod):
 
     print(green('files restored from ' + file['file']))
 
+  def rsync(self, source_config, target_config, folder = 'filesFolder'):
+    if not source_config['supportsCopyFrom']:
+      print red('The configuration "{c} does not support copyFrom'.format(c=source_config['config_name']))
+      return
+
+    print green('Copying files from {f} to {t}'.format(f=source_config['config_name'], t=target_config['config_name']))
+
+
+    with cd(env.config['rootFolder']):
+      exclude_settings = configuration.getSettings('excludeFiles')
+      exclude_files_setting = exclude_settings['copyFrom']
+      rsync_args = ''
+      if exclude_files_setting:
+        rsync_args = ' --exclude "' + '" --exclude "'.join(exclude_files_setting) + '"'
+
+
+      rsync = 'rsync -rav --no-o --no-g  -e "ssh -T -o Compression=no {ssh_args} -p {port}" {rsync_args} {user}@{host}:{source_dir}/* {target_dir}'.format(
+        ssh_args=utils.ssh_no_strict_key_host_checking_params,
+        source_dir=source_config[folder],
+        target_dir=target_config[folder],
+        rsync_args=rsync_args,
+        **source_config
+      )
+
+      with warn_only():
+        run(rsync)
+
+  def copyFilesFrom(self, config, source_config=False, **kwargs):
+    keys = ['filesFolder', 'privateFilesFolder']
+    for key in keys:
+      if key in source_config and key in config:
+        self.rsync(source_config, config, key)

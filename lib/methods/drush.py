@@ -2,7 +2,10 @@ from base import BaseMethod
 from fabric.api import *
 from fabric.state import output, env
 from fabric.colors import green, red
+from fabric.network import *
+from fabric.context_managers import settings as _settings
 from lib import configuration
+from lib import utils
 import re
 
 class DrushMethod(BaseMethod):
@@ -110,23 +113,63 @@ class DrushMethod(BaseMethod):
     if not file:
       return
 
-    with cd(config['siteFolder']):
+    sql_name_target = config['backupFolder'] + '/' + file['file']
+    self.importSQLFromFile(config, sql_name_target, cleanupBeforeRestore)
 
+
+  def importSQLFromFile(self, config, sql_name_target, cleanupBeforeRestore=False):
+
+    with cd(config['siteFolder']):
       if cleanupBeforeRestore:
         self.run_drush('sql-drop')
 
-      sql_name_target = config['backupFolder'] + '/' + file['file']
       if config['supportsZippedBackups']:
         self.run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
       else:
         self.run_drush('drush sql-cli < ' + sql_name_target, False)
 
-      print(green('SQL restored from ' + file['file']))
+      print(green('SQL restored from "%s"' % sql_name_target))
 
 
 
   def deployPrepare(self, config, **kwargs):
     if config['type'] != 'dev':
       self.backup(config, ** kwargs)
+
+
+  def copyDBFrom(self, config, source_config=False, **kwargs):
+    target_config = config
+    sql_name_source = source_config['tmpFolder'] + config['config_name'] + '.sql'
+    sql_name_target = target_config['tmpFolder'] + config['config_name'] + '_target.sql'
+
+    if source_config['supportsZippedBackups']:
+      sql_name_target += '.gz'
+
+    source_host_string = join_host_strings(source_config['user'], source_config['host'], source_config['port'])
+
+    # create dump on source.
+    with _settings( host_string=source_host_string ):
+      self.backupSql(source_config, sql_name_source)
+
+    # copy dump to target:
+    if source_config['supportsZippedBackups']:
+      sql_name_source += '.gz'
+
+    args = utils.ssh_no_strict_key_host_checking_params
+
+    cmd = 'scp -P {port} {args} {user}@{host}:{sql_name_source} {sql_name_target} >>/dev/null'.format(  args=args,
+      sql_name_source=sql_name_source,
+      sql_name_target=sql_name_target,
+      **source_config
+      )
+    run(cmd)
+    with _settings(host_string=source_host_string):
+      self.run_quietly('rm %s' % sql_name_source)
+
+    self.importSQLFromFile(target_config, sql_name_target)
+    self.run_quietly('rm %s' % sql_name_target)
+
+
+
 
 

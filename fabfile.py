@@ -227,3 +227,23 @@ def deploy():
 def notify(message):
   configuration.check()
   methods.runTask(configuration.current(), 'notify', message=message)
+
+@task
+def copyFilesFrom(source_config_name):
+  configuration.check()
+  source_configuration = configuration.get(source_config_name)
+  methods.runTask(configuration.current(), 'copyFilesFrom', source_config=source_configuration)
+
+@task
+def copyDBFrom(source_config_name):
+  configuration.check()
+  source_configuration = configuration.get(source_config_name)
+  methods.runTask(configuration.current(), 'copyDBFrom', source_config=source_configuration)
+
+  # reset()
+
+@task
+def copyFrom(source_config_name):
+  configuration.check()
+  copyDBFrom(source_config_name)
+  copyFilesFrom(source_config_name)

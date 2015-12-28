@@ -14,7 +14,7 @@ class SSHTunnel:
       cmd = 'ssh'
 
     cmd = cmd + ' -vAN -L %d:%s:%d %s@%s' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
-
+    print cmd,
     self.p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     start_time = time.time()
     atexit.register(self.p.kill)
@@ -25,7 +25,7 @@ class SSHTunnel:
     return 'localhost:%d' % self.local_port
 
 class RemoteSSHTunnel:
-  def __init__(self, config, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=45):
+  def __init__(self, config, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=90):
     self.local_port = local_port
     self.bridge_host = bridge_host
     self.bridge_user = bridge_user
@@ -36,7 +36,8 @@ class RemoteSSHTunnel:
       remote_cmd = 'ssh'
       cmd = 'ssh'
     remote_cmd = remote_cmd + ' -v -L %d:%s:%d %s@%s -A -N -M ' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
-    run_quietly('rm -f ~/.ssh-tunnel-from-fabric')
+    with hide('running', 'output', 'warnings'):
+      run('rm -f ~/.ssh-tunnel-from-fabric')
 
     ssh_port = 22
     if 'port' in config:
@@ -45,8 +46,7 @@ class RemoteSSHTunnel:
     cmd = cmd + ' -vA -p %d %s@%s' % (ssh_port, config['user'], config['host'])
     cmd = cmd + " '" + remote_cmd + "'"
 
-    print("running remote tunnel")
-    print(cmd);
+    print(cmd),
 
     self.p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -56,7 +56,7 @@ class RemoteSSHTunnel:
     atexit.register(self.p.kill)
     while not 'Entering interactive session' in self.p.stderr.readline():
       if time.time() > start_time + timeout:
-        raise Exception("SSH tunnel timed out")
+        raise Exception('SSH tunnel timed out with command "%s"' % cmd)
 
 
   def entrance(self):
