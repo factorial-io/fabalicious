@@ -252,10 +252,10 @@ check_fabalicious_version.version = False
 
 def get_configuration(name):
   unsupported = {
-    'needsComposer': 'Unsupported, please add "composer" to your "needs" ',
-    'hasDrush': 'Unsupported, please add "drush7" or "drush8" to your "needs"',
-    'supportsSSH': 'Unsupported, please add "ssh" to your "needs"',
-    'useForDevelopment': 'Unsupported, please use "type" with dev|prod|stage as value.'
+    'needsComposer': '"%s" is unsupported, please add "composer" to your "needs" ',
+    'hasDrush': '"%s" is unsupported, please add "drush7" or "drush8" to your "needs"',
+    'supportsSSH': '"%s" is unsupported, please add "ssh" to your "needs"',
+    'useForDevelopment': '"%s" is unsupported, please use "type" with "dev|prod|stage" as value.'
   }
 
   config = get_all_configurations()
@@ -386,7 +386,7 @@ def get_configuration(name):
 
     for key in unsupported:
       if key in host_config:
-        print red(key + ' ' + unsupported[key])
+        print red(unsupported[key] % key)
 
     return host_config
 
@@ -456,31 +456,6 @@ def get_docker_configuration(config_name, config):
 
   return False
 
-def create_ssh_tunnel(config, tunnel_config, remote=False):
-  o = tunnel_config
-
-  if 'destHostFromDockerContainer' in o:
-
-    ip_address = get_docker_container_ip(o['destHostFromDockerContainer'], o['bridgeHost'], o['bridgeUser'], o['bridgePort'])
-
-    if not ip_address:
-      print red('Docker not running, can\'t establish tunnel')
-      return
-
-    print(green("Docker container " + o['destHostFromDockerContainer'] + " uses IP " + ip_address))
-
-    o['destHost'] = ip_address
-
-  strictHostKeyChecking = True
-  if 'strictHostKeyChecking' in o:
-    strictHostKeyChecking = o['strictHostKeyChecking']
-
-  if remote:
-    tunnel = RemoteSSHTunnel(config, o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'], strictHostKeyChecking)
-  else:
-    tunnel = SSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'], strictHostKeyChecking)
-
-  return tunnel
 
 
 
@@ -509,9 +484,7 @@ def apply(config, name):
   env.user = config['user']
   env.hosts = [ config['host'] ]
 
-  if 'sshTunnel' in config:
-    create_ssh_tunnel(config, config['sshTunnel'])
-
+  # TODO: move to docker-method.
   # add docker configuration password to env.passwords
   if 'docker' in config:
 
