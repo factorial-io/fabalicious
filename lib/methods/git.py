@@ -65,3 +65,15 @@ class GitMethod(BaseMethod):
 
     fn = self.factory.get('script', 'runTaskSpecificScript')
     fn('deploy', config, **kwargs)
+
+  def restore(self, config, files=False, cleanupBeforeRestore=False, **kwargs):
+
+    commit = False
+    for file in files:
+      if 'commit' in file and len(file['commit']) > 0:
+        commit = file['commit']
+
+    if commit:
+      run('git checkout ' + commit)
+      print(green('source restored to ' + commit))
+
