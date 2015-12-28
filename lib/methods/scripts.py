@@ -9,8 +9,12 @@ class ScriptMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'script'
 
+  def printReplacements(self, replacements):
+    for key, value in replacements.iteritems():
+      print "{key:<40}  |  {value}".format(key = key, value=value)
 
-  def runScriptImpl(self, rootFolder, commands, callbacks= {}, environment = {}):
+
+  def runScriptImpl(self, rootFolder, commands, callbacks= {}, environment = {}, replacements = {}):
 
     pattern = re.compile('\%(\S*)\%')
     state = { 'warnOnly': True }
@@ -28,7 +32,8 @@ class ScriptMethod(BaseMethod):
         ok = False
 
     if not ok:
-      return
+      self.printReplacements(replacements)
+      return False
 
 
     for line in commands:
@@ -122,7 +127,7 @@ class ScriptMethod(BaseMethod):
     commands = self.expandCommands(script, replacements)
     environment = self.expandEnvironment(environment, replacements)
 
-    self.runScriptImpl(config['rootFolder'], commands, callbacks, environment)
+    self.runScriptImpl(config['rootFolder'], commands, callbacks, environment, replacements)
 
 
   def runTaskSpecificScript(self, taskName, config, **kwargs):
