@@ -27,7 +27,6 @@ class DockerMethod(BaseMethod):
 
   def getIp(self, docker_name, docker_host, docker_user, docker_port):
     host_string = join_host_strings(docker_user, docker_host, docker_port)
-    print host_string
     try:
       with hide('running', 'output'), _settings( host_string=host_string ):
         output = run('docker inspect --format "{{ .NetworkSettings.IPAddress }}" %s ' % (docker_name))
@@ -40,13 +39,24 @@ class DockerMethod(BaseMethod):
     return ip_address
 
 
+  def getIpAddress(self, config, **kwargs):
+    docker_config = self.getDockerConfig(config)
+    if docker_config:
+      ip = self.getIp(config['docker']['name'], docker_config['host'], docker_config['user'], docker_config['port'])
+      if 'result' in kwargs:
+        kwargs['result']['ip'] = ip
+      return ip if ip else False
+
+    return False
+
+
   def startRemoteAccess(self, config, **kwargs):
     docker_config = self.getDockerConfig(config)
     if not docker_config:
       print red('No docker configuration found!')
       exit(1)
 
-    ip = self.getIp(config['docker']['name'], docker_config['host'], docker_config['user'], docker_config['port'])
+    ip = self.getIpAddress(config)
 
     if not ip:
       print red('Could not get docker-ip-address.')
