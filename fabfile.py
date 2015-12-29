@@ -215,9 +215,18 @@ def docker(command = False, **kwargs):
   methods.call('docker', 'runCommand', configuration.current(), command = command, **kwargs)
 
 @task
-def deploy():
+def deploy(overrideBranch=False):
   configuration.check()
-  methods.runTask(configuration.current(), 'deploy')
+  config = configuration.current()
+  if overrideBranch:
+    config['branch'] = overrideBranch
+
+  if config['type'] != 'dev':
+      backup(withFiles=False)
+
+  methods.runTask(config, 'deploy')
+
+  reset()
 
 @task
 def notify(message):

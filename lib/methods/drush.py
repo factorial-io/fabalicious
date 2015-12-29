@@ -92,6 +92,8 @@ class DrushMethod(BaseMethod):
 
 
   def backup(self, config, **kwargs):
+
+    print(kwargs)
     baseName = kwargs['baseName']
     filename = config['backupFolder'] + "/" + '--'.join(baseName) + ".sql"
     self.backupSql(config, filename)
@@ -129,12 +131,6 @@ class DrushMethod(BaseMethod):
         self.run_drush('drush sql-cli < ' + sql_name_target, False)
 
       print(green('SQL restored from "%s"' % sql_name_target))
-
-
-
-  def deployPrepare(self, config, **kwargs):
-    if config['type'] != 'dev':
-      self.backup(config, ** kwargs)
 
 
   def copyDBFrom(self, config, source_config=False, **kwargs):
