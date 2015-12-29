@@ -50,7 +50,7 @@ class DockerMethod(BaseMethod):
     return False
 
 
-  def startRemoteAccess(self, config, port="80", **kwargs):
+  def startRemoteAccess(self, config, port="80", publicPort="8888", **kwargs):
     docker_config = self.getDockerConfig(config)
     if not docker_config:
       print red('No docker configuration found!')
@@ -66,7 +66,7 @@ class DockerMethod(BaseMethod):
     if 'ip' in kwargs:
       public_ip = kwargs['ip']
     print green("I am about to start the port forwarding via SSH. If you are finished, just type exit after the prompt.")
-    local("ssh -L%s:8888:%s:%s -p %s %s@%s" % (public_ip, ip, port, docker_config['port'], docker_config['user'], docker_config['host']))
+    local("ssh -L%s:%s:%s:%s -p %s %s@%s" % (public_ip, publicPort, ip, port, docker_config['port'], docker_config['user'], docker_config['host']))
     exit(0)
 
 

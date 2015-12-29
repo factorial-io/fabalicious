@@ -210,9 +210,9 @@ def script(scriptKey = False):
     exit(1)
 
 @task
-def docker(command = False):
+def docker(command = False, **kwargs):
   configuration.check()
-  methods.call('docker', 'runCommand', configuration.current(), command = command)
+  methods.call('docker', 'runCommand', configuration.current(), command = command, **kwargs)
 
 @task
 def deploy():
