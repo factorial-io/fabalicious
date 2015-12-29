@@ -169,6 +169,19 @@ class DrushMethod(BaseMethod):
     self.importSQLFromFile(target_config, sql_name_target)
     self.run_quietly('rm %s' % sql_name_target)
 
+  def restoreSQLFromFile(self, config, sourceFile, **kwargs):
+    targetSQLFileName = env.config['tmpFolder'] + 'manual_upload.sql'
+
+    fileName, fileExtension = os.path.splitext(sourceFile)
+    zipped = fileExtension == '.gz'
+    if zipped:
+      targetSQLFileName += '.gz'
+
+    put(sourceFile, targetSQLFileName)
+
+    self.importSQLFromFile(config, targetSQLFileName)
+    self.run_quietly('rm %s' % targetSQLFileName)
+
 
 
 

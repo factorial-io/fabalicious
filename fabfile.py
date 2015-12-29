@@ -133,6 +133,10 @@ def backup(withFiles = True):
   methods.runTask(configuration.current(), 'backup', withFiles = withFiles, baseName = basename)
 
 @task
+def backupDB():
+  backup(withFiles=False)
+
+@task
 def listBackups(commit = False):
   configuration.check()
   results = []
@@ -239,3 +243,9 @@ def copyFrom(source_config_name):
   configuration.check()
   copyDBFrom(source_config_name)
   copyFilesFrom(source_config_name)
+
+@task
+def restoreSQLFromFile(full_file_name):
+  configuration.check()
+  methods.runTask(configuration.current(), 'restoreSQLFromFile', sourceFile = full_file_name)
+
