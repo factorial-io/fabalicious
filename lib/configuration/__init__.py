@@ -7,6 +7,9 @@ import yaml
 import copy
 import hashlib
 
+
+fabalicious_version = '2.0.0'
+
 settings = 0
 verbose_output = False
 current_config = 'unknown'
@@ -224,23 +227,7 @@ def versiontuple(v):
 def check_fabalicious_version(required_version, msg):
   required_version = str(required_version)
 
-  if not check_fabalicious_version.version:
-
-    file = __file__
-    if os.path.basename(file) == 'fabfile.pyc':
-      file = os.path.dirname(file) + '/fabfile.py';
-
-    app_folder = os.path.dirname(os.path.realpath(file))
-
-    with hide('output', 'running'):
-      output = local('cd %s; git describe --always' % app_folder, capture=True)
-      output = output.stdout.splitlines()
-      check_fabalicious_version.version = output[-1].replace('/', '-')
-      p = check_fabalicious_version.version.find('-')
-      if p >= 0:
-        check_fabalicious_version.version = check_fabalicious_version.version[0:p]
-
-  current_version = check_fabalicious_version.version
+  current_version = fabalicious_version
 
   if (versiontuple(current_version) < versiontuple(required_version)):
     print red('The %s needs %s as minimum app-version.' % (msg, required_version))
@@ -248,7 +235,6 @@ def check_fabalicious_version(required_version, msg):
     exit(1)
 
 
-check_fabalicious_version.version = False
 
 def get_configuration(name):
   unsupported = {

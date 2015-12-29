@@ -22,7 +22,6 @@ def config(configName='local'):
   c = configuration.get(configName)
   configuration.apply(c, configName)
 
-
 @task
 def getProperty(in_key):
   configuration.check()
@@ -38,7 +37,6 @@ def getProperty(in_key):
 
   print c
   exit(0)
-
 
 @task
 def about(config_name=False):
@@ -61,7 +59,9 @@ def about(config_name=False):
       else:
         print(key.ljust(25) + ': '+ str(value))
 
-
+@task
+def info():
+  print green('Fabalicious %s by Factorial.io. MIT Licensed.\n\n' % configuration.fabalicious_version)
 
 @task
 def version():
@@ -69,12 +69,10 @@ def version():
   version = methods.call('git', 'getVersion', configuration.current())
   print green('%s @ %s tagged with: %s' % (configuration.getSettings('name'), configuration.current('config_name'), version))
 
-
 @task
 def drush(drush_command):
   configuration.check(['drush7', 'drush8'])
   methods.call('drush', 'drush', configuration.current(), command=drush_command)
-
 
 @task
 def list():
@@ -84,7 +82,6 @@ def list():
   keys = sorted(keys)
   for key in keys:
     print '- ' + key
-
 
 @task
 def reset(**kwargs):
@@ -135,7 +132,6 @@ def backup(withFiles = True):
 
   methods.runTask(configuration.current(), 'backup', withFiles = withFiles, baseName = basename)
 
-
 @task
 def listBackups(commit = False):
   configuration.check()
@@ -156,7 +152,6 @@ def listBackups(commit = False):
       last_date = result['date']
 
     print "{date} {time}  |  {commit:<30}  |  {method:<10}  |  {file}".format(**result)
-
 
 def get_backup_files(commit):
   results = []
@@ -191,7 +186,6 @@ def getBackup(commit):
 
     get(remote_path=remotePath, local_path=localPath)
 
-
 @task
 def restore(commit, cleanupBeforeRestore=0):
   configuration.check()
@@ -199,7 +193,6 @@ def restore(commit, cleanupBeforeRestore=0):
   methods.runTask(configuration.current(), 'restore', files = files, cleanupBeforeRestore = cleanupBeforeRestore)
 
   reset()
-
 
 @task
 def script(scriptKey = False):
@@ -211,7 +204,6 @@ def script(scriptKey = False):
   else:
     print red('Could not find any script named "%s" in fabfile.yaml' % scriptKey)
     exit(1)
-
 
 @task
 def docker(command = False):
@@ -240,7 +232,7 @@ def copyDBFrom(source_config_name):
   source_configuration = configuration.get(source_config_name)
   methods.runTask(configuration.current(), 'copyDBFrom', source_config=source_configuration)
 
-  # reset()
+  reset()
 
 @task
 def copyFrom(source_config_name):
