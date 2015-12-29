@@ -182,6 +182,45 @@ class DrushMethod(BaseMethod):
     self.importSQLFromFile(config, targetSQLFileName)
     self.run_quietly('rm %s' % targetSQLFileName)
 
+  def install(self, config, ask='True', distribution='minimal', **kwargs):
+    if 'database' not in config:
+      print red('Missing database configuration!')
+      exit(1)
+
+    configuration.validate_dict(['user', 'pass', 'name', 'host'], config['database'], 'Missing database configuration: ')
+
+    print green('Installing fresh database for "%s"' % config['config_name'])
+
+    o = config['database']
+    self.run_quietly('mkdir -p %s' % config['siteFolder'])
+    with cd(config['siteFolder']):
+      mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
+
+      self.run_quietly('mysql -h {host} -u {user} --password={pass} -e "{mysql_command}"'.format(mysql_command=mysql_cmd, **o), 'Creating database')
+
+      with warn_only():
+        self.run_quietly('chmod u+w {siteFolder}'.format(**config))
+        self.run_quietly('chmod u+w {siteFolder}/settings.php'.format(**config))
+        self.run_quietly('rm -f {siteFolder}/settings.php.old'.format(**config))
+        self.run_quietly('mv {siteFolder}/settings.php {siteFolder}/settings.php.old 2>/dev/null'.format(**config))
+
+        sites_folder = os.path.basename(config['siteFolder'])
+        options = ''
+        if ask.lower() == 'false' or ask.lower() == '0':
+          options = ' -y'
+        options += ' --sites-subdir='+sites_folder
+        options += ' --account-name=admin'
+        options += ' --account-pass=admin'
+        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@' + o['host'] + '/' +o ['name']
+        self.run_drush('site-install ' + distribution + ' ' + options)
+
+        if self.methodName == 'drush7':
+          self.run_drush('en features -y')
+
+        deploymentModule = configuration.getSettings('deploymentModule')
+        if deploymentModule:
+          self.run_drush('en -y %s' % deploymentModule)
+
 
 
 

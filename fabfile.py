@@ -249,3 +249,13 @@ def restoreSQLFromFile(full_file_name):
   configuration.check()
   methods.runTask(configuration.current(), 'restoreSQLFromFile', sourceFile = full_file_name)
 
+@task
+def install(**kwargs):
+  configuration.check()
+  config = configuration.current()
+  if config['type'] == 'prod' or not config['supportsInstalls']:
+    print red('Task install is not supported for this configuration. Please check if "type" and "supportsInstalls" is set correctly.')
+    exit(1)
+
+  methods.runTask(configuration.current(), 'install', **kwargs)
+  reset()
