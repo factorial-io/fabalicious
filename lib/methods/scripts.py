@@ -98,7 +98,7 @@ class ScriptMethod(BaseMethod):
 
 
   def executeCallback(self, context, command, *args, **kwargs):
-    execute(command, *args)
+    execute(command, *args, **kwargs)
 
   def runTaskCallback(self, context, *args, **kwargs):
     print red('run_task is not supported anymore, use "execute(docker, <your_task>)"');
