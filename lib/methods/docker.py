@@ -2,6 +2,7 @@ from base import BaseMethod
 from fabric.api import *
 from fabric.network import *
 from fabric.context_managers import settings as _settings
+from fabric.context_managers import env
 from fabric.colors import green, red
 from lib import configuration
 
@@ -10,6 +11,11 @@ class DockerMethod(BaseMethod):
   @staticmethod
   def supports(methodName):
     return methodName == 'docker'
+
+
+  def addPasswordToFabricCache(self, user, host, port, password, **kwargs):
+    host_string = join_host_strings(user, host, port)
+    env.passwords[host_string] = password
 
 
   def getDockerConfig(self, config):
@@ -23,7 +29,13 @@ class DockerMethod(BaseMethod):
     if not dockerHosts or docker_config_name not in dockerHosts:
       return False
 
-    return dockerHosts[docker_config_name]
+    docker_config = dockerHosts[docker_config_name]
+    if 'password' in docker_config:
+      self.addPasswordToFabricCache(**docker_config)
+
+
+    return docker_config
+
 
   def getIp(self, docker_name, docker_host, docker_user, docker_port):
     host_string = join_host_strings(docker_user, docker_host, docker_port)
@@ -94,6 +106,9 @@ class DockerMethod(BaseMethod):
 
   def waitForServices(self, config, **kwargs):
     host_string = join_host_strings(config['user'], config['host'], config['port'])
+    if 'password' in config:
+      self.addPasswordToFabricCache(**config)
+
     max_tries = 20
     try_n = 0
 
