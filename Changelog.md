@@ -1,0 +1,107 @@
+#Changelog
+
+
+## 2.0.0
+
+### new
+
+* you can now specify what features you need. The following features are available: `composer`, `docker`, `drush7`, `drush8`, `git`, `ssh`, `files`, `slack`. You specify your needs in the fabfile with the `needs`-key. You can declare this globally and/or per host.
+
+    ```
+    needs:
+      - git
+      - drush8
+      - composer
+      - slack
+      - ssh
+      - files
+    ```
+
+    `needs` defaults to `git`, `ssh`, `drush7` and `files` if not set explicitly.
+
+* new key `environment`, you can declare a list of environment-variables in `hosts` and `dockerHosts` which get exposed to the running scripts. You can even use the known replacement-patterns available to scripts
+
+    ```
+    environment:
+      - ROOT_FOLDER: "%dockerHost.rootFolder%/%host.docker.projectFolder%"
+      - TYPE: "%host.type%
+    ```
+
+
+* the replacement-patterns already available for docker-scripts are now available for all scripts.
+
+* every task may have a script, which gets called, when the task gets executed. There are three stages for every task available: `<task>Prepare`, `<task>` and `<task>Finished`. Here's an example for the deploy-task:
+
+    ```
+    deployPrepare:
+      - echo "Preparing deployment …"
+    deploy:
+      - echo "Deploying …"
+    deployFinished:
+      - echo "Finished with deployment."
+    ```
+
+* You can now add custom scripts to your fabfile and run it via the `script`-task. Declare your scripts on the root level. Here's an example:
+
+    ```
+    scripts:
+     testScript:
+       - echo "This is a test-script…"
+    ```
+
+    Now you can run the script via
+
+    ```
+    fab config:<config> script:testScript
+    ```
+
+
+* you can specify a branch when running the deploy-task: `deploy:<branchname>`. This will override the branch temporary.
+
+* You can now specify port and the public port for the startRemoteAccess subtask: To create a tunnel to the mysql-server you can use
+
+    ```
+    fab config:<your-config> docker:startRemoteAccess,port=3306,publicPort=33060
+    ```
+* You can run other tasks from  within your scripts, use the reserved keyword `execute`
+
+    ```
+    testScript:
+      - execute(deploy)
+      - execute(docker, start)
+    ```
+
+* It should be easier to extend fabalicious to support other hosting environments or applications. You can now add custom scripts to your fabalicious file and call them when running a specific task. Or you can add a new custom method to the source, which gets called when running a specific task. You can even extend existing methods and register them under a different name. (Needs more documentation.)
+
+### changed
+
+* script-replacements are now prefixed by `host` and `dockerHost`. You’ll get a list of available replacements if fabalicious can’t resolve all replacements successfully.
+* All declared yaml-variables are exposed to the script. You can access sub-dictionaries via the dot-syntax, e.g. `host.docker.name`.
+* The task `waitForServices` is now part of the docker-method. Invoke it via `docker:waitForServices`
+* The task `startRemoteAccess` is now part of the docker-method. Invoke it via `docker:startRemoteAccess`
+* The task `copySSHKeyToDocker` is renamed to `copySSHKeys`and is now part of the docker-method. Invoke it via `docker:copySSHKeys`
+* the common-section of the fabfile.yaml has changed, you can specify a common script per `type`, e.g.:
+
+    ```
+    common:
+      dev:
+        - echo "dev"
+      stage:
+        - echo "stage"
+      prod:
+        - echo "prod"
+    ```
+
+    You can even use custom types, but `prod` is reserved for production-installations.
+
+
+
+### unsupported
+
+* `useForDevelopment`, use `type` with value `dev` or `stage`
+* `hasDrush` is unsupported, set your `needs` accordingly.
+* `needsComposer` is unsupported, set your `needs` accordingly.
+
+* the custom script-command `run_task` is not supported anymore. Use `execute(<task-name>)` instead.
+
+
