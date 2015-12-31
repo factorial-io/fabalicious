@@ -75,7 +75,8 @@ run a task
 * `ssh`: create a remote shell.
 * `putFile:<filename>` copy a file to the remote host into the tmp-folder.
 * `getFile:<filename>:localPath=<path>` copy a file from the remote host to the local host at `<path>`.
-* `notify:<message>` send a message via slack.
+* `notify:<message>` send a message via slack or other method.
+* `script:<scriptName>` run a script declared under the global `scripts`-section
 
 
 ##fabfile.yaml

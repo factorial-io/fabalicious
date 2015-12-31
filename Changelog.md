@@ -98,10 +98,10 @@
 
 ### unsupported
 
-* `useForDevelopment`, use `type` with value `dev` or `stage`
+* `useForDevelopment` is unsupported, use `type` with value `dev` or `stage`
 * `hasDrush` is unsupported, set your `needs` accordingly.
 * `needsComposer` is unsupported, set your `needs` accordingly.
-
 * the custom script-command `run_task` is not supported anymore. Use `execute(<task-name>)` instead.
+* the task `updateDrupalCore` is not ported over, not sure if it comes back.
 
 
