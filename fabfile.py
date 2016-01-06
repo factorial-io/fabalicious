@@ -199,14 +199,28 @@ def restore(commit, cleanupBeforeRestore=0):
   reset()
 
 @task
-def script(scriptKey = False):
+def script(scriptKey = False, *args, **kwargs):
   configuration.check()
+  arguments = ' '.join(args)
+  for key in kwargs.keys():
+    arguments += ' ' + key + '="' + kwargs[key]+'"'
+  print arguments
+  variables = {
+    'arguments': kwargs,
+  }
+  variables['arguments']['combined'] = arguments
   if scriptKey in configuration.current('scripts'):
-    methods.call('script', 'runScript', configuration.current(), script = configuration.current('scripts')[scriptKey])
+    methods.call('script', 'runScript', configuration.current(), script = configuration.current('scripts')[scriptKey], variables=variables)
   elif scriptKey in configuration.getSettings('scripts'):
-    methods.call('script', 'runScript', configuration.current(), script = configuration.getSettings('scripts')[scriptKey])
+    methods.call('script', 'runScript', configuration.current(), script = configuration.getSettings('scripts')[scriptKey], variables=variables)
   else:
     print red('Could not find any script named "%s" in fabfile.yaml' % scriptKey)
+    if configuration.current('scripts'):
+      print 'Available scripts in %s:\n  - ' % configuration.current('config_name') + '\n  - '.join(configuration.current('scripts').keys())
+
+    if configuration.getSettings('scripts'):
+      print 'Available scripts: \n  - '  + '\n  - '.join(configuration.getSettings('scripts').keys())
+
     exit(1)
 
 @task
