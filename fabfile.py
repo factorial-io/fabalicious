@@ -1415,7 +1415,7 @@ def docker(subtask=False, **kwargs):
   parsed_commands = []
 
   replacements = {}
-  for key in ('user', 'host', 'port', 'branch', 'rootFolder'):
+  for key in ('user', 'host', 'port', 'branch', 'rootFolder', 'gitRootFolder'):
     if key in env.config:
       replacements['%guest.'+key+'%'] = str(env.config[key])
   for key in ('user', 'host', 'port', 'rootFolder'):
@@ -1628,7 +1628,7 @@ def restore(commit, drop=0):
   # restore git
   with cd(env.config['gitRootFolder']):
 
-    run('git checkout ' + result['commit'])
+    run('git checkout ' + files['commit'])
 
     print(green('source restored to ' + files['commit']))
 
