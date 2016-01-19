@@ -55,6 +55,19 @@
     fab config:<config> script:testScript
     ```
 
+    If you need default arguments, you can split your script-declaration as follows:
+
+    ```
+    scripts:
+      hello:
+        defaults:
+          name: world
+        script:
+          - echo "hello %arguments.name%"
+    ```
+
+    Running `fab config:<config> script:hello` will print "hello world". Running `fab config:<config> script:hello,name="universum"` will print "hello universum".
+
 
 * you can specify a branch when running the deploy-task: `deploy:<branchname>`. This will override the branch temporary.
 
