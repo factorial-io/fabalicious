@@ -201,19 +201,14 @@ def restore(commit, cleanupBeforeRestore=0):
 @task
 def script(scriptKey = False, *args, **kwargs):
   configuration.check()
-  arguments = ' '.join(args)
-  for key in kwargs.keys():
-    arguments += ' ' + key + '="' + kwargs[key]+'"'
-  print arguments
-  variables = {
-    'arguments': kwargs,
-  }
-  variables['arguments']['combined'] = arguments
-  if scriptKey in configuration.current('scripts'):
-    methods.call('script', 'runScript', configuration.current(), script = configuration.current('scripts')[scriptKey], variables=variables)
-  elif scriptKey in configuration.getSettings('scripts'):
-    methods.call('script', 'runScript', configuration.current(), script = configuration.getSettings('scripts')[scriptKey], variables=variables)
-  else:
+  scripts = configuration.current('scripts')
+  scriptData = scripts[scriptKey] if scriptKey in scripts else False
+
+  if not scriptData:
+    scripts = configuration.getSettings('scripts')
+    scriptData = scripts[scriptKey] if scriptKey in scripts else False
+
+  if not scriptData:
     print red('Could not find any script named "%s" in fabfile.yaml' % scriptKey)
     if configuration.current('scripts'):
       print 'Available scripts in %s:\n  - ' % configuration.current('config_name') + '\n  - '.join(configuration.current('scripts').keys())
@@ -222,6 +217,25 @@ def script(scriptKey = False, *args, **kwargs):
       print 'Available scripts: \n  - '  + '\n  - '.join(configuration.getSettings('scripts').keys())
 
     exit(1)
+
+  if isinstance(scriptData, dict):
+    if 'defaults' in scriptData:
+      kwargs = configuration.data_merge(scriptData['defaults'], kwargs)
+
+    scriptData = scriptData['script']
+
+  # compute arguments:
+  arguments = ' '.join(args)
+  for key in kwargs.keys():
+    arguments += ' ' + key + '="' + kwargs[key]+'"'
+  variables = {
+    'arguments': kwargs,
+  }
+  variables['arguments']['combined'] = arguments
+
+
+  if scriptData:
+    methods.call('script', 'runScript', configuration.current(), script=scriptData, variables=variables)
 
 @task
 def docker(command = False, **kwargs):
