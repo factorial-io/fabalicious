@@ -870,7 +870,8 @@ def reset(withPasswordReset=False):
     with cd(env.config['siteFolder']):
       if env.config['useForDevelopment'] == True:
         if withPasswordReset in [True, 'True', '1']:
-          run_drush('user-password admin --password="admin"')
+          adminUser = settings['adminUser'] if 'adminUser' in settings else 'admin'
+          run_drush('user-password %s --password="admin"' % adminUser)
         with warn_only():
           run_quietly('chmod -R 777 ' + env.config['filesFolder'])
       with warn_only():
