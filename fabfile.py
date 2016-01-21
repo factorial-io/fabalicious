@@ -178,7 +178,7 @@ def load_configuration(input_file):
         check_fabalicious_version(host['requires'], 'docker-configuration ' + config_name)
 
   global settings
-  settings = data
+  settings = copy.deepcopy(data)
   if 'hosts' in data:
     for config_name in data['hosts']:
       host = data['hosts'][config_name]
@@ -288,14 +288,14 @@ def resolve_inheritance(config, all_configs):
   if not isinstance(inherits_from, basestring):
     for item in reversed(inherits_from):
       config['inheritsFrom'] = item
-      config = resolve_inheritance_impl(config, all_configs)
-
-    return config
+      new_config = resolve_inheritance_impl(config, all_configs)
 
   else:
     config['inheritsFrom'] = inherits_from
-    return resolve_inheritance_impl(config, all_configs)
+    new_config = resolve_inheritance_impl(config, all_configs)
 
+  new_config.pop('inheritsFrom', None)
+  return new_config
 
 def resolve_inheritance_impl(config, all_configs):
   if 'inheritsFrom' not in config:
@@ -311,7 +311,7 @@ def resolve_inheritance_impl(config, all_configs):
     base_config = get_configuration_via_file(inherits_from)
 
   elif inherits_from in all_configs:
-    base_config = all_configs[inherits_from]
+    base_config = copy.deepcopy(all_configs[inherits_from])
 
   if base_config and 'inheritsFrom' in base_config:
     base_config = resolve_inheritance(base_config, all_configs)
