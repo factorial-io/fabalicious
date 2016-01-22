@@ -75,6 +75,12 @@ def drush(drush_command):
   methods.call('drush', 'drush', configuration.current(), command=drush_command)
 
 @task
+def drupalconsole(drupal_command):
+  configuration.check(['drupalconsole'])
+  methods.call('drupalconsole', 'drupalconsole', configuration.current(), command=drupal_command)
+
+
+@task
 def list():
   config = configuration.getAll()
   print('Found configurations for "%s":' % config['name']+"\n")

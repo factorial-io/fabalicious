@@ -5,7 +5,7 @@
 
 ### new
 
-* you can now specify what features you need. The following features are available: `composer`, `docker`, `drush7`, `drush8`, `git`, `ssh`, `files`, `slack`. You specify your needs in the fabfile with the `needs`-key. You can declare this globally and/or per host.
+* you can now specify what features you need. The following features are available: `composer`, `docker`, `drush7`, `drush8`, `git`, `ssh`, `files`, `slack`, `drupalconsole`. You specify your needs in the fabfile with the `needs`-key. You can declare this globally and/or per host.
 
     ```
     needs:
@@ -72,6 +72,8 @@
     ```
 
 * It should be easier to extend fabalicious to support other hosting environments or applications. You can now add custom scripts to your fabalicious file and call them when running a specific task. Or you can add a new custom method to the source, which gets called when running a specific task. You can even extend existing methods and register them under a different name. (Needs more documentation.)
+
+* New task `drupalconsole:<command>`. Runs the Drupal Console inside your container, on your host. If `command` is `install` drupal-console gets installed on that environment. The Drupal Console does similar things like drush, but there's currently no support to "deploy" via the drupal console.
 
 ### changed
 
