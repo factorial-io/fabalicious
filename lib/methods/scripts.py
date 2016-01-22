@@ -2,7 +2,7 @@ from base import BaseMethod
 from fabric.api import *
 from fabric.colors import green, red
 from lib import configuration
-import re
+import re, copy
 
 class ScriptMethod(BaseMethod):
   @staticmethod
@@ -10,7 +10,9 @@ class ScriptMethod(BaseMethod):
     return methodName == 'script'
 
   def printReplacements(self, replacements):
-    for key, value in replacements.iteritems():
+
+    for key in sorted(replacements.keys()):
+      value = replacements[key]
       print "{key:<40}  |  {value}".format(key = key, value=value)
 
 
@@ -34,10 +36,11 @@ class ScriptMethod(BaseMethod):
     if not ok:
       self.printReplacements(replacements)
       return False
-
+    saved_output_prefix = env.output_prefix
+    env.output_prefix = False
 
     for line in commands:
-      with cd(rootFolder), shell_env(**environment):
+      with cd(rootFolder), shell_env(**environment), hide('running'):
         handled = False
         start_p = line.find('(')
         end_p = line.rfind(')')
@@ -64,11 +67,14 @@ class ScriptMethod(BaseMethod):
               run(line)
           else:
             run(line)
+    env.output_prefix = saved_output_prefix
 
   def expandVariablesImpl(self, prefix, variables, result):
     for key in variables:
       if isinstance(variables[key], dict):
         self.expandVariablesImpl(prefix + "." + key, variables[key], result)
+      elif isinstance(variables[key], list):
+        pass # lists are not supported.
       else:
         result["%" + prefix + "." + key + "%"] = str(variables[key])
 
@@ -119,6 +125,9 @@ class ScriptMethod(BaseMethod):
     if 'environment' in config:
       environment = configuration.data_merge(config['environment'], environment)
     variables['host'] = config
+    settings = copy.deepcopy(configuration.getSettings())
+    map(lambda x: settings.pop(x,None), ['hosts', 'dockerHosts'])
+    variables['settings'] = settings
 
     callbacks['execute'] = self.executeCallback
     callbacks['run_task'] = self.runTaskCallback

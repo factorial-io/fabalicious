@@ -471,18 +471,6 @@ def apply(config, name):
   env.user = config['user']
   env.hosts = [ config['host'] ]
 
-  # TODO: move to docker-method.
-  # add docker configuration password to env.passwords
-  if 'docker' in config:
-
-    docker_configuration = get_docker_configuration(config['docker']['configuration'], config)
-
-    if docker_configuration:
-
-      host_str = docker_configuration['user'] + '@'+docker_configuration['host']+':'+str(docker_configuration['port'])
-
-      if 'password' in docker_configuration:
-        env.passwords[host_str]= docker_configuration['password']
 
 
 
