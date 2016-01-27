@@ -1,9 +1,15 @@
-# fabalicious -- huber's deployment scripts
+# fabalicious -- factorial's deployment scripts
 
-this fabfile is a special crafted deployment script to help deploy drupal installations across different servers.
-It reads a yaml-file called "fabfile.yaml" where all hosts are stored.
+## What it is
 
-##Prerequisites
+Fabalicious is a set of python-code using [fabric](http://www.fabfile.org) to help automating our deployment-processes. Basically you create a yaml-file which declares all your hosts (like local development-server, a staging and a live-environment).
+
+Then you can use fabalicious to deploy to one of the listed hosts, copy data (files and databases) from one host to another and some other often-needed tasks.
+
+We are using these scripts to help automating our docker-based development-environment, but this is just some nice bonus and not required.
+
+
+## Installation
 
 on Mac OS X:
 
@@ -17,10 +23,11 @@ on Debian/Ubuntu
     pip install fabric
     pip install pyyaml
 
-On systems with a non-bash environment like lshell try the following settings in your fabfile.yaml
+If you want to use the slack-integration, install slacker, but it's optional.
 
-    useShell: false
-    usePty: false
+    pip install slacker
+
+Create a file called "fabfile.yaml" and add your hosts to this file. See this file for more information.
 
 
 ## Usage
@@ -68,7 +75,8 @@ run a task
 * `ssh`: create a remote shell.
 * `putFile:<filename>` copy a file to the remote host into the tmp-folder.
 * `getFile:<filename>:localPath=<path>` copy a file from the remote host to the local host at `<path>`.
-* `notify:<message>` send a message via slack.
+* `notify:<message>` send a message via slack or other method.
+* `script:<scriptName>` run a script declared under the global `scripts`-section
 
 
 ##fabfile.yaml
@@ -78,18 +86,22 @@ run a task
     #optional
     requires: the required version of fabalicous to handle this configuration, e.g. 0.18.2
 
+    needs: a list of needed methods. available are git, drush7, drush8, files, ssh, slack, composer. Defaults to [git, drush7, files, ssh]
+
     #optional
     deploymentModule: the name of your drupal deployment-module/Users/stephan/Documents/dev/web/multibasebox/projects/test/_tools/fabalicious/README.md
 
     # common commands are executed when resetting/deploying an installation,
     # for all hosts. if 'useForDevelopment' is set, then 'development' is used
     common:
-      development:
+      dev:
         # custom commands to run for development-installations, e.g:
         - "drush vset -y --exact devel_rebuild_theme_registry TRUE"
-      deployment:
-        # custom commands to run for all other installations, e.g:
+      stage:
+        # custom commands to run for all installations of type 'prod', e.g:
         - "drush dis -y devel"
+      prod:
+        # custom commands to run for installations of type 'prod'
 
     # optional, defaults to true
     useShell: <boolean>
@@ -136,6 +148,14 @@ run a task
     # path to a authorized_keys-file which should be used for a docker-image,
     # see task copySSHKeyToDocker
     dockerAuthorizedKeyFile: _tools/ssh-key/authorized_keys
+
+    # Scripts can contain any number of scripts, which can be called via the script-task
+    scripts:
+      scriptA:
+        - echo "foo"
+        - echo "bar"
+      scriptB:
+        - echo "FooBar"
 
     # dockerHosts is a list of hosts which hosts docker-installations
     # hosts can reference one of this configurations via docker/configuration
@@ -218,11 +238,8 @@ run a task
         sitesFolder: <relative-path-to-your-sites-folder>
         filesFolder: <relative-path-to-yout-files-folder>
         backupFolder: <absolute-path-where-backup-should-be-stored>
-
-        # optional and defaults to true
-        hasDrush: <boolean>
-        # optional and defaults to false
-        useForDevelopment: <boolean>
+        # type of installation, required, defaults to prod
+        type: <dev|stage|prod>
         # optional and defaults to false
         ignoreSubmodules: <boolean>
         # optional and defaults to true
@@ -257,6 +274,7 @@ run a task
           user: <database-user>
           pass: <database-password>
           name: <name-of-database>
+          host: <database-host, defaults to "localhost">
 
         # docker-specific vars
         # you can add any vars to this section, you can use it in your
