@@ -16,17 +16,17 @@ class DrupalConsoleMethod(BaseMethod):
       run('curl https://drupalconsole.com/installer -L -o drupal.phar')
       run('mv drupal.phar /usr/local/bin/drupal')
       run('chmod +x /usr/local/bin/drupal')
+      run('drupal init')
 
       print green('Drupal Console installed successfully.')
 
   def run_drupalconsole(self, config, command):
-    with cd(config['siteFolder']):
+    with cd(config['rootFolder']):
       run('drupal %s' % command)
 
   def drupalconsole(self, config, **kwargs):
     if kwargs['command'] == 'install':
         self.install(config)
         return
-    with cd(config['siteFolder']):
-      self.run_drupalconsole(config, kwargs['command'])
+    self.run_drupalconsole(config, kwargs['command'])
 
