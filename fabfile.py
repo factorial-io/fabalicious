@@ -9,7 +9,7 @@ import datetime
 import sys
 
 # Import our modules.
-root_folder = os.path.dirname(os.path.realpath('fabfile.py'))
+root_folder = os.path.dirname(os.path.realpath(os.path.dirname(__file__) + '/fabfile.py'))
 sys.path.append(root_folder)
 from lib import methods
 from lib import configuration
