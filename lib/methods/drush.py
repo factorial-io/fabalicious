@@ -32,8 +32,10 @@ class DrushMethod(BaseMethod):
 
     with cd(config['siteFolder']):
       if config['type'] == 'dev':
+        admin_user = configuration.getSettings('adminUser', 'admin')
+
         if 'withPasswordReset' in kwargs and kwargs['withPasswordReset'] in [True, 'True', '1']:
-          self.run_drush('user-password admin --password="admin"')
+          self.run_drush('user-password %s --password="admin"' % admin_user)
         with warn_only():
           self.run_quietly('chmod -R 777 ' + config['filesFolder'])
       with warn_only():

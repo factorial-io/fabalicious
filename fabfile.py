@@ -92,6 +92,9 @@ def list():
 @task
 def reset(**kwargs):
   configuration.check()
+  if 'withPasswordReset' not in kwargs:
+    kwargs['withPasswordReset'] = True
+
   print green('Resetting %s @ %s' % (configuration.getSettings('name'), configuration.current('config_name')))
   methods.runTask(configuration.current(), 'reset', **kwargs)
 

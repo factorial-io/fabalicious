@@ -507,9 +507,9 @@ def current(key = False):
 def getAll():
   return get_all_configurations()
 
-def getSettings(key = False):
+def getSettings(key = False, defaultValue = False):
   if key:
-    return settings[key] if key in settings else False
+    return settings[key] if key in settings else defaultValue
   else:
     return settings
 
