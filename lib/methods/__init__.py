@@ -1,4 +1,6 @@
 import inspect, sys
+from fabric.colors import green, yellow
+
 from types import TypeType
 from base import BaseMethod
 from git import GitMethod
@@ -67,10 +69,20 @@ def runTask(configuration, taskName, **kwargs):
   preflight('preflight', taskName, configuration, **kwargs)
   runTaskImpl(configuration['needs'], taskName + "Prepare", configuration, **kwargs);
   runTaskImpl(configuration['needs'], taskName, configuration, **kwargs);
+
+  if 'nextTasks' in kwargs and len(kwargs['nextTasks']) > 0:
+    next_task = kwargs['nextTasks'].pop()
+    runTask(configuration, next_task, **kwargs)
+
   runTaskImpl(configuration['needs'], taskName + "Finished", configuration, **kwargs);
   preflight('postflight', taskName, configuration, **kwargs)
 
 
 def runTaskImpl(methodNames, taskName, configuration, **kwargs):
+  msg_printed = False
   for methodName in methodNames:
+    if not msg_printed:
+      print yellow('Running task %s on configuration %s' % (taskName, configuration['config_name']))
+      msg_printed = True
+
     callImpl(methodName, taskName, configuration, True, **kwargs)
