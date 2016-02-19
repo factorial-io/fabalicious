@@ -14,12 +14,6 @@ class DrushMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'drush7' or methodName == 'drush8' or methodName == 'drush'
 
-  def runCommonScripts(self, config):
-   common_scripts = configuration.getSettings('common')
-   if common_scripts and config['type'] in common_scripts:
-     script = common_scripts[config['type']]
-     self.factory.call('script', 'runScript', config, script = script)
-
 
   def reset(self, config, **kwargs):
     if self.methodName == 'drush8':
