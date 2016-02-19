@@ -141,16 +141,13 @@ class ScriptMethod(BaseMethod):
 
 
   def runTaskSpecificScript(self, taskName, config, **kwargs):
-    script = False
+    common_scripts = configuration.getSettings('common')
+    type = config['type']
+    if taskName in common_scripts and type in common_scripts[taskName]:
+      script = common_scripts[taskName][type]
+      self.runScript(config, script=script)
     if taskName in config:
       script = config[taskName]
-    else:
-      common_scripts = configuration.getSettings('common')
-      type = config['type']
-      if taskName in common_scripts and type in common_scripts[taskName]:
-        script = common_scripts[taskName][type]
-
-    if script:
       self.runScript(config, script=script)
 
 
