@@ -7,7 +7,7 @@ class ComposerMethod(BaseMethod):
     return methodName == 'composer'
 
 
-  def resetPrepare(self, config):
+  def resetPrepare(self, config, **kwargs):
     with cd(config['gitRootFolder']):
       self.run_quietly('composer install')
 
