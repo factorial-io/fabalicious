@@ -121,7 +121,7 @@ class ScriptMethod(BaseMethod):
     callbacks = kwargs['callbacks'] if 'callbacks' in kwargs else {}
     variables = kwargs['variables'] if 'variables' in kwargs else {}
     environment = kwargs['environment'] if 'environment' in kwargs else {}
-    root_folder = kwargs['rootFolder'] if 'rootFolder' in kwargs else config['rootFolder']
+    root_folder = kwargs['rootFolder'] if 'rootFolder' in kwargs else config['siteFolder']
     if 'environment' in config:
       environment = configuration.data_merge(config['environment'], environment)
     variables['host'] = config
@@ -141,16 +141,19 @@ class ScriptMethod(BaseMethod):
 
 
   def runTaskSpecificScript(self, taskName, config, **kwargs):
-    script = False
+    common_scripts = configuration.getSettings('common')
+    type = config['type']
+
+    if type in common_scripts and isinstance(common_scripts[type], list):
+      print red("Found old-style common-scripts. Please regroup by common > taskName > type > command > type > commandss.")
+
+    if taskName in common_scripts:
+      if type in common_scripts[taskName]:
+        script = common_scripts[taskName][type]
+        self.runScript(config, script=script)
+
     if taskName in config:
       script = config[taskName]
-    else:
-      common_scripts = configuration.getSettings('common')
-      type = config['type']
-      if taskName in common_scripts and type in common_scripts[taskName]:
-        script = common_scripts[taskName][type]
-
-    if script:
       self.runScript(config, script=script)
 
 

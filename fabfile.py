@@ -261,9 +261,8 @@ def deploy(overrideBranch=False):
   if config['type'] != 'dev':
       backup(withFiles=False)
 
-  methods.runTask(config, 'deploy')
+  methods.runTask(config, 'deploy', nextTasks=['reset'])
 
-  reset()
 
 @task
 def notify(message):
@@ -280,9 +279,8 @@ def copyFilesFrom(source_config_name):
 def copyDBFrom(source_config_name):
   configuration.check()
   source_configuration = configuration.get(source_config_name)
-  methods.runTask(configuration.current(), 'copyDBFrom', source_config=source_configuration)
+  methods.runTask(configuration.current(), 'copyDBFrom', source_config=source_configuration, nextTasks=['reset'])
 
-  reset()
 
 @task
 def copyFrom(source_config_name):
@@ -303,5 +301,4 @@ def install(**kwargs):
     print red('Task install is not supported for this configuration. Please check if "type" and "supportsInstalls" is set correctly.')
     exit(1)
 
-  methods.runTask(configuration.current(), 'install', **kwargs)
-  reset()
+  methods.runTask(configuration.current(), 'install', nextTasks=['reset'], **kwargs)
