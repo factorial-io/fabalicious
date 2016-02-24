@@ -81,7 +81,7 @@ def runTask(configuration, taskName, **kwargs):
 def runTaskImpl(methodNames, taskName, configuration, **kwargs):
   msg_printed = False
   for methodName in methodNames:
-    if not msg_printed:
+    if not 'quiet' in kwargs and not msg_printed:
       print yellow('Running task %s on configuration %s' % (taskName, configuration['config_name']))
       msg_printed = True
 

@@ -24,7 +24,7 @@ class SSHMethod(BaseMethod):
       print "get remote ip-address from available methods ...",
       # check other methods for gathering the desthost-ip-address.
       result = {}
-      self.factory.runTask(target_config, 'getIpAddress', result=result)
+      self.factory.runTask(target_config, 'getIpAddress', result=result, quiet=True)
       if 'ip' in result:
         o['destHost'] = result['ip']
 
