@@ -14,7 +14,6 @@ class SSHTunnel:
       cmd = 'ssh'
 
     cmd = cmd + ' -vAN -L %d:%s:%d %s@%s' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
-    print cmd,
     self.p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     start_time = time.time()
     atexit.register(self.p.kill)
