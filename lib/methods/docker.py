@@ -40,14 +40,17 @@ class DockerMethod(BaseMethod):
   def getIp(self, docker_name, docker_host, docker_user, docker_port):
     host_string = join_host_strings(docker_user, docker_host, docker_port)
     try:
-      with hide('running', 'output'), _settings( host_string=host_string ):
+      with hide('running', 'output', 'warnings'), _settings( host_string=host_string, warn_only=True ):
         output = run('docker inspect --format "{{ .NetworkSettings.IPAddress }}" %s ' % (docker_name))
 
     except SystemExit:
       print red('Docker not running, can\'t get ip')
-      return
+      return False
 
     ip_address = output.stdout.strip()
+    if output.return_code != 0:
+      return False
+
     return ip_address
 
 

@@ -21,15 +21,15 @@ class SSHMethod(BaseMethod):
     o = copy.deepcopy(target_config['sshTunnel'])
 
     if 'destHost' not in o:
-      print "get remote ip-address from available methods ...",
+      print "get remote ip-address ...",
       # check other methods for gathering the desthost-ip-address.
       result = {}
       self.factory.runTask(target_config, 'getIpAddress', result=result, quiet=True)
       if 'ip' in result:
         o['destHost'] = result['ip']
 
-    if 'destHost' not in o:
-      print red('Could not get remote ip-address from existing method, tunnel creation failed.')
+    if 'destHost' not in o or not o['destHost']:
+      print red('Could not get remote ip-address!')
       return False
 
     strictHostKeyChecking = o['strictHostKeyChecking'] if 'strictHostKeyChecking' in o else True
