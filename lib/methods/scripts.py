@@ -1,5 +1,7 @@
 from base import BaseMethod
 from fabric.api import *
+from fabric.network import *
+from fabric.context_managers import settings as _settings
 from fabric.colors import green, red
 from lib import configuration
 import re, copy
@@ -16,10 +18,10 @@ class ScriptMethod(BaseMethod):
       print "{key:<40}  |  {value}".format(key = key, value=value)
 
 
-  def runScriptImpl(self, rootFolder, commands, callbacks= {}, environment = {}, replacements = {}):
+  def runScriptImpl(self, rootFolder, commands, config, callbacks= {}, environment = {}, replacements = {}):
 
     pattern = re.compile('\%(\S*)\%')
-    state = { 'warnOnly': True }
+    state = { 'warnOnly': False, 'config': config }
 
     # preflight
     ok = True
@@ -35,7 +37,8 @@ class ScriptMethod(BaseMethod):
 
     if not ok:
       self.printReplacements(replacements)
-      return False
+      exit(1)
+
     saved_output_prefix = env.output_prefix
     env.output_prefix = False
 
@@ -104,7 +107,10 @@ class ScriptMethod(BaseMethod):
 
 
   def executeCallback(self, context, command, *args, **kwargs):
-    execute(command, *args, **kwargs)
+    config = context['config']
+    host_string = join_host_strings(config['user'], config['host'], config['port'])
+    with _settings(host_string=host_string):
+      execute(command, *args, **kwargs)
 
   def runTaskCallback(self, context, *args, **kwargs):
     print red('run_task is not supported anymore, use "execute(docker, <your_task>)"');
@@ -137,7 +143,10 @@ class ScriptMethod(BaseMethod):
     commands = self.expandCommands(script, replacements)
     environment = self.expandEnvironment(environment, replacements)
 
-    self.runScriptImpl(root_folder, commands, callbacks, environment, replacements)
+    for need in config['needs']:
+      environment[need.upper() + '_AVAILABLE'] = "1"
+
+    self.runScriptImpl(root_folder, commands, config, callbacks, environment, replacements)
 
 
   def runTaskSpecificScript(self, taskName, config, **kwargs):
