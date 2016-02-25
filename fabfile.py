@@ -302,13 +302,14 @@ def install(**kwargs):
 
   methods.runTask(configuration.current(), 'install', nextTasks=['reset'], **kwargs)
 
+
 @task
-def update(**kwargs):
+def updateApp(**kwargs):
   configuration.check()
   config = configuration.current()
   if config['type'] != 'dev':
-    print red('Task upgrade is not supported for this configuration. Please check if "type" is set correctly.')
+    print red('Task updateApp is not supported for this configuration. Please check if "type" is set correctly.')
     exit(1)
   backupDB()
-  methods.runTask(configuration.current(), 'upgrade', **kwargs)
+  methods.runTask(configuration.current(), 'updateApp', **kwargs)
 
