@@ -214,7 +214,7 @@ class DrushMethod(BaseMethod):
           self.run_drush('en -y %s' % deploymentModule)
 
 
-  def upgrade(self, config, version=7, **kwargs):
+  def updateApp(self, config, version=7, **kwargs):
     if 'composer' in config['needs']:
       # ignore update, as composer will handle this.
       return;
