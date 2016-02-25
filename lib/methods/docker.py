@@ -13,9 +13,6 @@ class DockerMethod(BaseMethod):
     return methodName == 'docker'
 
 
-  def addPasswordToFabricCache(self, user, host, port, password, **kwargs):
-    host_string = join_host_strings(user, host, port)
-    env.passwords[host_string] = password
 
 
   def getDockerConfig(self, config):
