@@ -162,7 +162,7 @@ class DrushMethod(BaseMethod):
     self.run_quietly('rm %s' % sql_name_target)
 
   def restoreSQLFromFile(self, config, sourceFile, **kwargs):
-    targetSQLFileName = env.config['tmpFolder'] + 'manual_upload.sql'
+    targetSQLFileName = config['tmpFolder'] + 'manual_upload.sql'
 
     fileName, fileExtension = os.path.splitext(sourceFile)
     zipped = fileExtension == '.gz'
@@ -213,6 +213,31 @@ class DrushMethod(BaseMethod):
         if deploymentModule:
           self.run_drush('en -y %s' % deploymentModule)
 
+
+  def upgrade(self, config, version=7, **kwargs):
+    if 'composer' in config['needs']:
+      # ignore update, as composer will handle this.
+      return;
+
+    # download drupal
+    with cd(config['rootFolder']):
+      self.run_quietly('rm -rf /tmp/drupal-update')
+      self.run_quietly('mkdir -p /tmp/drupal-update')
+      self.run_drush('dl --destination="/tmp/drupal-update" --default-major="%d" drupal ' % version)
+
+    # copy files to root-folder
+    with(cd('/tmp/drupal-update')), hide('running'):
+      drupal_folder = run('ls').stdout.strip()
+      # print drupal_folder
+
+      run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, config['rootFolder']) )
+
+
+    # remove temporary files
+    with cd(config['rootFolder']):
+      self.run_quietly('rm -rf /tmp/drupal-update')
+
+    print green("Updated drupal successfully to '%s'." % (drupal_folder))
 
 
 

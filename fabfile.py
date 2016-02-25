@@ -95,7 +95,6 @@ def reset(**kwargs):
   if 'withPasswordReset' not in kwargs:
     kwargs['withPasswordReset'] = True
 
-  print green('Resetting %s @ %s' % (configuration.getSettings('name'), configuration.current('config_name')))
   methods.runTask(configuration.current(), 'reset', **kwargs)
 
 @task
@@ -302,3 +301,14 @@ def install(**kwargs):
     exit(1)
 
   methods.runTask(configuration.current(), 'install', nextTasks=['reset'], **kwargs)
+
+@task
+def update(**kwargs):
+  configuration.check()
+  config = configuration.current()
+  if config['type'] != 'dev':
+    print red('Task upgrade is not supported for this configuration. Please check if "type" is set correctly.')
+    exit(1)
+  backupDB()
+  methods.runTask(configuration.current(), 'upgrade', **kwargs)
+
