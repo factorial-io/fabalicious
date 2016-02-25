@@ -109,8 +109,9 @@ class ScriptMethod(BaseMethod):
   def executeCallback(self, context, command, *args, **kwargs):
     config = context['config']
     host_string = join_host_strings(config['user'], config['host'], config['port'])
-    with _settings(host_string=host_string):
-      execute(command, *args, **kwargs)
+    print host_string
+    kwargs['host'] = host_string
+    execute(command, *args, **kwargs)
 
   def runTaskCallback(self, context, *args, **kwargs):
     print red('run_task is not supported anymore, use "execute(docker, <your_task>)"');

@@ -184,8 +184,8 @@ class DrushMethod(BaseMethod):
     print green('Installing fresh database for "%s"' % config['config_name'])
 
     o = config['database']
-    self.run_quietly('mkdir -p %s' % config['siteFolder'])
     with cd(config['siteFolder']):
+      self.run_quietly('mkdir -p %s' % config['siteFolder'])
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
 
       self.run_quietly('mysql -h {host} -u {user} --password={pass} -e "{mysql_command}"'.format(mysql_command=mysql_cmd, **o), 'Creating database')
