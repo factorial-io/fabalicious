@@ -86,6 +86,8 @@ class DockerMethod(BaseMethod):
   def copySSHKeys(self, config, **kwargs):
     key_file = configuration.getSettings('dockerKeyFile')
     authorized_keys_file = configuration.getSettings('dockerAuthorizedKeyFile')
+    known_hosts_file = configuration.getSettings('dockerKnownHostsFile')
+
 
     with cd(config['rootFolder']), hide('commands', 'output'), lcd(configuration.getBaseDir()):
       run('mkdir -p /root/.ssh')
@@ -102,6 +104,11 @@ class DockerMethod(BaseMethod):
       if authorized_keys_file:
         put(authorized_keys_file, '/root/.ssh/authorized_keys')
         print green('Copied authorized keys to docker.')
+
+      if known_hosts_file:
+        put(known_hosts_file, '/root/.ssh/known_hosts')
+        print green('Copied known hosts to docker.')
+
       run('chmod 700 /root/.ssh')
 
   def waitForServices(self, config, **kwargs):
