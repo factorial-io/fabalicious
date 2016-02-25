@@ -109,7 +109,6 @@ class ScriptMethod(BaseMethod):
   def executeCallback(self, context, command, *args, **kwargs):
     config = context['config']
     host_string = join_host_strings(config['user'], config['host'], config['port'])
-    print host_string
     kwargs['host'] = host_string
     execute(command, *args, **kwargs)
 
