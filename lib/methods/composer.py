@@ -11,4 +11,9 @@ class ComposerMethod(BaseMethod):
     with cd(config['gitRootFolder']):
       self.run_quietly('composer install')
 
+  def updateApp(self, config,**kwargs):
+    with cd(config['gitRootFolder']):
+      self.run_quietly('composer update')
+
+
 
