@@ -6,14 +6,27 @@ class ComposerMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'composer'
 
+  def getArgs(self,config):
+    args = ''
+    if config['type'] == 'dev':
+      args += ' --dev'
+    else:
+      args += ' --no-dev --optimize-autoloader'
+
+    return args
+
 
   def resetPrepare(self, config, **kwargs):
     with cd(config['gitRootFolder']):
-      self.run_quietly('composer install')
+      self.run_quietly('composer install %s' % self.getArgs(config))
 
   def updateApp(self, config,**kwargs):
     with cd(config['gitRootFolder']):
-      self.run_quietly('composer update')
+      self.run_quietly('composer update %s' % self.getArgs(config))
+
+  def composer(self, config, command, **kwargs):
+    with cd(config['gitRootFolder']):
+      self.run_quietly('composer %s' % command)
 
 
 

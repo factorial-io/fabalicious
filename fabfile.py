@@ -79,6 +79,11 @@ def drupalconsole(drupal_command):
   configuration.check(['drupalconsole'])
   methods.call('drupalconsole', 'drupalconsole', configuration.current(), command=drupal_command)
 
+@task
+def composer(composer_command):
+  configuration.check(['composer'])
+  methods.call('composer', 'composer', configuration.current(), command=composer_command)
+
 
 @task
 def list():
