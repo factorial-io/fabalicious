@@ -104,9 +104,10 @@ def reset(**kwargs):
 
 @task
 def ssh():
-  configuration.check()
-  with cd(configuration.current('rootFolder')):
-    open_shell()
+  configuration.check(['ssh'])
+  methods.call('ssh', 'openShell', configuration.current())
+
+
 
 @task
 def putFile(fileName):

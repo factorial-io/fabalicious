@@ -17,6 +17,11 @@ class SSHMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'ssh'
 
+  def openShell (self, config):
+    with cd(config['rootFolder']):
+      open_shell()
+
+
   def create_ssh_tunnel(self, source_config, target_config, remote=False):
     o = copy.deepcopy(target_config['sshTunnel'])
 
