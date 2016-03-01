@@ -72,7 +72,7 @@ class FilesMethod(BaseMethod):
     print(green('files restored from ' + file['file']))
 
   def rsync(self, source_config, target_config, folder = 'filesFolder'):
-    if not source_config['supportsCopyFrom']:
+    if not target_config['supportsCopyFrom']:
       print red('The configuration "{c} does not support copyFrom'.format(c=source_config['config_name']))
       return
 
