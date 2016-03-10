@@ -1,9 +1,15 @@
-# fabalicious -- huber's deployment scripts
+# fabalicious -- factorial's deployment scripts
 
-this fabfile is a special crafted deployment script to help deploy drupal installations across different servers.
-It reads a yaml-file called "fabfile.yaml" where all hosts are stored.
+## What it is
 
-##Prerequisites
+Fabalicious is a set of python-code using [fabric](http://www.fabfile.org) to help automating our deployment-processes. Basically you create a yaml-file which declares all your hosts (like local development-server, a staging and a live-environment).
+
+Then you can use fabalicious to deploy to one of the listed hosts, copy data (files and databases) from one host to another and some other often-needed tasks.
+
+We are using these scripts to help automating our docker-based development-environment, but this is just some nice bonus and not required.
+
+
+## Installation
 
 on Mac OS X:
 
@@ -17,10 +23,60 @@ on Debian/Ubuntu
     pip install fabric
     pip install pyyaml
 
-On systems with a non-bash environment like lshell try the following settings in your fabfile.yaml
+If you want to use the slack-integration, install slacker, but it's optional.
 
-    useShell: false
-    usePty: false
+    pip install slacker
+
+Create a file called "fabfile.yaml" and add your hosts to this file. See this file for more information.
+
+
+## Usage
+
+list all configurations:
+
+    cd <where-your-fabfile-is>
+    fab list
+
+list a specific configuration:
+
+    cd <where-your-fabfile-is>
+    fab about:hostA
+
+list all available tasks:
+
+    cd <where-your-fabfile-is>
+    fab --list
+
+run a task
+
+    cd <where-your-fabfile-is>
+    fab config:hostA <task-name>
+
+##Available tasks:
+
+* `version`: get the current version of the source (= git describe)
+* `reset`: reset the drupal-installation, clear the caches, run update, reset all features, enable deploy-module and its dependencies
+* `backup`: tar all files, dump the database and copy them to the backup-directory.
+* `backupDB`: backup the DB tp the backups-directory only
+* `listBackups`: list all previously made backups
+* `restore:<commit|partial-filename>` will restore files and/or DB from given commit or partial filename and reset git's HEAD to given revision.
+* `deploy`: update the installation by pulling the newest source from git and running the reset-task afterwards
+* `copyFrom:<source-host>`: copies all files from `filesFolder` at source-host to target host, and imports a sql-dump from source-host.
+* `copyDBFrom:<source-host>`: copies only the DB from the source-host
+* `copyFilesFrom:<source-host>`: copies only the files from the source-host
+* `install:<distribution=minimal>,<ask=True>`: will install a database in the docker-container. Works currently only when `supportsInstall=true` and `useForDevelopment=true`. Needs an additional host-setting: `database`-dictionary. If `hasDrush=true` the code will install drupal with profile minimal, if the optional distribution-parameter is not set.  This task will overwrite your settings.php-file and databases, so be prepared! This task has two optional parameter: you can install another distribution when setting ``distribution`` according to your needs. If you set ``ask`` to (0|false) there will be no confimration dialog.
+* `behat:<name="Name of feature",format="pretty", out="", options="">`: run behat tests, the configuration needs a setting for `behat:run` which gets called to run the tests. You can add command-line-options to the command, the most used (name, format and out) are mirrored by fabalicious, as escaping all the commas is cumbersome.
+* `installBehat`: install behat, the configuration needs a setting for `behat:install` which gets called to install behat at.
+* `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
+* `docker:<subtask>`: runs a set of scripts on the host-machine to control docker-instances.
+* `copySSHKeysToDocker`: copies stored ssh-keys into a docker-image. You'll need to set `dockerKeyFile`. If there's a setting for `dockerAuthorizedKeyFile` the authorized_key-file will also copied into the docker. This will help with docker-to-docker-communication via SSH.
+* `updateDrupalCore:<version=x>`: This task will create a new branch, download the latest stable release from drupal, and move all files to your webRoot. After that you can review the new code, commit it and marge it into your existing branch. Why not use drush for this? In my testings it didn't work reliable, sometimes the update went smooth, sometimes it doesn't do anything.
+* `restoreSQLFromFile:<file-name>`: will copy file-name to the remote host and import it via drush.
+* `ssh`: create a remote shell.
+* `putFile:<filename>` copy a file to the remote host into the tmp-folder.
+* `getFile:<filename>:localPath=<path>` copy a file from the remote host to the local host at `<path>`.
+* `notify:<message>` send a message via slack or other method.
+* `script:<scriptName>` run a script declared under the global `scripts`-section
 
 
 ##fabfile.yaml
@@ -30,18 +86,22 @@ On systems with a non-bash environment like lshell try the following settings in
     #optional
     requires: the required version of fabalicous to handle this configuration, e.g. 0.18.2
 
+    needs: a list of needed methods. available are git, drush7, drush8, files, ssh, slack, composer. Defaults to [git, drush7, files, ssh]
+
     #optional
     deploymentModule: the name of your drupal deployment-module/Users/stephan/Documents/dev/web/multibasebox/projects/test/_tools/fabalicious/README.md
 
     # common commands are executed when resetting/deploying an installation,
     # for all hosts. if 'useForDevelopment' is set, then 'development' is used
     common:
-      development:
+      dev:
         # custom commands to run for development-installations, e.g:
         - "drush vset -y --exact devel_rebuild_theme_registry TRUE"
-      deployment:
-        # custom commands to run for all other installations, e.g:
+      stage:
+        # custom commands to run for all installations of type 'prod', e.g:
         - "drush dis -y devel"
+      prod:
+        # custom commands to run for installations of type 'prod'
 
     # optional, defaults to true
     useShell: <boolean>
@@ -88,6 +148,14 @@ On systems with a non-bash environment like lshell try the following settings in
     # path to a authorized_keys-file which should be used for a docker-image,
     # see task copySSHKeyToDocker
     dockerAuthorizedKeyFile: _tools/ssh-key/authorized_keys
+
+    # Scripts can contain any number of scripts, which can be called via the script-task
+    scripts:
+      scriptA:
+        - echo "foo"
+        - echo "bar"
+      scriptB:
+        - echo "FooBar"
 
     # dockerHosts is a list of hosts which hosts docker-installations
     # hosts can reference one of this configurations via docker/configuration
@@ -170,11 +238,8 @@ On systems with a non-bash environment like lshell try the following settings in
         sitesFolder: <relative-path-to-your-sites-folder>
         filesFolder: <relative-path-to-yout-files-folder>
         backupFolder: <absolute-path-where-backup-should-be-stored>
-
-        # optional and defaults to true
-        hasDrush: <boolean>
-        # optional and defaults to false
-        useForDevelopment: <boolean>
+        # type of installation, required, defaults to prod
+        type: <dev|stage|prod>
         # optional and defaults to false
         ignoreSubmodules: <boolean>
         # optional and defaults to true
@@ -209,6 +274,7 @@ On systems with a non-bash environment like lshell try the following settings in
           user: <database-user>
           pass: <database-password>
           name: <name-of-database>
+          host: <database-host, defaults to "localhost">
 
         # docker-specific vars
         # you can add any vars to this section, you can use it in your
@@ -231,53 +297,6 @@ On systems with a non-bash environment like lshell try the following settings in
         inheritsFrom: <key>
         ...
 
-## Usage
-
-list all configurations:
-
-    cd <where-your-fabfile-is>
-    fab list
-
-list a specific configuration:
-
-    cd <where-your-fabfile-is>
-    fab about:hostA
-
-list all available tasks:
-
-    cd <where-your-fabfile-is>
-    fab --list
-
-run a task
-
-    cd <where-your-fabfile-is>
-    fab config:hostA <task-name>
-
-##Available tasks:
-
-* `version`: get the current version of the source (= git describe)
-* `reset`: reset the drupal-installation, clear the caches, run update, reset all features, enable deploy-module and its dependencies
-* `backup`: tar all files, dump the database and copy them to the backup-directory.
-* `backupDB`: backup the DB tp the backups-directory only
-* `listBackups`: list all previously made backups
-* `restore:<commit|partial-filename>` will restore files and/or DB from given commit or partial filename and reset git's HEAD to given revision.
-* `deploy`: update the installation by pulling the newest source from git and running the reset-task afterwards
-* `copyFrom:<source-host>`: copies all files from `filesFolder` at source-host to target host, and imports a sql-dump from source-host.
-* `copyDBFrom:<source-host>`: copies only the DB from the source-host
-* `copyFilesFrom:<source-host>`: copies only the files from the source-host
-* `install:<distribution=minimal>,<ask=True>`: will install a database in the docker-container. Works currently only when `supportsInstall=true` and `useForDevelopment=true`. Needs an additional host-setting: `database`-dictionary. If `hasDrush=true` the code will install drupal with profile minimal, if the optional distribution-parameter is not set.  This task will overwrite your settings.php-file and databases, so be prepared! This task has two optional parameter: you can install another distribution when setting ``distribution`` according to your needs. If you set ``ask`` to (0|false) there will be no confimration dialog.
-* `behat:<name="Name of feature",format="pretty", out="", options="">`: run behat tests, the configuration needs a setting for `behat:run` which gets called to run the tests. You can add command-line-options to the command, the most used (name, format and out) are mirrored by fabalicious, as escaping all the commas is cumbersome.
-* `installBehat`: install behat, the configuration needs a setting for `behat:install` which gets called to install behat
-at.
-* `drush:<command>`: run drush command on given host. Add '' as needed, e.g. fab config:local "drush:cc all"
-* `docker:<subtask>`: runs a set of scripts on the host-machine to control docker-instances.
-* `copySSHKeysToDocker`: copies stored ssh-keys into a docker-image. You'll need to set `dockerKeyFile`. If there's a setting for `dockerAuthorizedKeyFile` the authorized_key-file will also copied into the docker. This will help with docker-to-docker-communication via SSH.
-* `updateDrupalCore:<version=x>`: This task will create a new branch, download the latest stable release from drupal, and move all files to your webRoot. After that you can review the new code, commit it and marge it into your existing branch. Why not use drush for this? In my testings it didn't work reliable, sometimes the update went smooth, sometimes it doesn't do anything.
-* `restoreSQLFromFile:<file-name>`: will copy file-name to the remote host and import it via drush.
-* `ssh`: create a remote shell.
-* `putFile:<filename>` copy a file to the remote host into the tmp-folder.
-* `getFile:<filename>:localPath=<path>` copy a file from the remote host to the local host at `<path>`.
-* `slack:<message>` send a message via slack.
 
 ## Advanced topics
 
