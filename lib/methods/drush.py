@@ -16,6 +16,9 @@ class DrushMethod(BaseMethod):
 
 
   def reset(self, config, **kwargs):
+    if 'withPasswordReset' not in kwargs:
+      kwargs['withPasswordReset'] = True
+
     if self.methodName == 'drush8':
       uuid = config['uuid'] if 'uuid' in config else False
       if not uuid:

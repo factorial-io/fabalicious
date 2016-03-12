@@ -316,7 +316,7 @@ def get_configuration(name):
       'usePty': settings['usePty'],
       'needs': settings['needs'],
       'scripts': {},
-      'slack': {}
+      'slack': {},
     }
 
     for key in defaults:
@@ -366,6 +366,8 @@ def get_configuration(name):
       if 'host' not in host_config['database']:
         host_config['database']['host'] = 'localhost'
 
+    if not 'backupBeforeDeploy' in host_config:
+      host_config['backupBeforeDeploy'] = host_config['type'] != 'dev'
 
     config['needs'].append('script')
 

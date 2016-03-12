@@ -98,6 +98,12 @@ class FilesMethod(BaseMethod):
       with warn_only():
         run(rsync)
 
+  def put(self, config, filename):
+    put(filename, config['tmpFolder'])
+
+  def get(self, config, remotePath, localPath):
+    get(remotePath, localPath)
+
   def copyFilesFrom(self, config, source_config=False, **kwargs):
     keys = ['filesFolder', 'privateFilesFolder']
     for key in keys:

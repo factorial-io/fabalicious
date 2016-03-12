@@ -97,8 +97,6 @@ def list():
 @task
 def reset(**kwargs):
   configuration.check()
-  if 'withPasswordReset' not in kwargs:
-    kwargs['withPasswordReset'] = True
 
   methods.runTask(configuration.current(), 'reset', **kwargs)
 
@@ -112,12 +110,12 @@ def ssh():
 @task
 def putFile(fileName):
   configuration.check()
-  put(fileName, configuration.current('tmpFolder'))
+  methods.call('files', 'put', configuration.current(), filename=fileName)
 
 @task
 def getFile(remotePath, localPath='./'):
   configuration.check()
-  get(remote_path=remotePath, local_path=localPath)
+  methods.call('files', 'get', configuration.current(), remotePath=remotePath, localPath=localPath)
 
 @task
 def getSQLDump():
@@ -263,7 +261,7 @@ def deploy(overrideBranch=False):
   if overrideBranch:
     config['branch'] = overrideBranch
 
-  if config['type'] != 'dev':
+  if config['backupBeforeDeploy']:
       backup(withFiles=False)
 
   methods.runTask(config, 'deploy', nextTasks=['reset'])
