@@ -43,7 +43,7 @@ class ScriptMethod(BaseMethod):
     env.output_prefix = False
 
     for line in commands:
-      with cd(rootFolder), shell_env(**environment), hide('running'):
+      with cd(rootFolder), shell_env(**environment), hide('running'), show('output'):
         handled = False
         start_p = line.find('(')
         end_p = line.rfind(')')
