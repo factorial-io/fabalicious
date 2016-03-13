@@ -141,7 +141,10 @@ class ScriptMethod(BaseMethod):
 
     replacements = self.expandVariables(variables);
     commands = self.expandCommands(script, replacements)
+    # Do it again to support replacements which needs to be replaced again.
+    commands = self.expandCommands(commands, replacements)
     environment = self.expandEnvironment(environment, replacements)
+
 
     for need in config['needs']:
       environment[need.upper() + '_AVAILABLE'] = "1"
