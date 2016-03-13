@@ -8,7 +8,7 @@ class ComposerMethod(BaseMethod):
 
   def getArgs(self,config):
     args = ''
-    if config['type'] != 'dev':
+    if config['type'] != 'dev' and config['type'] != 'test':
       args += ' --no-dev --optimize-autoloader'
 
     return args
