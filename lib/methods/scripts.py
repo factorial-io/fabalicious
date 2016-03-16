@@ -21,7 +21,7 @@ class ScriptMethod(BaseMethod):
   def runScriptImpl(self, rootFolder, commands, config, callbacks= {}, environment = {}, replacements = {}):
 
     pattern = re.compile('\%(\S*)\%')
-    state = { 'warnOnly': False, 'config': config }
+    state = { 'warnOnly': False, 'config': config, 'return_code': 0 }
 
     # preflight
     ok = True
@@ -67,10 +67,15 @@ class ScriptMethod(BaseMethod):
         if not handled:
           if state['warnOnly']:
             with warn_only():
-              run(line)
+              result = run(line)
+              state['return_code'] = state['return_code'] or result.return_code
           else:
-            run(line)
+            result = run(line)
+            state['return_code'] = state['return_code'] or result.return_code
+
     env.output_prefix = saved_output_prefix
+
+    return state['return_code']
 
   def expandVariablesImpl(self, prefix, variables, result):
     for key in variables:
@@ -149,8 +154,10 @@ class ScriptMethod(BaseMethod):
     for need in config['needs']:
       environment[need.upper() + '_AVAILABLE'] = "1"
 
-    self.runScriptImpl(root_folder, commands, config, callbacks, environment, replacements)
-
+    return_code = self.runScriptImpl(root_folder, commands, config, callbacks, environment, replacements)
+    if return_code:
+      print red('Due to earlier errors quitting now.')
+      exit(return_code)
 
   def runTaskSpecificScript(self, taskName, config, **kwargs):
     common_scripts = configuration.getSettings('common')
