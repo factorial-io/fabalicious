@@ -122,7 +122,7 @@ class DrushMethod(BaseMethod):
 
     with cd(config['siteFolder']):
       if cleanupBeforeRestore:
-        self.run_drush('sql-drop')
+        self.run_drush('sql-drop -y')
 
       if config['supportsZippedBackups']:
         self.run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
@@ -161,7 +161,7 @@ class DrushMethod(BaseMethod):
     with _settings(host_string=source_host_string):
       self.run_quietly('rm %s' % sql_name_source)
 
-    self.importSQLFromFile(target_config, sql_name_target)
+    self.importSQLFromFile(target_config, sql_name_target, True)
     self.run_quietly('rm %s' % sql_name_target)
 
   def restoreSQLFromFile(self, config, sourceFile, **kwargs):
