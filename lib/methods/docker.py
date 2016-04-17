@@ -84,6 +84,9 @@ class DockerMethod(BaseMethod):
 
 
   def copySSHKeys(self, config, **kwargs):
+    if 'ssh' not in config['needs']:
+      return
+
     key_file = configuration.getSettings('dockerKeyFile')
     authorized_keys_file = configuration.getSettings('dockerAuthorizedKeyFile')
     known_hosts_file = configuration.getSettings('dockerKnownHostsFile')
@@ -112,6 +115,9 @@ class DockerMethod(BaseMethod):
       run('chmod 700 /root/.ssh')
 
   def waitForServices(self, config, **kwargs):
+    if 'ssh' not in config['needs']:
+      return
+
     host_string = join_host_strings(config['user'], config['host'], config['port'])
     if 'password' in config:
       self.addPasswordToFabricCache(**config)
