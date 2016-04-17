@@ -175,7 +175,8 @@ class ScriptMethod(BaseMethod):
       script = config[taskName]
       self.runScript(config, script=script)
 
-
+  def fallback(self, taskName, configuration, **kwargs):
+    self.runTaskSpecificScript(taskName, configuration, **kwargs)
 
   def preflight(self, taskName, configuration, **kwargs):
     self.runTaskSpecificScript(taskName + "Prepare", configuration, **kwargs)

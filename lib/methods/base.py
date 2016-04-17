@@ -25,6 +25,10 @@ class BaseMethod(object):
   def postflight(self, task, config, **kwargs):
     pass
 
+  def fallback(self, task, config, **kwargs):
+    pass
+
+
   def addPasswordToFabricCache(self, user, host, port, password, **kwargs):
     host_string = join_host_strings(user, host, port)
     env.passwords[host_string] = password
