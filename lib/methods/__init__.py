@@ -87,7 +87,7 @@ def runTaskImpl(methodNames, taskName, configuration, **kwargs):
       msg_printed = True
     fn = get(methodName, taskName)
     if fn:
-      fn_called = true
+      fn_called = True
     callImpl(methodName, taskName, configuration, True, **kwargs)
 
   if not fn_called:
