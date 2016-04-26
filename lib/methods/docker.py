@@ -71,7 +71,7 @@ class DockerMethod(BaseMethod):
     ip = self.getIpAddress(config)
 
     if not ip:
-      print red('Could not get docker-ip-address.')
+      print red('Could not get docker-ip-address of docker-container %s.' % config['docker']['name'])
       exit(1)
 
     public_ip = '0.0.0.0'
