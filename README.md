@@ -166,7 +166,31 @@ Required methods:
 * `git`. The task will get the installed version via `git describe`, so if you tag your source properly (hint git flow), you'll get a nice version-number.
 
 
+### deploy
 
+```
+fab config:<your-config> deploy
+```
+
+This task will deploy the latest code to the given installation. If the installation-type is not `dev` or `test` the `backupDB`-task is run before the deployment.
+
+After a successfull deployment the `reset`-taks will be run.
+
+Available methods:
+* `git` will deploy to the latest commit for the given branch defined in the host-configuration. Submodules will be synced, and updated.
+
+
+### reset
+
+```
+fab config:<your-config> reset
+```
+
+This task will reset your installation
+
+Available methods:
+* `drush` will revert features (drupal 7) / import the configuration (drupal 8), run update-hooks and does a cache-clear.
+* `composer` will run `composer install` to update any dependencies before doint the reset
 
 
 
