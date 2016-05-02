@@ -2,14 +2,14 @@
 
 ## What it is
 
-Fabalicious is a set of python-code using [fabric](http://www.fabfile.org) to help automating our deployment-processes. Basically you create a yaml-file which declares all your hosts (like local development-server, a staging and a live-environment).
+Fabalicious is a set of python-code using [fabric](http://www.fabfile.org) to help automating our deployment-processes. Basically you create a yaml-file which declares all your hosts (like a local development-server, a staging and a live-environment).
 
 Then you can use fabalicious to deploy to one of the listed hosts, copy data (files and databases) from one host to another and some other often-needed tasks.
 
 We are using these scripts to help automating our docker-based development-environment, but this is just some nice bonus and not required.
 
 
-## Installation
+## Installation of needed dependencies
 
 on Mac OS X:
 
@@ -29,28 +29,105 @@ If you want to use the slack-integration, install slacker, but it's optional.
 
 Create a file called "fabfile.yaml" and add your hosts to this file. See this file for more information.
 
+## Installation of fabalicious
+
+There are 2 alternative ways to install fabalicious. Because of historic reasons we install fabalicious into the folder `_tools/fabalicious`
+
+1. Clone this repository, or add this repository as a submodule.
+
+    ```
+    mkdir _tools/fabalicious
+    git submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious
+    ln -s _tools/fabalicious/fabfile.py fabfile.py
+    ```
+
+2. If you are using composer you can add fabalicious as a dependency
+
+    ```
+    composer require factorial/fabalicious 2.*
+    ln -s _tools/fabalicious/fabfile.py fabfile.py
+    ```
+
+3. Run `fab --list`, this should give you a list of available commands.
+4. Create a configuration file called `fabfile.yaml`
+
+## How does fabalicious work in two sentences
+
+Fabalicious uses `ssh` and optionally tools like `composer`, `drush`, `git`, `docker` or custom scripts to run common tasks on remote machines. It is slightly biased to drupal-projects but it works for a lot of other projects.
+
+## A simple configuration-example
+
+```yaml
+name: My awesome project
+
+# We'll need fabalicious >= 2.0
+requires: 2.0
+
+# We need git and ssh, there are more options
+needs:
+  - ssh
+  - git
+
+# Our list of host-configurations
+hosts:
+  dev:
+    host: myhost.dev
+    user: root
+    port: 22
+    rootFolder: /var/www
+    filesFolder: /var/www
+    siteFolder: /var/www
+    backupFolder: /var/backups
+```
+
+For more infos about the file-format have a look at the file-format-section.
+
+## Running fabalicious
+
+To execute a task with the help of fabalicious, just
+```
+cd <your-project-folder>
+fab config:<your-config-key> <task>
+```
+
+This will read your fabfile.yaml, look for `<your-config-key>` in the host-section and run the task <task>
+
+## List of commands sorted by topic
+
+### Reset
+
+
+
 
 ## Usage
 
-list all configurations:
+List all configurations:
 
     cd <where-your-fabfile-is>
     fab list
 
-list a specific configuration:
+List a specific configuration:
 
     cd <where-your-fabfile-is>
     fab about:hostA
 
-list all available tasks:
+List all available tasks:
 
     cd <where-your-fabfile-is>
     fab --list
 
-run a task
+Run a task
 
     cd <where-your-fabfile-is>
     fab config:hostA <task-name>
+
+
+##Documentation
+
+You'll find an extensive documentation in our [wiki](https://github.com/factorial-io/fabalicious/wiki)
+
+##
+
 
 ##Available tasks:
 
