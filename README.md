@@ -1,12 +1,16 @@
 # fabalicious -- factorial's deployment scripts
 
-## What it is
+## How does fabalicious work in two sentences
 
-Fabalicious is a set of python-code using [fabric](http://www.fabfile.org) to help automating our deployment-processes. Basically you create a yaml-file which declares all your hosts (like a local development-server, a staging and a live-environment).
+Fabalicious uses a configuration file with a list of hosts and `ssh` and optionally tools like `composer`, `drush`, `git`, `docker` or custom scripts to run common tasks on remote machines. It is slightly biased to drupal-projects but it works for a lot of other projects.
 
-Then you can use fabalicious to deploy to one of the listed hosts, copy data (files and databases) from one host to another and some other often-needed tasks.
+Fabalicious is using [fabric](http://www.fabfile.org) to run tasks on remote machines. The configuration-file contains a list of hosts to work on. Some common tasks are:
 
-We are using these scripts to help automating our docker-based development-environment, but this is just some nice bonus and not required.
+ * deploying new code to a remote installation
+ * reset a remote installation to its defaults.
+ * backup/ restore data
+ * copy data from one installation to another
+ * optionally work with our docker-based development-stack [multibasebox](https://github.com/factorial-io/multibasebox)
 
 
 ## Installation of needed dependencies
@@ -51,10 +55,6 @@ There are 2 alternative ways to install fabalicious. Because of historic reasons
 3. Run `fab --list`, this should give you a list of available commands.
 4. Create a configuration file called `fabfile.yaml`
 
-## How does fabalicious work in two sentences
-
-Fabalicious uses `ssh` and optionally tools like `composer`, `drush`, `git`, `docker` or custom scripts to run common tasks on remote machines. It is slightly biased to drupal-projects but it works for a lot of other projects.
-
 ## A simple configuration-example
 
 ```yaml
@@ -92,12 +92,91 @@ fab config:<your-config-key> <task>
 
 This will read your fabfile.yaml, look for `<your-config-key>` in the host-section and run the task <task>
 
-## List of commands sorted by topic
+## List of commands
 
-### Reset
+### Background
+
+Fabalicious provides a set of so-called methods which implement all listed functionality. The following methods are available:
+
+* git
+* ssh
+* drush
+* composer
+* files
+* docker
+* drupalconsole
+* slack
+
+You declare your needs in the fabfile.yaml with the key `needs`, e.g.
+
+```
+needs:
+  - git
+  - ssh
+  - drush
+  - files
+```
+
+Have a look at the file-format documentation for more info.
+
+### List of commands
+
+Here's a list of available commands
+
+You can get a list of available commands with
+
+```
+fab --list
+```
+
+### config
+
+```
+fab config:<your-config>
+```
+
+This is one of the most fundamental commands fabalicious provides. This will lookup `<your-config>` in the `hosts`-section of your `fabfile.yaml` and feed the data to `fabric` so it can connect to the host.
+
+### list
+
+```
+fab list
+```
+
+This task will list all your hosts defined in your `hosts`-section of your `fabfile.yaml`.
+
+### about
+
+```
+fab config:<your-config> about
+```
+
+will display the configuration of host `<your-config>`.
+
+
+### version
+
+```
+fab config:<your-config> version
+```
+
+This command will display the installed version of the code on the installation `<your-config>`.
+
+Required methods:
+* `git`. The task will get the installed version via `git describe`, so if you tag your source properly (hint git flow), you'll get a nice version-number.
 
 
 
+
+
+
+
+
+
+
+
+----------------------------------------------
+Obsolete:
 
 ## Usage
 
