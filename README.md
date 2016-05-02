@@ -162,22 +162,29 @@ fab config:<your-config> version
 
 This command will display the installed version of the code on the installation `<your-config>`.
 
-Required methods:
+Available methods:
 * `git`. The task will get the installed version via `git describe`, so if you tag your source properly (hint git flow), you'll get a nice version-number.
 
+Configuration:
+* your host-configuration needs a `branch`-key stating the branch to deploy.
 
 ### deploy
 
 ```
 fab config:<your-config> deploy
+fab config:<your-config> deploy:<branch-to-deploy>
+
 ```
 
-This task will deploy the latest code to the given installation. If the installation-type is not `dev` or `test` the `backupDB`-task is run before the deployment.
+This task will deploy the latest code to the given installation. If the installation-type is not `dev` or `test` the `backupDB`-task is run before the deployment. If `<branch-to-deploy>` is stated the specific branch gets deployed.
 
 After a successfull deployment the `reset`-taks will be run.
 
 Available methods:
 * `git` will deploy to the latest commit for the given branch defined in the host-configuration. Submodules will be synced, and updated.
+
+Configuration:
+* your host-configuration needs a `branch`-key stating the branch to deploy.
 
 
 ### reset
@@ -189,8 +196,16 @@ fab config:<your-config> reset
 This task will reset your installation
 
 Available methods:
-* `drush` will revert features (drupal 7) / import the configuration (drupal 8), run update-hooks and does a cache-clear.
-* `composer` will run `composer install` to update any dependencies before doint the reset
+* `composer` will run `composer install` to update any dependencies before doing the reset
+* `drush` will
+  * revert features (drupal 7) / import the configuration (drupal 8),
+  * run update-hooks
+  * enable a deployment-module if any stated in the fabfile.yaml
+  * and does a cache-clear.
+  * if your host-type is `dev` the password gets reset to admin/admin
+
+Configuration:
+* your host-configuration needs a `branch`-key stating the branch to deploy.
 
 
 
