@@ -155,6 +155,19 @@ fab config:<your-config> about
 will display the configuration of host `<your-config>`.
 
 
+### getProperty
+
+```
+fab config:<your-config> getProperty:<name-of-property>
+```
+
+This will print the property-value to the console. Suitable if you want to use fabalicious from within other scripts.
+
+**Examples**
+* `fab config:mbb getProperty:host` will print the hostname of configuration `mbb`.
+* `fab config:mbb getProperty:docker/tag` will print the tag of the docker-configuration of `mbb`.
+
+
 ### version
 
 ```
@@ -163,10 +176,10 @@ fab config:<your-config> version
 
 This command will display the installed version of the code on the installation `<your-config>`.
 
-Available methods:
+**Available methods**:
 * `git`. The task will get the installed version via `git describe`, so if you tag your source properly (hint git flow), you'll get a nice version-number.
 
-Configuration:
+**Configuration:**
 * your host-configuration needs a `branch`-key stating the branch to deploy.
 
 ### deploy
@@ -176,14 +189,14 @@ fab config:<your-config> deploy
 fab config:<your-config> deploy:<branch-to-deploy>
 ```
 
-This task will deploy the latest code to the given installation. If the installation-type is not `dev` or `test` the `backupDB`-task is run before the deployment. If `<branch-to-deploy>` is stated the specific branch gets deployed.
+This task will deploy the latest code to the given installation. If the installation-type is not `dev` or `test` the `backupDB`-task is run before the deployment starts. If `<branch-to-deploy>` is stated the specific branch gets deployed.
 
 After a successfull deployment the `reset`-taks will be run.
 
-Available methods:
+**Available methods:**
 * `git` will deploy to the latest commit for the given branch defined in the host-configuration. Submodules will be synced, and updated.
 
-Configuration:
+**Configuration:**
 * your host-configuration needs a `branch`-key stating the branch to deploy.
 
 
@@ -195,22 +208,51 @@ fab config:<your-config> reset
 
 This task will reset your installation
 
-Available methods:
+**Available methods:**
 * `composer` will run `composer install` to update any dependencies before doing the reset
 * `drush` will
   * revert features (drupal 7) / import the configuration (drupal 8),
   * run update-hooks
   * enable a deployment-module if any stated in the fabfile.yaml
   * and does a cache-clear.
-  * if your host-type is `dev` the password gets reset to admin/admin
+  * if your host-type is `dev` and `withPasswordReset` is not false, the password gets reset to admin/admin
 
-Configuration:
+
+**Configuration:**
 * your host-configuration needs a `branch`-key stating the branch to deploy.
 
+**Examples:**
+* `fab config:mbb reset:withPasswordReset=0` will reset the installation and will not reset the password.
 
 
+### backup
 
+```
+fab config:<your-config> backup
+```
 
+This command will backup your files and database into the specified `backup`-directory. The file-names will include configuration-name, a timestamp and the git-SHA1. Every backup can be referenced by its filename (w/o extension) or, when git is abailable via the git-commit-hash.
+
+**Available methods:**
+* `git` will prepend the file-names with a hash of the current revision.
+* `files` will tar all files in the `filesFolder` and save it into the `backupFolder`
+* `drush` will dump the databases and save it to the `backupFolder`
+
+**Configuration:**
+* your host-configuration will need a `backupFolder` and a `filesFolder`
+
+### listBackups
+
+```
+fab config:<your-config> listBackups
+```
+
+This command will print all available backups to the console.
+
+### restore
+
+```
+fab config:<your-config> restore:<commit-hash|file-name>
 
 
 
