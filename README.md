@@ -85,6 +85,7 @@ For more infos about the file-format have a look at the file-format-section.
 ## Running fabalicious
 
 To execute a task with the help of fabalicious, just
+
 ```
 cd <your-project-folder>
 fab config:<your-config-key> <task>
@@ -173,7 +174,6 @@ Configuration:
 ```
 fab config:<your-config> deploy
 fab config:<your-config> deploy:<branch-to-deploy>
-
 ```
 
 This task will deploy the latest code to the given installation. If the installation-type is not `dev` or `test` the `backupDB`-task is run before the deployment. If `<branch-to-deploy>` is stated the specific branch gets deployed.
