@@ -241,6 +241,14 @@ This command will backup your files and database into the specified `backup`-dir
 **Configuration:**
 * your host-configuration will need a `backupFolder` and a `filesFolder`
 
+### backupDB
+
+```
+fab config:<your-config> backupDB
+```
+
+This command will backup only the database. See the task `backup` for more info.
+
 ### listBackups
 
 ```
@@ -253,8 +261,75 @@ This command will print all available backups to the console.
 
 ```
 fab config:<your-config> restore:<commit-hash|file-name>
+```
+
+This will restore a backup-set. A backup-set consists typically of a database-dump and a gzupped-file-archive. You can a list of candidates via `fab config:<config> listBackups`
+
+**Available methods**
+* `git` git will checkout the given hash encoded in the filename.
+* `files` all files will be restored. An existing files-folder will be renamed for safety reasons.
+* `drush` will import the database-dump.
 
 
+### copyFrom
+
+```
+fab config:<dest-config> copyFrom:<source-config>
+```
+
+This task will copy all files via rsync from `source-config`to `dest-config` and will dump the database from `source-config` and restore it to `dest-config`. After that the `reset`-task gets executed. This is the ideal task to copy a complete installation from one host to another.
+
+**Available methods**
+* `ssh` will create all necessary tunnels to access the hosts.
+* `files` will rsync all new and changed files from source to dest
+* `drush` will dump the database and restore it on the dest-host.
+
+
+### copyDBFrom
+
+```
+fab config:<dest-config> copyDBFrom:<source-config>
+```
+
+Basically the same as the `copyFrom`-task, but only the database gets copied.
+
+
+### copyFilesFrom
+
+```
+fab config:<dest-config> copyFileFrom:<source-config>
+```
+
+Basically the same as the `copyFrom`-task, but only the new and updated files get copied.
+
+
+### drush
+
+```
+fab config:<config> drush:<drush-command>
+```
+
+This task will execute the `drush-command` on the remote host specified in <config>. Please note, that you'll have to quote the drush-command when it contains spaces. Signs should be excaped, so python does not interpret them.
+
+**Available methods**
+* Only available for the `drush`-method
+
+**Examples**
+* `fab config:staging drush:"cc all"`
+* `fab config:local drush:fra`
+
+### drupalconsole
+
+This task will execute a drupal-console task on the remote host. Please note, that you'll have to quote the command when it contains spaces. There's a special command to install the drupal-console on the host: `fab config:<config> drupalconsole:install`
+
+**Available methods**
+* Only available for the `drupalconsole`-method
+
+**Examples**
+* `fab config:local drupalconsole:cache:rebuild`
+* `fab config:local drupalconsole:"generate:module --module helloworld"
+*
+*
 
 ----------------------------------------------
 Obsolete:
