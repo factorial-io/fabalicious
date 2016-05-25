@@ -2,7 +2,7 @@
 
 ## How does fabalicious work in two sentences
 
-Fabalicious uses a configuration file with a list of hosts and `ssh` and optionally tools like `composer`, `drush`, `git`, `docker` or custom scripts to run common tasks on remote machines. It is slightly biased to drupal-projects but it works for a lot of other projects.
+Fabalicious uses a configuration file with a list of hosts and `ssh` and optionally tools like `composer`, `drush`, `git`, `docker` or custom scripts to run common tasks on remote machines. It is slightly biased to drupal-projects but it works for a lot of other types of projects.
 
 Fabalicious is using [fabric](http://www.fabfile.org) to run tasks on remote machines. The configuration-file contains a list of hosts to work on. Some common tasks are:
 
@@ -211,7 +211,8 @@ This task will reset your installation
 **Available methods:**
 * `composer` will run `composer install` to update any dependencies before doing the reset
 * `drush` will
-  * revert features (drupal 7) / import the configuration (drupal 8),
+  * set the site-uuid from fabfile.yaml (drupal 8)
+  * revert features (drupal 7) / import the configuration `staging` (drupal 8),
   * run update-hooks
   * enable a deployment-module if any stated in the fabfile.yaml
   * and does a cache-clear.
@@ -220,6 +221,7 @@ This task will reset your installation
 
 **Configuration:**
 * your host-configuration needs a `branch`-key stating the branch to deploy.
+* your configuration needs a `uuid`-entry, this is the site uuid (drupal 8). You can get the site-uuid via `drush cget system.site`
 
 **Examples:**
 * `fab config:mbb reset:withPasswordReset=0` will reset the installation and will not reset the password.
@@ -241,6 +243,7 @@ This command will backup your files and database into the specified `backup`-dir
 **Configuration:**
 * your host-configuration will need a `backupFolder` and a `filesFolder`
 
+
 ### backupDB
 
 ```
@@ -249,6 +252,7 @@ fab config:<your-config> backupDB
 
 This command will backup only the database. See the task `backup` for more info.
 
+
 ### listBackups
 
 ```
@@ -256,6 +260,7 @@ fab config:<your-config> listBackups
 ```
 
 This command will print all available backups to the console.
+
 
 ### restore
 
@@ -269,6 +274,19 @@ This will restore a backup-set. A backup-set consists typically of a database-du
 * `git` git will checkout the given hash encoded in the filename.
 * `files` all files will be restored. An existing files-folder will be renamed for safety reasons.
 * `drush` will import the database-dump.
+
+
+### getBackup
+
+```
+fab config:<config> getBackup:<commit-hash|file-name>
+```
+
+This command will copy a remote backup-set to your local computer into the current working-directory.
+
+**See also:**
+* restore
+* backup
 
 
 ### copyFrom
@@ -318,6 +336,7 @@ This task will execute the `drush-command` on the remote host specified in <conf
 * `fab config:staging drush:"cc all"`
 * `fab config:local drush:fra`
 
+
 ### drupalconsole
 
 This task will execute a drupal-console task on the remote host. Please note, that you'll have to quote the command when it contains spaces. There's a special command to install the drupal-console on the host: `fab config:<config> drupalconsole:install`
@@ -327,9 +346,115 @@ This task will execute a drupal-console task on the remote host. Please note, th
 
 **Examples**
 * `fab config:local drupalconsole:cache:rebuild`
-* `fab config:local drupalconsole:"generate:module --module helloworld"
-*
-*
+* `fab config:local drupalconsole:"generate:module --module helloworld"`
+
+
+### getFile
+
+```
+fab config:<config> getFile:<path-to-remote-file>
+```
+
+Copy a remote file to the current working directory of your current machine.
+
+
+### putFile
+
+```
+fab config:<config> putFile:<path-to-local-file>
+```
+
+Copy a local file to the tmp-folder of a remote machine.
+
+**Configuration**
+* this command will use the `tmpFolder`-host-setting for the destination directory.
+
+
+### getSQLDump
+
+```
+fab config:<config> getSQLDump
+```
+
+Get a current dump of the remote database and copy it to the local machine into the current working directory.
+
+**Available methods**
+* currently only implemented for the `drush`-method
+
+
+### restoreSQLFromFile
+
+```
+fab config:<config> restoreSQLFromFile:<path-to-local-sql-dump>
+```
+
+This command will copy the dump-file `path-to-local-sql-dump` to the remote machine and import it into the database.
+
+**Available methods**
+* currently only implemented for the `drush`-method
+
+
+### script
+
+```
+fab config:<config> script:<script-name>
+```
+
+This command will run costum scripts on a remote machine. You can declare scripts globally or per host. If the `script-name` can't be found in the fabfile.yaml you'll get a list of all available scripts.
+
+Additional arguments get passed to the script. You'll have to use the python-syntax to feed additional arguments to the script. See the examples.
+
+**Examples**
+* `fab config:mbb script`. List all available scripts for configuration `mbb`
+* `fab config:mbb script:behat` Run the `behat`-script
+* `fab config:mbb script:behat,--name="Login feature",--format=pretty` Run the behat-test, apply `--name` and `--format` parameters to the script
+
+The `script`-command is rather powerful, have a read about it in the extra section.
+
+
+### docker
+
+```
+fab config:<config> docker:<docker-task>
+```
+
+The docker command is suitable for orchestrating and administering remote instances of docker-containers. The basic setup is that your host-configuration has a `docker`-section, which contains a `configuration`-key. The `dockerHosts`-section of your fabfile.yaml has a list of tasks which are executed on the "parent-host" of the configuration. Please have a look at the docker-section for more information.
+
+Most of the time the docker-container do not have a public or known ip-address. Fabalicious tries to find out the ip-address of a given instance and use that for communicating with its services.
+
+There are three implicit tasks available:
+
+#### copySSHKeys
+
+```
+fab config:mbb docker:copySSHKeys
+```
+
+This will copy the ssh-keys into the docker-instance. You'll need to provide the paths to the files via the three configurations:
+* `dockerKeyFile`, the path to the private ssh-key to use.
+* `dockerAuthorizedKeyFile`, the path to the file for `authoried_keys`
+* `dockerKnownHostsFile`, the path to the file for `known_hosts`
+
+As docker-container do not have any state, this task is used to copy any necessary ssh-configuration into the docker-container, so communication per ssh does not need any passwords.
+
+#### startRemoteAccess
+
+```
+fab config:<config> docker:startRemoteAccess
+fab config:<config> docker:startRemoteAccess,port=<port>,publicPort=<public-port>
+```
+
+This docker-task will run a ssh-command to forward a local port to a port inside the docker-container. It starts a new ssh-session which will do the forwarding. When finished, type `exit`.
+
+**Examples**
+* `fab config:mbb docker:startRemoteAccess` will forward `localhost:8888` to port `80` of the docker-container
+* `fab config:mbb docker:startRemoteAccess,port=3306,publicPort=33060` will forward `localhost:33060`to port `3306` of the docker-container
+
+#### waitForServices
+
+This task will try to establish a ssh-connection into the docker-container and if the connection succeeds, waits for `supervisorctl status` to return success. This is useful in scripts to wait for any services that need some time to start up. Obviously this task depends on `supervisorctl`.
+
+
 
 ----------------------------------------------
 Obsolete:
