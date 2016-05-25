@@ -39,7 +39,7 @@ There are 2 alternative ways to install fabalicious. Because of historic reasons
 
 1. Clone this repository, or add this repository as a submodule.
 
-    ```
+    ```shell
     mkdir _tools/fabalicious
     git submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious
     ln -s _tools/fabalicious/fabfile.py fabfile.py
@@ -47,7 +47,7 @@ There are 2 alternative ways to install fabalicious. Because of historic reasons
 
 2. If you are using composer you can add fabalicious as a dependency
 
-    ```
+    ```shell
     composer require factorial/fabalicious 2.*
     ln -s _tools/fabalicious/fabfile.py fabfile.py
     ```
@@ -86,7 +86,7 @@ For more infos about the file-format have a look at the file-format-section.
 
 To execute a task with the help of fabalicious, just
 
-```
+```shell
 cd <your-project-folder>
 fab config:<your-config-key> <task>
 ```
@@ -110,7 +110,7 @@ Fabalicious provides a set of so-called methods which implement all listed funct
 
 You declare your needs in the fabfile.yaml with the key `needs`, e.g.
 
-```
+```yaml
 needs:
   - git
   - ssh
@@ -126,13 +126,13 @@ Here's a list of available commands
 
 You can get a list of available commands with
 
-```
+```shell
 fab --list
 ```
 
 ### config
 
-```
+```shell
 fab config:<your-config>
 ```
 
@@ -140,7 +140,7 @@ This is one of the most fundamental commands fabalicious provides. This will loo
 
 ### list
 
-```
+```shell
 fab list
 ```
 
@@ -148,7 +148,7 @@ This task will list all your hosts defined in your `hosts`-section of your `fabf
 
 ### about
 
-```
+```shell
 fab config:<your-config> about
 ```
 
@@ -157,7 +157,7 @@ will display the configuration of host `<your-config>`.
 
 ### getProperty
 
-```
+```shell
 fab config:<your-config> getProperty:<name-of-property>
 ```
 
@@ -170,7 +170,7 @@ This will print the property-value to the console. Suitable if you want to use f
 
 ### version
 
-```
+```shell
 fab config:<your-config> version
 ```
 
@@ -184,7 +184,7 @@ This command will display the installed version of the code on the installation 
 
 ### deploy
 
-```
+```shell
 fab config:<your-config> deploy
 fab config:<your-config> deploy:<branch-to-deploy>
 ```
@@ -202,7 +202,7 @@ After a successfull deployment the `reset`-taks will be run.
 
 ### reset
 
-```
+```shell
 fab config:<your-config> reset
 ```
 
@@ -229,7 +229,7 @@ This task will reset your installation
 
 ### backup
 
-```
+```shell
 fab config:<your-config> backup
 ```
 
@@ -246,7 +246,7 @@ This command will backup your files and database into the specified `backup`-dir
 
 ### backupDB
 
-```
+```shell
 fab config:<your-config> backupDB
 ```
 
@@ -255,7 +255,7 @@ This command will backup only the database. See the task `backup` for more info.
 
 ### listBackups
 
-```
+```shell
 fab config:<your-config> listBackups
 ```
 
@@ -264,7 +264,7 @@ This command will print all available backups to the console.
 
 ### restore
 
-```
+```shell
 fab config:<your-config> restore:<commit-hash|file-name>
 ```
 
@@ -278,7 +278,7 @@ This will restore a backup-set. A backup-set consists typically of a database-du
 
 ### getBackup
 
-```
+```shell
 fab config:<config> getBackup:<commit-hash|file-name>
 ```
 
@@ -291,7 +291,7 @@ This command will copy a remote backup-set to your local computer into the curre
 
 ### copyFrom
 
-```
+```shell
 fab config:<dest-config> copyFrom:<source-config>
 ```
 
@@ -305,7 +305,7 @@ This task will copy all files via rsync from `source-config`to `dest-config` and
 
 ### copyDBFrom
 
-```
+```shell
 fab config:<dest-config> copyDBFrom:<source-config>
 ```
 
@@ -314,7 +314,7 @@ Basically the same as the `copyFrom`-task, but only the database gets copied.
 
 ### copyFilesFrom
 
-```
+```shell
 fab config:<dest-config> copyFileFrom:<source-config>
 ```
 
@@ -323,7 +323,7 @@ Basically the same as the `copyFrom`-task, but only the new and updated files ge
 
 ### drush
 
-```
+```shell
 fab config:<config> drush:<drush-command>
 ```
 
@@ -351,7 +351,7 @@ This task will execute a drupal-console task on the remote host. Please note, th
 
 ### getFile
 
-```
+```shell
 fab config:<config> getFile:<path-to-remote-file>
 ```
 
@@ -360,7 +360,7 @@ Copy a remote file to the current working directory of your current machine.
 
 ### putFile
 
-```
+```shell
 fab config:<config> putFile:<path-to-local-file>
 ```
 
@@ -372,7 +372,7 @@ Copy a local file to the tmp-folder of a remote machine.
 
 ### getSQLDump
 
-```
+```shell
 fab config:<config> getSQLDump
 ```
 
@@ -384,7 +384,7 @@ Get a current dump of the remote database and copy it to the local machine into 
 
 ### restoreSQLFromFile
 
-```
+```shell
 fab config:<config> restoreSQLFromFile:<path-to-local-sql-dump>
 ```
 
@@ -396,7 +396,7 @@ This command will copy the dump-file `path-to-local-sql-dump` to the remote mach
 
 ### script
 
-```
+```shell
 fab config:<config> script:<script-name>
 ```
 
@@ -414,7 +414,7 @@ The `script`-command is rather powerful, have a read about it in the extra secti
 
 ### docker
 
-```
+```shell
 fab config:<config> docker:<docker-task>
 ```
 
@@ -426,7 +426,7 @@ There are three implicit tasks available:
 
 #### copySSHKeys
 
-```
+```shell
 fab config:mbb docker:copySSHKeys
 ```
 
@@ -439,7 +439,7 @@ As docker-container do not have any state, this task is used to copy any necessa
 
 #### startRemoteAccess
 
-```
+```shell
 fab config:<config> docker:startRemoteAccess
 fab config:<config> docker:startRemoteAccess,port=<port>,publicPort=<public-port>
 ```
