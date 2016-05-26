@@ -489,4 +489,218 @@ This docker-task will run a ssh-command to forward a local port to a port inside
 This task will try to establish a ssh-connection into the docker-container and if the connection succeeds, waits for `supervisorctl status` to return success. This is useful in scripts to wait for any services that need some time to start up. Obviously this task depends on `supervisorctl`.
 
 
+# the structure of the configuration file
 
+## Overview
+
+The configuration is fetched from the file `fabfile.yaml` and should have the followin structure:
+
+```yaml
+name: <the project name>
+
+needs:
+  - list of methods
+
+requires: 2.0
+
+dockerHosts:
+  docker1:
+    ...
+
+hosts:
+  host1:
+    ...
+```
+
+Here's the documentation of the supported and used keys:
+
+### name
+
+The name of the project, it's only used for output.
+
+### needs
+
+List here all needed methods for that type of project. Available methods are:
+  * `git` for deployments via git
+  * `ssh`
+  * `drush7` for support of drupal-7 installations
+  * `drush8` for support fo drupal 8 installations
+  * `files`
+  * `slack` for slack-notifications
+  * `docker` for docker-support
+  * `composer` for composer support
+  * `drupalconsole` for drupal-concole support
+
+**Example for drupal 7**
+
+```yaml
+needs:
+  - ssh
+  - git
+  - drush7
+  - files
+```
+
+**Example for drupal 8 composer based and dockerized**
+
+```yaml
+needs:
+  - ssh
+  - git
+  - drush8
+  - composer
+  - docker
+  - files
+```
+
+
+### requires
+
+The file-format of fabalicious changed over time. Set this to the lowest version of fabalicious which can handle the file. Should bei `2.0`
+
+### hosts
+
+Hosts is a list of host-definitions which contain all needed data to connect to a remote host. Here's an example
+
+```yaml
+hosts:
+  exampleHost:
+    host: example.host.tld
+    user: example_user
+    port: 2233
+    password: optionalPassword
+    type: dev
+    rootFolder: /var/www/public
+    gitRootFolder: /var/www
+    siteFolder: /sites/default
+    filesFolder: /sites/default/files
+    backupFolder: /var/www/backups
+    supportsInstalls: true|false
+    supportsCopyFrom: true|false
+    type: dev
+    branch: develop
+    docker:
+      ...
+    database:
+      ...
+    scripts:
+      ...
+    sshTunnel:
+      ..
+
+```
+
+* `host`, `user`, `port` and optionally `password` is used to connect via SSH to the remote machine. Please make sure SSH key forwarding is enabled on your installation. `password` should only used as an exception.
+* `type` defines the type of installation. Currently there are four types available:
+    * `dev` for dev-installations, they won't backup the databases on deployment
+    * `test` for test-installations, similar than `dev`, no backups on deployments
+    * `stage` for staging-installations.
+    * `live` for live-installations. Some tasks can not be run on live-installations as `install` or as a target for `copyFrom`
+    The main use-case is to run different scripts per type, see the `common`-section.
+* `branch` the name of the branch to use for deployments, they get ususally checked out and pulled from origin. `gitRootFolder` should be the base-folder, where the local git-repository is. (If not explicitely set, fabalicious uses the `rootFolder`)
+* `rootFolder`  the web-root-folder of the installation, typically exposed to the public.
+* `backupFolder` the folder, where fabalicious shuld store its backups into
+* `siteFolder` is a drupal-specific folder, where the settings.php resides for the given installation. This allows to interact with multisites etc.
+* `filesFolder` the path to the files-folder, where user-assets get stored and which should be backed up by the `files`-method
+* `tmpFolder` name of tmp-folder, defaults to `/tmp`
+* `supportsBackups` defaults to true, set to false, if backups are not supported
+* `supportsZippedBackups` defaults to true. Set to false, if database-dumps shouldn't be zipped.
+* `supportsInstalls` defaults to false, if set to true, the `install`-task will run on that host.
+* `supportsCopyFrom` defaults to false, if set to true, the host can be used as target for `copyFrom`
+* `ignoreSubmodules`defaults to true, set to false, if you don't want to update a projects' submodule on deploy.
+* `disableKonwonHosts`, `useShell` and `usePty` see section `other`
+* `database` the database-credentials the `install`-tasks uses when installing a new installation.
+    * `name` the database name
+    * `host` the database host
+    * `user` the database user
+    * `pass` the password for the database user
+* `docker` for all docker-relevant configuration. `configuration` is the only required key, all other are optional and used by the docker-tasks. `configuration`should contain the key of the dockerHost-configuration in `dockerHosts`
+
+
+
+### dockerHosts
+
+TODO
+
+### common
+
+TODO
+
+### scripts:
+
+TODO
+
+### other
+
+* `deploymentModule` name of the deployment-module the drush-method enables when doing a deploy
+* `usePty` defaults to true, set it to false when you can't connect to specific hosts.
+* `useShell` defaults to true, set it to false, when you can't connect to specific hosts.
+* `disableKnownHosts` defaults to false, set it too true, if you trust every host
+* `gitOptions` TODO
+* `sqlSkipTables` a list of table-names drush should omit when doing a backup.
+*
+
+
+## Inheritance
+
+Sometimes it make sense to extend an existing configuration or to include configuration from other places from the file-system or from remote locations. There's a special key `inheritsFrom` which will include the yaml found at the location and merge it with the data. This is supported for entries in `hosts` and `dockerHosts` and for the fabfile itself.
+
+If a ``host``, a ``dockerHost`` or the fabfile itself has the key ``inheritsFrom``, then the given key is used as a base-configuration. Here's a simple example:
+
+```yaml
+hosts:
+  default:
+    port: 22
+    host: localhost
+    user: default
+  example1:
+    inheritsFrom: default
+    port: 23
+  example2:
+    inheritsFrom: example1
+    user: example2
+```
+
+``example1`` will store the merged configuration from ``default`` with the configuration of ``example1``. ``example2``is a merge of all three configurations: ``example2`` with ``example1`` with ``default``.
+
+```yaml
+hosts:
+  example1:
+    port: 23
+    host: localhost
+    user: default
+  example2:
+    port: 23
+    host: localhost
+    user: example2
+```
+
+You can even reference external files to inherit from:
+
+```yaml
+hosts:
+  fileExample:
+    inheritsFrom: ./path/to/config/file.yaml
+  httpExapme:
+    inheritsFrom: http://my.tld/path/to/config_file.yaml
+```
+
+This mechanism works also for the fabfile.yaml / index.yaml itself, and is not limited to one entry:
+
+```yaml
+name: test fabfile
+
+inheritsFrom:
+  - ./mbb.yaml
+  - ./drupal.yaml
+```
+
+TODO
+
+# scripts
+
+TODO
+
+# docker integration
+
+TODO
