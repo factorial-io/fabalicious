@@ -47,6 +47,20 @@ Fabalicious is using [fabric](http://www.fabfile.org) to run tasks on remote mac
       * [copySSHKeys](#copysshkeys)
       * [startRemoteAccess](#startremoteaccess)
       * [waitForServices](#waitforservices)
+  * [the structure of the configuration file](#the-structure-of-the-configuration-file)
+    * [Overview](#overview)
+      * [name](#name)
+      * [needs](#needs)
+      * [requires](#requires)
+      * [hosts](#hosts)
+      * [dockerHosts](#dockerhosts)
+      * [common](#common)
+      * [scripts:](#scripts)
+      * [other](#other)
+    * [Inheritance](#inheritance)
+  * [scripts](#scripts-1)
+  * [docker integration](#docker-integration)
+
 
 # Installation of needed dependencies
 
