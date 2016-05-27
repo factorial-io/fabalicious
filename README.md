@@ -604,6 +604,15 @@ hosts:
 
 ```
 
+You can get all host-information including the default values using the fabalicious command `about`:
+
+```
+fab config:staging about
+```
+
+This will print all host configuration for the host `staging`.
+
+Here are all possible kyes documented:
 * `host`, `user`, `port` and optionally `password` is used to connect via SSH to the remote machine. Please make sure SSH key forwarding is enabled on your installation. `password` should only used as an exception.
 * `type` defines the type of installation. Currently there are four types available:
     * `dev` for dev-installations, they won't backup the databases on deployment
@@ -613,7 +622,7 @@ hosts:
     The main use-case is to run different scripts per type, see the `common`-section.
 * `branch` the name of the branch to use for deployments, they get ususally checked out and pulled from origin. `gitRootFolder` should be the base-folder, where the local git-repository is. (If not explicitely set, fabalicious uses the `rootFolder`)
 * `rootFolder`  the web-root-folder of the installation, typically exposed to the public.
-* `backupFolder` the folder, where fabalicious shuld store its backups into
+* `backupFolder` the folder, where fabalicious should store its backups into
 * `siteFolder` is a drupal-specific folder, where the settings.php resides for the given installation. This allows to interact with multisites etc.
 * `filesFolder` the path to the files-folder, where user-assets get stored and which should be backed up by the `files`-method
 * `tmpFolder` name of tmp-folder, defaults to `/tmp`
@@ -628,7 +637,17 @@ hosts:
     * `host` the database host
     * `user` the database user
     * `pass` the password for the database user
-* `docker` for all docker-relevant configuration. `configuration` is the only required key, all other are optional and used by the docker-tasks. `configuration`should contain the key of the dockerHost-configuration in `dockerHosts`
+* `sshTunnel` Fabalicious supports SSH-Tunnels, that means it can log in into another machine and forward the access to the real host. This is handy for dockerized installations, where the ssh-port of the docker-instance is not public. `sshTunnel` needs the following informations
+    * `bridgeHost`: the host acting as a bridge.
+    * `bridgeUser`: the ssh-user on the bridge-host
+    * `bridgePort`: the port to connect to on the bridge-host
+    * `localPort`: the local port which gets forwarded to the `destPort`. If `localPort` is omitted, the ssh-port of the host-configuration is used.
+    * `destHost`: the destination host to forward to
+    * `destHostFromDockerContainer`: if set, the docker's Ip address is used for destHost. This is automatically set when using a `docker`-configuration, see there.
+    * `destPort`: the destination port to forward to
+* `docker` for all docker-relevant configuration. `configuration` and `name` are the only required keys, all other are optional and used by the docker-tasks.
+    * `configuration` should contain the key of the dockerHost-configuration in `dockerHosts`
+    * `name` contains the name of the docker-container. This is needed to get the IP-address of the particular docker-container when using ssh-tunnels (see above).
 
 
 
@@ -659,7 +678,7 @@ TODO
 
 Sometimes it make sense to extend an existing configuration or to include configuration from other places from the file-system or from remote locations. There's a special key `inheritsFrom` which will include the yaml found at the location and merge it with the data. This is supported for entries in `hosts` and `dockerHosts` and for the fabfile itself.
 
-If a ``host``, a ``dockerHost`` or the fabfile itself has the key ``inheritsFrom``, then the given key is used as a base-configuration. Here's a simple example:
+If a `host`, a `dockerHost` or the fabfile itself has the key `inheritsFrom`, then the given key is used as a base-configuration. Here's a simple example:
 
 ```yaml
 hosts:
@@ -675,7 +694,7 @@ hosts:
     user: example2
 ```
 
-``example1`` will store the merged configuration from ``default`` with the configuration of ``example1``. ``example2``is a merge of all three configurations: ``example2`` with ``example1`` with ``default``.
+`example1` will store the merged configuration from `default` with the configuration of `example1`. `example2` is a merge of all three configurations: `example2` with `example1` with `default`.
 
 ```yaml
 hosts:
