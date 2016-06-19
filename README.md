@@ -92,7 +92,7 @@ There are 2 alternative ways to install fabalicious. Because of historic reasons
 
 1. Clone this repository, or add this repository as a submodule.
 
-    ```shellshell
+    ```shell
     mkdir _tools/fabalicious
     git submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious
     ln -s _tools/fabalicious/fabfile.py fabfile.py
@@ -611,7 +611,7 @@ hosts:
 
 You can get all host-information including the default values using the fabalicious command `about`:
 
-```
+```shell
 fab config:staging about
 ```
 
@@ -663,7 +663,7 @@ Here are all possible keys documented:
 
 Here's an example `dockerHosts`-entry:
 
-```
+```yaml
 dockerHosts:
   mbb:
     host: multibasebox.dev
@@ -689,7 +689,7 @@ You can use `inheritsFrom` to base your configuration on an existing one. You ca
 
 You can reference a specific docker-host-configuration from your host-configuration via
 
-```
+```yaml
 hosts:
   test:
     docker:
@@ -701,7 +701,7 @@ hosts:
 common contains a list of commands, keyed by task and type which gets executed when the task is executed. 
 
 Example:
-```yams
+```yaml
 common:
   reset:
     dev:
@@ -727,7 +727,7 @@ The first key is the task-name (`reset`, `deploy`, ...), the second key is the t
 
 A keyed list of available scripts. This scripts may be defined globally (on the root level) or on a per host-level. The key is the name of the script and can be executed via
 
-```bash
+```shell
 fab config:<configuration> script:<key>
 ```
 
@@ -866,7 +866,7 @@ script:
 
 Calling this script via
 
-```bash
+```shell
 fab config:mbb script:test
 ```
 
