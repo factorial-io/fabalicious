@@ -270,6 +270,7 @@ This task will reset your installation
 **Configuration:**
 * your host-configuration needs a `branch`-key stating the branch to deploy.
 * your configuration needs a `uuid`-entry, this is the site uuid (drupal 8). You can get the site-uuid via `drush cget system.site`
+* you can customize which configuration to import with the `configurationManagement`-setting inside your host- or global-setting.
 
 **Examples:**
 * `fab config:mbb reset:withPasswordReset=0` will reset the installation and will not reset the password.
@@ -448,7 +449,7 @@ This command will copy the dump-file `path-to-local-sql-dump` to the remote mach
 fab config:<config> script:<script-name>
 ```
 
-This command will run costum scripts on a remote machine. You can declare scripts globally or per host. If the `script-name` can't be found in the fabfile.yaml you'll get a list of all available scripts.
+This command will run custom scripts on a remote machine. You can declare scripts globally or per host. If the `script-name` can't be found in the fabfile.yaml you'll get a list of all available scripts.
 
 Additional arguments get passed to the script. You'll have to use the python-syntax to feed additional arguments to the script. See the examples.
 
@@ -612,7 +613,7 @@ fab config:staging about
 
 This will print all host configuration for the host `staging`.
 
-Here are all possible kyes documented:
+Here are all possible keys documented:
 * `host`, `user`, `port` and optionally `password` is used to connect via SSH to the remote machine. Please make sure SSH key forwarding is enabled on your installation. `password` should only used as an exception.
 * `type` defines the type of installation. Currently there are four types available:
     * `dev` for dev-installations, they won't backup the databases on deployment
@@ -630,8 +631,9 @@ Here are all possible kyes documented:
 * `supportsZippedBackups` defaults to true. Set to false, if database-dumps shouldn't be zipped.
 * `supportsInstalls` defaults to false, if set to true, the `install`-task will run on that host.
 * `supportsCopyFrom` defaults to false, if set to true, the host can be used as target for `copyFrom`
-* `ignoreSubmodules`defaults to true, set to false, if you don't want to update a projects' submodule on deploy.
-* `disableKonwonHosts`, `useShell` and `usePty` see section `other`
+* `ignoreSubmodules` defaults to true, set to false, if you don't want to update a projects' submodule on deploy.
+* `configurationManagement`, an array of configuration-labels to import on `reset`, defaults to `['staging']`. You can add command arguments for drush, e.g. `['staging', 'dev --partial']`
+* `disableKnownHosts`, `useShell` and `usePty` see section `other`
 * `database` the database-credentials the `install`-tasks uses when installing a new installation.
     * `name` the database name
     * `host` the database host
@@ -653,15 +655,107 @@ Here are all possible kyes documented:
 
 ### dockerHosts
 
-TODO
+`dockerHosts` is similar structured as the `hosts`-entry. It's a keyed lists of hosts containing all necessary information to create a ssh-connection to the host, controlling the docker-instances, and a list of tasks, the user might call via the `docker`-command. See the `docker`-entry for a more birds-eye-view of the concepts.
+
+Here's an example `dockerHosts`-entry:
+
+```
+dockerHosts:
+  mbb:
+    host: multibasebox.dev
+    user: vagrant
+    password: vagrant
+    port: 22
+    rootFolder: /vagrant
+    environment:
+      VHOST: %host.host%
+      WEBROOT: %host.rootFolder%
+    tasks:
+      logs:
+        - docker logs %host.docker.name%
+```
+
+Here's a list of all possible entries of a dockerHosts-entry:
+
+* `host`, `user`, `port` and `password`: all needed information to start a ssh-connection to that host. `port` and `password` are optional.
+* `environment` a keyed list of environment-variables to set, when running one of the tasks. The replacement-patterns of `scripts` are supported, see there for more information.
+* `tasks` a keyed list of commands to run for a given docker-subtask (similar to `scripts`). Note: these commands are running on the docker-host, not on the host. All replacement-patterns do work, and you can call even other tasks via `execute(<task>, <subtask>)` e.g. `execute(docker, stop)` See the `scripts`-section for more info.
+
+You can use `inheritsFrom` to base your configuration on an existing one. You can add any configuration you may need and reference to that information from within your tasks via the replacement-pattern `%dockerHost.keyName%` e.g. `%dockerHost.host%`.
+
+You can reference a specific docker-host-configuration from your host-configuration via
+
+```
+hosts:
+  test:
+    docker:
+      configuration: mbb
+```
 
 ### common
 
-TODO
+common contains a list of commands, keyed by task and type which gets executed when the task is executed. 
 
-### scripts:
+Example:
+```yams
+common:
+  reset:
+    dev:
+      - echo "running reset on a dev-instance"
+    stage: 
+      - echo "running reset on a stage-instance"
+    prod: 
+      - echo "running reset on a prod-instance"
+  deployPrepare:
+    dev:
+      - echo "preparing deploy on a dev instance"
+  deploy:
+    dev:
+      - echo "deploying on a dev instance"
+  deployFinished:
+    dev: 
+      - echo "finished deployment on a dev instance"
+```
 
-TODO
+The first key is the task-name (`reset`, `deploy`, ...), the second key is the type of the installation (`dev`, `stage`, `prod`, `test`). Every task is prepended by a prepare-stage and appended by a finished-stage, so you can call scripts before and after an actual task. You can even run other scripts via the `execute`-command, see the `scripts`-section.
+
+### scripts
+
+A keyed list of available scripts. This scripts may be defined globally (on the root level) or on a per host-level. The key is the name of the script and can be executed via
+
+```bash
+fab config:<configuration> script:<key>
+```
+
+A script consists of an array of commands which gets executed sequentially. 
+
+An example:
+
+```yaml  
+scripts:
+  test:
+    - echo "Running script test"
+  test2:
+    - echo "Running script test2 on %host.config_name%
+    - execute(script, test)
+```
+
+Scripts can be defined on a global level, but also on a per host-level.
+
+You can declare default-values for arguments via a slightly modified syntax:
+
+```yaml
+scripts:
+  defaultArgumentTest:
+    defaults:
+      name: Bob
+    script:
+      - echo "Hello %arguments.name%"
+```
+
+Running the script via `fab config:mbb script:defaultArgumentTest,name="Julia"` will show `Hello Julia`. Running `fab config:mbb script:defaultArgumentTest` will show `Hello Bob`.
+
+For more information see the main scripts section below.
 
 ### other
 
@@ -669,9 +763,27 @@ TODO
 * `usePty` defaults to true, set it to false when you can't connect to specific hosts.
 * `useShell` defaults to true, set it to false, when you can't connect to specific hosts.
 * `disableKnownHosts` defaults to false, set it too true, if you trust every host
-* `gitOptions` TODO
+* `gitOptions` a keyed list of options to apply to a git command. Currently only pull is supported. If your git-version does not support `--rebase` you can disable it via an empty array: `pull: []`
 * `sqlSkipTables` a list of table-names drush should omit when doing a backup.
-*
+* `configurationManagement` a list of configuration-labels to import on `reset`. This defaults to `['staging']` and may be overridden on a per-host basis. You can add command arguments to the the configuration label.  
+
+Example:
+```yaml
+deploymentModule: my_deployment_module
+usePty: false
+useShell: false
+gitOptions:
+  pull:
+    - --rebase
+    - --quiet
+sqlSkipTables:
+  - cache
+  - watchdog
+  - session
+configurationManagement:
+   - staging
+   - dev -- partial
+```
 
 
 ## Inheritance
@@ -732,7 +844,74 @@ TODO
 
 # scripts
 
-TODO
+Scripts are a powerful concept of fabalicious. There are a lot of places where scripts can be called. The `common`-section defines common scripts to be run for specific task/installation-type-configurations, docker-tasks are also scripts which you can execute via the docker-command. And you can even script fabalicious tasks and create meta-tasks.
+
+A script is basically a list of commands which get executed via shell on a remote machine. To stay independent of the host where the script is executed, fabalicious parsed the script before executing it and replaces given variables with their counterpart in the yams file. 
+
+## Replacement-patterns
+
+Replacement-Patterns are specific strings enclosed in `%`s, e.g. `%host.port%`, `%dockerHost.rootFolder% or `%arguments.name%. 
+
+Here's a simple example;
+
+```yaml
+script:
+  test:
+    - echo "I am running on %host.config_name%"
+```
+
+Calling this script via
+
+```bash
+fab config:mbb script:test
+```
+
+will show `I am running on mbb`.
+
+* The host-configuration gets exposes via the `host.`-prefix, so `port` maps to `%host.port%`, etc.
+* The dockerHost-configuration gets exposed via the `dockerHost`-prefix, so `rootFolder` maps to `%dockerHost.rootFolder%`
+* The global configuration of the yams-file gets exposed to the `settings`-prefix, so `uuid` gets mapped to `%settings.uuid%
+* Optional arguments to the `script`-taks get the `argument`-prefix, e.g. `%arguments.name%`. You can get all arguments via `%arguments.combined%`.
+* You can access hierarchical information via the dot-operator, e.g. `%host.database.name%`
+
+If fabalicious detects a pattern it can't replace it will abort the execution of the script and displays a list of available replacement-patterns.
+
+## Internal commands
+
+There are currently 2 internal commands. These commands control the flow inside fabalicious:
+
+* `fail_on_error(1|0)` If fail_on_error is set to one, fabalicious will exit if one of the script commands returns a non-zero return-code. When using `fail_on_error(0)` only a warning is displayed, the script will continue.
+* `execute(task, subtask, arguments)` execute a fabalicious task. For example you can run a deployment from a script via `execute(deploy)` or stop a docker-container from a script via `execute(docker, stop)`
+
+## Examples
+
+A rather complex example scripting fabalicious.
+
+```yaml
+scripts:
+  runTests:
+    defaults:
+      branch: develop
+    script:
+      - execute(docker, start)
+      - execute(docker, waitForServices)
+      - execute(deploy, %arguments.branch%)
+      - execute(script, behatInstall)
+      - execute(script, behat, --profile=ci --format=junit --format=progress)
+      - execute(getFile, /var/www/_tools/behat/build/behat/default.xml, ./_tools/behat)
+      - execute(docker, stop)
+```
+
+This script will 
+* start the docker-container, 
+* wait for it, 
+* deploys the given branch, 
+* run a script which will install behat, 
+* run behat with some custom arguments, 
+* gets the result-file and copy it to a location, 
+* and finally stops the container.
+
+
 
 # docker integration
 
