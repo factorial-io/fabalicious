@@ -47,7 +47,7 @@ Fabalicious is using [fabric](http://www.fabfile.org) to run tasks on remote mac
       * [copySSHKeys](#copysshkeys)
       * [startRemoteAccess](#startremoteaccess)
       * [waitForServices](#waitforservices)
-  * [the structure of the configuration file](#the-structure-of-the-configuration-file)
+  * [The structure of the configuration file](#the-structure-of-the-configuration-file)
     * [Overview](#overview)
       * [name](#name)
       * [needs](#needs)
@@ -55,11 +55,15 @@ Fabalicious is using [fabric](http://www.fabfile.org) to run tasks on remote mac
       * [hosts](#hosts)
       * [dockerHosts](#dockerhosts)
       * [common](#common)
-      * [scripts:](#scripts)
+      * [scripts](#scripts)
       * [other](#other)
     * [Inheritance](#inheritance)
-  * [scripts](#scripts-1)
-  * [docker integration](#docker-integration)
+  * [Scripts](#scripts-1)
+    * [Replacement\-patterns](#replacement-patterns)
+    * [Internal commands](#internal-commands)
+    * [Task\-related scripts](#task-related-scripts)
+    * [Examples](#examples)
+  * [Docker integration](#docker-integration)
 
 
 # Installation of needed dependencies
@@ -840,9 +844,9 @@ inheritsFrom:
   - ./drupal.yaml
 ```
 
-TODO
 
-# scripts
+
+# Scripts
 
 Scripts are a powerful concept of fabalicious. There are a lot of places where scripts can be called. The `common`-section defines common scripts to be run for specific task/installation-type-configurations, docker-tasks are also scripts which you can execute via the docker-command. And you can even script fabalicious tasks and create meta-tasks.
 
@@ -934,6 +938,6 @@ This script will
 
 
 
-# docker integration
+# Docker integration
 
 TODO
