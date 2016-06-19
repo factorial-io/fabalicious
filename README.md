@@ -883,6 +883,27 @@ There are currently 2 internal commands. These commands control the flow inside 
 * `fail_on_error(1|0)` If fail_on_error is set to one, fabalicious will exit if one of the script commands returns a non-zero return-code. When using `fail_on_error(0)` only a warning is displayed, the script will continue.
 * `execute(task, subtask, arguments)` execute a fabalicious task. For example you can run a deployment from a script via `execute(deploy)` or stop a docker-container from a script via `execute(docker, stop)`
 
+## Task-related scripts
+
+You can add scripts to the `common`-section, which will called for any host. You can differentiate by task-name and host-type, e.g. create a script which gets called for the task `deploy` and type `dev`. 
+
+You can even run scripts before or after a task is executed. Append the task with `Prepare` or `Finished`.
+
+You can even run scripts for specific tasks and hosts. Just add your script with the task-name as its key.
+
+```yaml
+host:
+  test:
+    deployPrepare:
+      - echo "Preparing deploy for test"
+    deploy:
+      - echo "Deploying on test"
+    deployFinished:
+      - echo "Deployment finished for test"
+```
+
+These scripts in the above examples gets executed only for the host `test` and task `deploy`.
+
 ## Examples
 
 A rather complex example scripting fabalicious.
