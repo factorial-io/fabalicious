@@ -290,6 +290,9 @@ def get_configuration(name):
     if 'scripts' not in settings:
       settings['scripts'] = {}
 
+    if 'configurationManagement' not in settings:
+      settings['configurationManagement'] = [ 'staging' ];
+
 
     host_config = config['hosts'][name]
     if 'requires' in host_config:
@@ -317,6 +320,7 @@ def get_configuration(name):
       'needs': settings['needs'],
       'scripts': {},
       'slack': {},
+      'configurationManagement': settings['configurationManagement'],
     }
 
     for key in defaults:

@@ -43,7 +43,9 @@ class DrushMethod(BaseMethod):
         if self.methodName == 'drush8':
           if uuid:
             self.run_drush('cset system.site uuid %s -y' % uuid)
-          self.run_drush('config-import staging -y')
+          if 'configurationManagement' in config:
+            for key in config['configurationManagement']:
+              self.run_drush('config-import %s -y' % key)
         else:
           self.run_drush('fra -y')
 
