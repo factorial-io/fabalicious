@@ -156,13 +156,26 @@ class DockerMethod(BaseMethod):
           print red("Supervisord not coming up at all")
           break
 
+  def listAvailableCommands(self, config):
+    if not config:
+      return
+
+    docker_config = self.getDockerConfig(config)
+    if not docker_config:
+      return
+
+    print "Available docker-commands:"
+    internal_commands = ['copySSHKeys', 'startRemoteAccess', 'waitForServices']
+    available_commands = internal_commands + docker_config['tasks'].keys()
+    for command in sorted(available_commands):
+      print "- %s" % command
 
 
   def runCommand(self, config, **kwargs):
-    internal_commands = ['copySSHKeys', 'startRemoteAccess', 'waitForServices']
     command = kwargs['command']
     if not command:
       print red('Missing command for docker-task.')
+      self.listAvailableCommands(config)
       exit(1)
 
 
@@ -177,8 +190,8 @@ class DockerMethod(BaseMethod):
       exit(1)
 
     if command not in docker_config['tasks']:
-      available_commands = internal_commands + docker_config['tasks'].keys()
-      print red('Can\'t find subtask "%s" in "%s"' % ( command, ', '.join(available_commands)))
+      print red('Can\'t find  docker-command "%s"'  % ( command ))
+      self.listAvailableCommands(config)
       exit(1)
     script = docker_config['tasks'][command]
 

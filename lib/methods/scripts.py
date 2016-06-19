@@ -164,7 +164,7 @@ class ScriptMethod(BaseMethod):
     type = config['type']
 
     if type in common_scripts and isinstance(common_scripts[type], list):
-      print red("Found old-style common-scripts. Please regroup by common > taskName > type > command > type > commandss.")
+      print red("Found old-style common-scripts. Please regroup by common > taskName > type > commands.")
 
     if taskName in common_scripts:
       if type in common_scripts[taskName]:
