@@ -2,7 +2,7 @@ from base import BaseMethod
 from fabric.api import *
 from fabric.network import *
 from fabric.context_managers import settings as _settings
-from fabric.colors import green, red
+from fabric.colors import green, red, yellow
 from lib import configuration
 import re, copy
 
@@ -164,15 +164,17 @@ class ScriptMethod(BaseMethod):
     type = config['type']
 
     if type in common_scripts and isinstance(common_scripts[type], list):
-      print red("Found old-style common-scripts. Please regroup by common > taskName > type > command > type > commandss.")
+      print red("Found old-style common-scripts. Please regroup by common > taskName > type > commands.")
 
     if taskName in common_scripts:
       if type in common_scripts[taskName]:
         script = common_scripts[taskName][type]
+        print yellow('Running common script for task %s and type %s' % (taskName, type))
         self.runScript(config, script=script)
 
     if taskName in config:
       script = config[taskName]
+      print yellow('Running host-script for task %s and type %s' % (taskName, type))
       self.runScript(config, script=script)
 
   def fallback(self, taskName, configuration, **kwargs):
