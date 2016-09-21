@@ -186,6 +186,7 @@ class DrushMethod(BaseMethod):
     self.run_quietly('rm %s' % targetSQLFileName)
 
   def install(self, config, ask='True', distribution='minimal', **kwargs):
+
     if 'database' not in config:
       print red('Missing database configuration!')
       exit(1)
@@ -195,6 +196,7 @@ class DrushMethod(BaseMethod):
     print green('Installing fresh database for "%s"' % config['config_name'])
 
     o = config['database']
+
     with cd(config['siteFolder']):
       self.run_quietly('mkdir -p %s' % config['siteFolder'])
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
@@ -223,6 +225,18 @@ class DrushMethod(BaseMethod):
         deploymentModule = configuration.getSettings('deploymentModule')
         if deploymentModule:
           self.run_drush('en -y %s' % deploymentModule)
+
+    if self.methodName == 'drush8':
+      self.setupConfigurationManagement(config)
+
+  def setupConfigurationManagement(self, config):
+    with cd(config['siteFolder']):
+      self.run_quietly('chmod u+w .');
+      self.run_quietly('chmod u+w settings.php');
+
+      for configName in config['configurationManagement']:
+        cmd = 'grep -q -F \'$config_directories["{0}"] = "../config/{0}";\' settings.php || echo \'$config_directories["{0}"] = "../config/{0}";\' >> settings.php'.format(configName)
+        self.run_quietly(cmd)
 
 
   def updateApp(self, config, version=7, **kwargs):
