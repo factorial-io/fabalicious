@@ -58,7 +58,7 @@ class SSHMethod(BaseMethod):
         print green('Tunnel is established')
 
     # copyDBFrom and copyFilesFrom may need additional tunnels
-    elif (task == 'copyDBFrom' or task == 'copyFilesFrom'):
+    if (task == 'copyDBFrom' or task == 'copyFilesFrom'):
       source_config = kwargs['source_config']
       if source_config and 'sshTunnel' in source_config and not self.source_tunnel_created:
         print "Establishing SSH-Tunnel to source ...",
