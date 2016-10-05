@@ -11,7 +11,7 @@ class DrupalConsoleMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'drupalconsole'
 
-  def install(self, config):
+  def install(self, config, **kwargs):
     with cd(config['tmpFolder']):
       run('curl https://drupalconsole.com/installer -L -o drupal.phar')
       run('mv drupal.phar /usr/local/bin/drupal')

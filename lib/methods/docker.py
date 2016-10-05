@@ -13,9 +13,6 @@ class DockerMethod(BaseMethod):
     return methodName == 'docker'
 
 
-  def addPasswordToFabricCache(self, user, host, port, password, **kwargs):
-    host_string = join_host_strings(user, host, port)
-    env.passwords[host_string] = password
 
 
   def getDockerConfig(self, config):
@@ -40,14 +37,17 @@ class DockerMethod(BaseMethod):
   def getIp(self, docker_name, docker_host, docker_user, docker_port):
     host_string = join_host_strings(docker_user, docker_host, docker_port)
     try:
-      with hide('running', 'output'), _settings( host_string=host_string ):
+      with hide('running', 'output', 'warnings'), _settings( host_string=host_string, warn_only=True ):
         output = run('docker inspect --format "{{ .NetworkSettings.IPAddress }}" %s ' % (docker_name))
 
     except SystemExit:
       print red('Docker not running, can\'t get ip')
-      return
+      return False
 
     ip_address = output.stdout.strip()
+    if output.return_code != 0:
+      return False
+
     return ip_address
 
 
@@ -71,7 +71,7 @@ class DockerMethod(BaseMethod):
     ip = self.getIpAddress(config)
 
     if not ip:
-      print red('Could not get docker-ip-address.')
+      print red('Could not get docker-ip-address of docker-container %s.' % config['docker']['name'])
       exit(1)
 
     public_ip = '0.0.0.0'
@@ -84,8 +84,13 @@ class DockerMethod(BaseMethod):
 
 
   def copySSHKeys(self, config, **kwargs):
+    if 'ssh' not in config['needs']:
+      return
+
     key_file = configuration.getSettings('dockerKeyFile')
     authorized_keys_file = configuration.getSettings('dockerAuthorizedKeyFile')
+    known_hosts_file = configuration.getSettings('dockerKnownHostsFile')
+
 
     with cd(config['rootFolder']), hide('commands', 'output'), lcd(configuration.getBaseDir()):
       run('mkdir -p /root/.ssh')
@@ -102,9 +107,17 @@ class DockerMethod(BaseMethod):
       if authorized_keys_file:
         put(authorized_keys_file, '/root/.ssh/authorized_keys')
         print green('Copied authorized keys to docker.')
+
+      if known_hosts_file:
+        put(known_hosts_file, '/root/.ssh/known_hosts')
+        print green('Copied known hosts to docker.')
+
       run('chmod 700 /root/.ssh')
 
   def waitForServices(self, config, **kwargs):
+    if 'ssh' not in config['needs']:
+      return
+
     host_string = join_host_strings(config['user'], config['host'], config['port'])
     if 'password' in config:
       self.addPasswordToFabricCache(**config)
@@ -143,13 +156,26 @@ class DockerMethod(BaseMethod):
           print red("Supervisord not coming up at all")
           break
 
+  def listAvailableCommands(self, config):
+    if not config:
+      return
+
+    docker_config = self.getDockerConfig(config)
+    if not docker_config:
+      return
+
+    print "Available docker-commands:"
+    internal_commands = ['copySSHKeys', 'startRemoteAccess', 'waitForServices']
+    available_commands = internal_commands + docker_config['tasks'].keys()
+    for command in sorted(available_commands):
+      print "- %s" % command
 
 
   def runCommand(self, config, **kwargs):
-    internal_commands = ['copySSHKeys', 'startRemoteAccess', 'waitForServices']
     command = kwargs['command']
     if not command:
       print red('Missing command for docker-task.')
+      self.listAvailableCommands(config)
       exit(1)
 
 
@@ -164,8 +190,8 @@ class DockerMethod(BaseMethod):
       exit(1)
 
     if command not in docker_config['tasks']:
-      available_commands = internal_commands + docker_config['tasks'].keys()
-      print red('Can\'t find subtask "%s" in "%s"' % ( command, ', '.join(available_commands)))
+      print red('Can\'t find  docker-command "%s"'  % ( command ))
+      self.listAvailableCommands(config)
       exit(1)
     script = docker_config['tasks'][command]
 

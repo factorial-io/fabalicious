@@ -17,19 +17,24 @@ class SSHMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'ssh'
 
+  def openShell (self, config):
+    with cd(config['rootFolder']):
+      open_shell()
+
+
   def create_ssh_tunnel(self, source_config, target_config, remote=False):
     o = copy.deepcopy(target_config['sshTunnel'])
 
     if 'destHost' not in o:
-      print "get remote ip-address from available methods ...",
+      print "get remote ip-address ...",
       # check other methods for gathering the desthost-ip-address.
       result = {}
-      self.factory.runTask(target_config, 'getIpAddress', result=result)
+      self.factory.runTask(target_config, 'getIpAddress', result=result, quiet=True)
       if 'ip' in result:
         o['destHost'] = result['ip']
 
-    if 'destHost' not in o:
-      print red('Could not get remote ip-address from existing method, tunnel creation failed.')
+    if 'destHost' not in o or not o['destHost']:
+      print red('Could not get remote ip-address!')
       return False
 
     strictHostKeyChecking = o['strictHostKeyChecking'] if 'strictHostKeyChecking' in o else True
@@ -53,7 +58,7 @@ class SSHMethod(BaseMethod):
         print green('Tunnel is established')
 
     # copyDBFrom and copyFilesFrom may need additional tunnels
-    elif (task == 'copyDBFrom' or task == 'copyFilesFrom'):
+    if (task == 'copyDBFrom' or task == 'copyFilesFrom'):
       source_config = kwargs['source_config']
       if source_config and 'sshTunnel' in source_config and not self.source_tunnel_created:
         print "Establishing SSH-Tunnel to source ...",

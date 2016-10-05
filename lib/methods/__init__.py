@@ -67,22 +67,31 @@ def preflight(task, taskName, configuration, **kwargs):
 
 def runTask(configuration, taskName, **kwargs):
   preflight('preflight', taskName, configuration, **kwargs)
-  runTaskImpl(configuration['needs'], taskName + "Prepare", configuration, **kwargs);
-  runTaskImpl(configuration['needs'], taskName, configuration, **kwargs);
+  runTaskImpl(configuration['needs'], taskName + "Prepare", configuration, False, **kwargs);
+  runTaskImpl(configuration['needs'], taskName, configuration, True, **kwargs);
 
   if 'nextTasks' in kwargs and len(kwargs['nextTasks']) > 0:
     next_task = kwargs['nextTasks'].pop()
     runTask(configuration, next_task, **kwargs)
 
-  runTaskImpl(configuration['needs'], taskName + "Finished", configuration, **kwargs);
+  runTaskImpl(configuration['needs'], taskName + "Finished", configuration, False, **kwargs);
   preflight('postflight', taskName, configuration, **kwargs)
 
 
-def runTaskImpl(methodNames, taskName, configuration, **kwargs):
+def runTaskImpl(methodNames, taskName, configuration, fallback_allowed, **kwargs):
   msg_printed = False
+  fn_called = False
   for methodName in methodNames:
-    if not msg_printed:
+    if not 'quiet' in kwargs and not msg_printed:
       print yellow('Running task %s on configuration %s' % (taskName, configuration['config_name']))
       msg_printed = True
-
+    fn = get(methodName, taskName)
+    if fn:
+      fn_called = True
     callImpl(methodName, taskName, configuration, True, **kwargs)
+
+  if not fn_called and fallback_allowed:
+    for methodName in methodNames:
+      fn = get(methodName, 'fallback')
+      if fn:
+        fn(taskName, configuration, **kwargs)

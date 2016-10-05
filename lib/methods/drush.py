@@ -14,14 +14,11 @@ class DrushMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'drush7' or methodName == 'drush8' or methodName == 'drush'
 
-  def runCommonScripts(self, config):
-   common_scripts = configuration.getSettings('common')
-   if common_scripts and config['type'] in common_scripts:
-     script = common_scripts[config['type']]
-     self.factory.call('script', 'runScript', config, script = script)
-
 
   def reset(self, config, **kwargs):
+    if 'withPasswordReset' not in kwargs:
+      kwargs['withPasswordReset'] = True
+
     if self.methodName == 'drush8':
       uuid = config['uuid'] if 'uuid' in config else False
       if not uuid:
@@ -41,12 +38,20 @@ class DrushMethod(BaseMethod):
       with warn_only():
         if configuration.getSettings('deploymentModule'):
           self.run_drush('en -y ' + configuration.getSettings('deploymentModule'))
-      self.run_drush('updb -y')
+
+      if self.methodName == 'drush8':
+        self.run_drush('updb --entity-updates -y')
+      else:
+        self.run_drush('updb -y')
+
+
       with warn_only():
         if self.methodName == 'drush8':
           if uuid:
             self.run_drush('cset system.site uuid %s -y' % uuid)
-          self.run_drush('config-import staging -y')
+          if 'configurationManagement' in config:
+            for key in config['configurationManagement']:
+              self.run_drush('config-import %s -y' % key)
         else:
           self.run_drush('fra -y')
 
@@ -125,7 +130,7 @@ class DrushMethod(BaseMethod):
 
     with cd(config['siteFolder']):
       if cleanupBeforeRestore:
-        self.run_drush('sql-drop')
+        self.run_drush('sql-drop -y')
 
       if config['supportsZippedBackups']:
         self.run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
@@ -164,11 +169,11 @@ class DrushMethod(BaseMethod):
     with _settings(host_string=source_host_string):
       self.run_quietly('rm %s' % sql_name_source)
 
-    self.importSQLFromFile(target_config, sql_name_target)
+    self.importSQLFromFile(target_config, sql_name_target, True)
     self.run_quietly('rm %s' % sql_name_target)
 
   def restoreSQLFromFile(self, config, sourceFile, **kwargs):
-    targetSQLFileName = env.config['tmpFolder'] + 'manual_upload.sql'
+    targetSQLFileName = config['tmpFolder'] + 'manual_upload.sql'
 
     fileName, fileExtension = os.path.splitext(sourceFile)
     zipped = fileExtension == '.gz'
@@ -181,6 +186,7 @@ class DrushMethod(BaseMethod):
     self.run_quietly('rm %s' % targetSQLFileName)
 
   def install(self, config, ask='True', distribution='minimal', **kwargs):
+
     if 'database' not in config:
       print red('Missing database configuration!')
       exit(1)
@@ -190,8 +196,9 @@ class DrushMethod(BaseMethod):
     print green('Installing fresh database for "%s"' % config['config_name'])
 
     o = config['database']
-    self.run_quietly('mkdir -p %s' % config['siteFolder'])
+
     with cd(config['siteFolder']):
+      self.run_quietly('mkdir -p %s' % config['siteFolder'])
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
 
       self.run_quietly('mysql -h {host} -u {user} --password={pass} -e "{mysql_command}"'.format(mysql_command=mysql_cmd, **o), 'Creating database')
@@ -222,6 +229,43 @@ class DrushMethod(BaseMethod):
         if deploymentModule:
           self.run_drush('en -y %s' % deploymentModule)
 
+    if self.methodName == 'drush8':
+      self.setupConfigurationManagement(config)
+
+  def setupConfigurationManagement(self, config):
+    with cd(config['siteFolder']):
+      self.run_quietly('chmod u+w .');
+      self.run_quietly('chmod u+w settings.php');
+
+      for configName in config['configurationManagement']:
+        cmd = 'grep -q -F \'$config_directories["{0}"] = "../config/{0}";\' settings.php || echo \'$config_directories["{0}"] = "../config/{0}";\' >> settings.php'.format(configName)
+        self.run_quietly(cmd)
+
+
+  def updateApp(self, config, version=7, **kwargs):
+    if 'composer' in config['needs']:
+      # ignore update, as composer will handle this.
+      return;
+
+    # download drupal
+    with cd(config['rootFolder']):
+      self.run_quietly('rm -rf /tmp/drupal-update')
+      self.run_quietly('mkdir -p /tmp/drupal-update')
+      self.run_drush('dl --destination="/tmp/drupal-update" --default-major="%d" drupal ' % version)
+
+    # copy files to root-folder
+    with(cd('/tmp/drupal-update')), hide('running'):
+      drupal_folder = run('ls').stdout.strip()
+      # print drupal_folder
+
+      run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, config['rootFolder']) )
+
+
+    # remove temporary files
+    with cd(config['rootFolder']):
+      self.run_quietly('rm -rf /tmp/drupal-update')
+
+    print green("Updated drupal successfully to '%s'." % (drupal_folder))
 
 
 

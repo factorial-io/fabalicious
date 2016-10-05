@@ -1,6 +1,8 @@
 from base import BaseMethod
 from fabric.api import *
-from fabric.colors import green, red
+from fabric.network import *
+from fabric.context_managers import settings as _settings
+from fabric.colors import green, red, yellow
 from lib import configuration
 import re, copy
 
@@ -16,10 +18,10 @@ class ScriptMethod(BaseMethod):
       print "{key:<40}  |  {value}".format(key = key, value=value)
 
 
-  def runScriptImpl(self, rootFolder, commands, callbacks= {}, environment = {}, replacements = {}):
+  def runScriptImpl(self, rootFolder, commands, config, callbacks= {}, environment = {}, replacements = {}):
 
     pattern = re.compile('\%(\S*)\%')
-    state = { 'warnOnly': True }
+    state = { 'warnOnly': False, 'config': config, 'return_code': 0 }
 
     # preflight
     ok = True
@@ -35,12 +37,13 @@ class ScriptMethod(BaseMethod):
 
     if not ok:
       self.printReplacements(replacements)
-      return False
+      exit(1)
+
     saved_output_prefix = env.output_prefix
     env.output_prefix = False
 
     for line in commands:
-      with cd(rootFolder), shell_env(**environment), hide('running'):
+      with cd(rootFolder), shell_env(**environment), hide('running'), show('output'):
         handled = False
         start_p = line.find('(')
         end_p = line.rfind(')')
@@ -64,10 +67,15 @@ class ScriptMethod(BaseMethod):
         if not handled:
           if state['warnOnly']:
             with warn_only():
-              run(line)
+              result = run(line)
+              state['return_code'] = state['return_code'] or result.return_code
           else:
-            run(line)
+            result = run(line)
+            state['return_code'] = state['return_code'] or result.return_code
+
     env.output_prefix = saved_output_prefix
+
+    return state['return_code']
 
   def expandVariablesImpl(self, prefix, variables, result):
     for key in variables:
@@ -104,6 +112,9 @@ class ScriptMethod(BaseMethod):
 
 
   def executeCallback(self, context, command, *args, **kwargs):
+    config = context['config']
+    host_string = join_host_strings(config['user'], config['host'], config['port'])
+    kwargs['host'] = host_string
     execute(command, *args, **kwargs)
 
   def runTaskCallback(self, context, *args, **kwargs):
@@ -121,7 +132,7 @@ class ScriptMethod(BaseMethod):
     callbacks = kwargs['callbacks'] if 'callbacks' in kwargs else {}
     variables = kwargs['variables'] if 'variables' in kwargs else {}
     environment = kwargs['environment'] if 'environment' in kwargs else {}
-    root_folder = kwargs['rootFolder'] if 'rootFolder' in kwargs else config['rootFolder']
+    root_folder = kwargs['rootFolder'] if 'rootFolder' in kwargs else config['siteFolder']
     if 'environment' in config:
       environment = configuration.data_merge(config['environment'], environment)
     variables['host'] = config
@@ -135,25 +146,39 @@ class ScriptMethod(BaseMethod):
 
     replacements = self.expandVariables(variables);
     commands = self.expandCommands(script, replacements)
+    # Do it again to support replacements which needs to be replaced again.
+    commands = self.expandCommands(commands, replacements)
     environment = self.expandEnvironment(environment, replacements)
 
-    self.runScriptImpl(root_folder, commands, callbacks, environment, replacements)
 
+    for need in config['needs']:
+      environment[need.upper() + '_AVAILABLE'] = "1"
+
+    return_code = self.runScriptImpl(root_folder, commands, config, callbacks, environment, replacements)
+    if return_code:
+      print red('Due to earlier errors quitting now.')
+      exit(return_code)
 
   def runTaskSpecificScript(self, taskName, config, **kwargs):
-    script = False
+    common_scripts = configuration.getSettings('common')
+    type = config['type']
+
+    if type in common_scripts and isinstance(common_scripts[type], list):
+      print red("Found old-style common-scripts. Please regroup by common > taskName > type > commands.")
+
+    if taskName in common_scripts:
+      if type in common_scripts[taskName]:
+        script = common_scripts[taskName][type]
+        print yellow('Running common script for task %s and type %s' % (taskName, type))
+        self.runScript(config, script=script)
+
     if taskName in config:
       script = config[taskName]
-    else:
-      common_scripts = configuration.getSettings('common')
-      type = config['type']
-      if taskName in common_scripts and type in common_scripts[taskName]:
-        script = common_scripts[taskName][type]
-
-    if script:
+      print yellow('Running host-script for task %s and type %s' % (taskName, type))
       self.runScript(config, script=script)
 
-
+  def fallback(self, taskName, configuration, **kwargs):
+    self.runTaskSpecificScript(taskName, configuration, **kwargs)
 
   def preflight(self, taskName, configuration, **kwargs):
     self.runTaskSpecificScript(taskName + "Prepare", configuration, **kwargs)

@@ -40,7 +40,7 @@ class GitMethod(BaseMethod):
 
     branch = config['branch']
 
-    with cd(env.config['gitRootFolder']):
+    with cd(config['gitRootFolder']):
 
       if not self.cleanWorkingCopy():
         print red("Working copy is not clean, aborting.\n")
@@ -53,12 +53,12 @@ class GitMethod(BaseMethod):
       run('git fetch --tags')
 
       git_options = ''
-      if 'pull' in env.config['gitOptions']:
-        git_options = ' '.join(env.config['gitOptions']['pull'])
+      if 'pull' in config['gitOptions']:
+        git_options = ' '.join(config['gitOptions']['pull'])
 
       run('git pull -q '+ git_options + ' origin ' + branch)
 
-      if not env.config['ignoreSubmodules']:
+      if not config['ignoreSubmodules']:
         run('git submodule init')
         run('git submodule sync')
         run('git submodule update --init --recursive')

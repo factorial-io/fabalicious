@@ -79,6 +79,11 @@ def drupalconsole(drupal_command):
   configuration.check(['drupalconsole'])
   methods.call('drupalconsole', 'drupalconsole', configuration.current(), command=drupal_command)
 
+@task
+def composer(composer_command):
+  configuration.check(['composer'])
+  methods.call('composer', 'composer', configuration.current(), command=composer_command)
+
 
 @task
 def list():
@@ -92,27 +97,25 @@ def list():
 @task
 def reset(**kwargs):
   configuration.check()
-  if 'withPasswordReset' not in kwargs:
-    kwargs['withPasswordReset'] = True
 
-  print green('Resetting %s @ %s' % (configuration.getSettings('name'), configuration.current('config_name')))
   methods.runTask(configuration.current(), 'reset', **kwargs)
 
 @task
 def ssh():
-  configuration.check()
-  with cd(configuration.current('rootFolder')):
-    open_shell()
+  configuration.check(['ssh'])
+  methods.call('ssh', 'openShell', configuration.current())
+
+
 
 @task
 def putFile(fileName):
   configuration.check()
-  put(fileName, configuration.current('tmpFolder'))
+  methods.call('files', 'put', configuration.current(), filename=fileName)
 
 @task
 def getFile(remotePath, localPath='./'):
   configuration.check()
-  get(remote_path=remotePath, local_path=localPath)
+  methods.call('files', 'get', configuration.current(), remotePath=remotePath, localPath=localPath)
 
 @task
 def getSQLDump():
@@ -258,7 +261,7 @@ def deploy(overrideBranch=False):
   if overrideBranch:
     config['branch'] = overrideBranch
 
-  if config['type'] != 'dev':
+  if config['backupBeforeDeploy']:
       backup(withFiles=False)
 
   methods.runTask(config, 'deploy', nextTasks=['reset'])
@@ -302,3 +305,15 @@ def install(**kwargs):
     exit(1)
 
   methods.runTask(configuration.current(), 'install', nextTasks=['reset'], **kwargs)
+
+
+@task
+def updateApp(**kwargs):
+  configuration.check()
+  config = configuration.current()
+  if config['type'] != 'dev':
+    print red('Task updateApp is not supported for this configuration. Please check if "type" is set correctly.')
+    exit(1)
+  backupDB()
+  methods.runTask(configuration.current(), 'updateApp', **kwargs)
+

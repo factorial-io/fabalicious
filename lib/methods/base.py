@@ -1,6 +1,8 @@
 from fabric.api import *
 from fabric.state import output, env
 from fabric.colors import green, red
+from fabric.context_managers import env
+from fabric.network import *
 
 
 class BaseMethod(object):
@@ -23,6 +25,13 @@ class BaseMethod(object):
   def postflight(self, task, config, **kwargs):
     pass
 
+  def fallback(self, task, config, **kwargs):
+    pass
+
+
+  def addPasswordToFabricCache(self, user, host, port, password, **kwargs):
+    host_string = join_host_strings(user, host, port)
+    env.passwords[host_string] = password
 
   def list_remote_files(self, base_folder, patterns):
     result = []
