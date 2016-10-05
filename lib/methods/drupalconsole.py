@@ -11,7 +11,7 @@ class DrupalConsoleMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'drupalconsole'
 
-  def install(self, config, **kwargs):
+  def run_install(self, config, **kwargs):
     with cd(config['tmpFolder']):
       run('curl https://drupalconsole.com/installer -L -o drupal.phar')
       run('mv drupal.phar /usr/local/bin/drupal')
@@ -26,7 +26,7 @@ class DrupalConsoleMethod(BaseMethod):
 
   def drupalconsole(self, config, **kwargs):
     if kwargs['command'] == 'install':
-        self.install(config)
+        self.run_install(config)
         return
     self.run_drupalconsole(config, kwargs['command'])
 
