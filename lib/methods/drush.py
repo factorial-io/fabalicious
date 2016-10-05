@@ -214,7 +214,7 @@ class DrushMethod(BaseMethod):
         if ask.lower() == 'false' or ask.lower() == '0':
           options = ' -y'
         options += ' --sites-subdir='+sites_folder
-        options += ' --account-name=admin'
+        options += ' --account-name=%s' % configuration.getSettings('adminUser', 'admin')
         options += ' --account-pass=admin'
         if 'prefix' in o:
           options += " --db-prefix='%s'" % o['prefix']
