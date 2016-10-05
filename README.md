@@ -643,6 +643,7 @@ Here are all possible keys documented:
     * `host` the database host
     * `user` the database user
     * `pass` the password for the database user
+    * `prefix` the optional table-prefix to use
 * `sshTunnel` Fabalicious supports SSH-Tunnels, that means it can log in into another machine and forward the access to the real host. This is handy for dockerized installations, where the ssh-port of the docker-instance is not public. `sshTunnel` needs the following informations
     * `bridgeHost`: the host acting as a bridge.
     * `bridgeUser`: the ssh-user on the bridge-host
@@ -698,7 +699,7 @@ hosts:
 
 ### common
 
-common contains a list of commands, keyed by task and type which gets executed when the task is executed. 
+common contains a list of commands, keyed by task and type which gets executed when the task is executed.
 
 Example:
 ```yaml
@@ -706,9 +707,9 @@ common:
   reset:
     dev:
       - echo "running reset on a dev-instance"
-    stage: 
+    stage:
       - echo "running reset on a stage-instance"
-    prod: 
+    prod:
       - echo "running reset on a prod-instance"
   deployPrepare:
     dev:
@@ -717,7 +718,7 @@ common:
     dev:
       - echo "deploying on a dev instance"
   deployFinished:
-    dev: 
+    dev:
       - echo "finished deployment on a dev instance"
 ```
 
@@ -731,11 +732,11 @@ A keyed list of available scripts. This scripts may be defined globally (on the 
 fab config:<configuration> script:<key>
 ```
 
-A script consists of an array of commands which gets executed sequentially. 
+A script consists of an array of commands which gets executed sequentially.
 
 An example:
 
-```yaml  
+```yaml
 scripts:
   test:
     - echo "Running script test"
@@ -769,7 +770,7 @@ For more information see the main scripts section below.
 * `disableKnownHosts` defaults to false, set it too true, if you trust every host
 * `gitOptions` a keyed list of options to apply to a git command. Currently only pull is supported. If your git-version does not support `--rebase` you can disable it via an empty array: `pull: []`
 * `sqlSkipTables` a list of table-names drush should omit when doing a backup.
-* `configurationManagement` a list of configuration-labels to import on `reset`. This defaults to `['staging']` and may be overridden on a per-host basis. You can add command arguments to the the configuration label.  
+* `configurationManagement` a list of configuration-labels to import on `reset`. This defaults to `['staging']` and may be overridden on a per-host basis. You can add command arguments to the the configuration label.
 
 Example:
 ```yaml
@@ -850,11 +851,11 @@ inheritsFrom:
 
 Scripts are a powerful concept of fabalicious. There are a lot of places where scripts can be called. The `common`-section defines common scripts to be run for specific task/installation-type-configurations, docker-tasks are also scripts which you can execute via the docker-command. And you can even script fabalicious tasks and create meta-tasks.
 
-A script is basically a list of commands which get executed via shell on a remote machine. To stay independent of the host where the script is executed, fabalicious parsed the script before executing it and replaces given variables with their counterpart in the yams file. 
+A script is basically a list of commands which get executed via shell on a remote machine. To stay independent of the host where the script is executed, fabalicious parsed the script before executing it and replaces given variables with their counterpart in the yams file.
 
 ## Replacement-patterns
 
-Replacement-Patterns are specific strings enclosed in `%`s, e.g. `%host.port%`, `%dockerHost.rootFolder% or `%arguments.name%. 
+Replacement-Patterns are specific strings enclosed in `%`s, e.g. `%host.port%`, `%dockerHost.rootFolder% or `%arguments.name%.
 
 Here's a simple example;
 
@@ -889,7 +890,7 @@ There are currently 2 internal commands. These commands control the flow inside 
 
 ## Task-related scripts
 
-You can add scripts to the `common`-section, which will called for any host. You can differentiate by task-name and host-type, e.g. create a script which gets called for the task `deploy` and type `dev`. 
+You can add scripts to the `common`-section, which will called for any host. You can differentiate by task-name and host-type, e.g. create a script which gets called for the task `deploy` and type `dev`.
 
 You can even run scripts before or after a task is executed. Append the task with `Prepare` or `Finished`.
 
@@ -927,13 +928,13 @@ scripts:
       - execute(docker, stop)
 ```
 
-This script will 
-* start the docker-container, 
-* wait for it, 
-* deploys the given branch, 
-* run a script which will install behat, 
-* run behat with some custom arguments, 
-* gets the result-file and copy it to a location, 
+This script will
+* start the docker-container,
+* wait for it,
+* deploys the given branch,
+* run a script which will install behat,
+* run behat with some custom arguments,
+* gets the result-file and copy it to a location,
 * and finally stops the container.
 
 
