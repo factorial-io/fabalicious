@@ -209,6 +209,9 @@ class DrushMethod(BaseMethod):
         options += ' --sites-subdir='+sites_folder
         options += ' --account-name=admin'
         options += ' --account-pass=admin'
+        if 'prefix' in o:
+          options += " --db-prefix='%s'" % o['prefix']
+
         options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@' + o['host'] + '/' +o ['name']
         self.run_drush('site-install ' + distribution + ' ' + options)
 
