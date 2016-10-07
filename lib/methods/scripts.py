@@ -1,5 +1,6 @@
 from base import BaseMethod
 from fabric.api import *
+from fabric.contrib.files import exists
 from fabric.network import *
 from fabric.context_managers import settings as _settings
 from fabric.colors import green, red, yellow
@@ -126,6 +127,11 @@ class ScriptMethod(BaseMethod):
     else:
       context['warnOnly'] = True
 
+  def failOnMissingDirectory(self, context, directory, message):
+    if not exists(directory):
+      print red(message)
+      exit(1);
+
 
   def runScript(self, config, **kwargs):
     script = kwargs['script']
@@ -143,6 +149,7 @@ class ScriptMethod(BaseMethod):
     callbacks['execute'] = self.executeCallback
     callbacks['run_task'] = self.runTaskCallback
     callbacks['fail_on_error'] = self.failOnErrorCallback
+    callbacks['fail_on_missing_directory'] = self.failOnMissingDirectory
 
     replacements = self.expandVariables(variables);
     commands = self.expandCommands(script, replacements)

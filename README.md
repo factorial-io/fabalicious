@@ -883,10 +883,11 @@ If fabalicious detects a pattern it can't replace it will abort the execution of
 
 ## Internal commands
 
-There are currently 2 internal commands. These commands control the flow inside fabalicious:
+There are currently 3 internal commands. These commands control the flow inside fabalicious:
 
 * `fail_on_error(1|0)` If fail_on_error is set to one, fabalicious will exit if one of the script commands returns a non-zero return-code. When using `fail_on_error(0)` only a warning is displayed, the script will continue.
 * `execute(task, subtask, arguments)` execute a fabalicious task. For example you can run a deployment from a script via `execute(deploy)` or stop a docker-container from a script via `execute(docker, stop)`
+* `fail_on_missing_directory(directory, message)` will print message `message` if the directory `directory` does not exist.
 
 ## Task-related scripts
 
