@@ -8,7 +8,7 @@ import copy
 import hashlib
 
 
-fabalicious_version = '2.0.0'
+fabalicious_version = '2.0.1'
 
 settings = 0
 verbose_output = False
