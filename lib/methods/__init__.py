@@ -12,6 +12,8 @@ from docker import DockerMethod
 from slack import SlackMethod
 from files import FilesMethod
 from drupalconsole import DrupalConsoleMethod
+from platform import PlatformMethod
+
 cache = {}
 
 class Factory(object):
@@ -89,7 +91,6 @@ def runTaskImpl(methodNames, taskName, configuration, fallback_allowed, **kwargs
     if fn:
       fn_called = True
     callImpl(methodName, taskName, configuration, True, **kwargs)
-
   if not fn_called and fallback_allowed:
     for methodName in methodNames:
       fn = get(methodName, 'fallback')
