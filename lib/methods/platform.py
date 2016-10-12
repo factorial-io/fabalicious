@@ -10,6 +10,10 @@ class PlatformMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'platform'
 
+  @staticmethod
+  def getOverrides():
+    return 'drush'
+
   def run_install(self, config, **kwargs):
     local('curl -sS https://platform.sh/cli/installer | php');
     print green('platform.sh client installed successfully.')
@@ -25,11 +29,5 @@ class PlatformMethod(BaseMethod):
 
   def deploy(self, config, **kwargs):
     local('git push platform %s' % config['branch'])
-
-  def backup(self, config, **kwargs):
-    self.run_platform(config, 'snapshot:create -e %s' % config["branch"])
-
-  def listBackups(self, config, results, **kwargs):
-    self.run_platform(config, 'snapshot:list -e %s' % config["branch"])
 
 

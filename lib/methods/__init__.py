@@ -29,12 +29,20 @@ class Factory(object):
     raise ValueError('No method supporting "%s" found.' % name)
 
 
-def get(methodName, taskName):
+
+def getMethod(methodName):
+  global cache
+
   if methodName in cache:
     m = cache[methodName]
   else:
     m = Factory().get(methodName)
     cache[methodName] = m
+
+  return m
+
+def get(methodName, taskName):
+  m = getMethod(methodName)
 
   if hasattr(m, taskName) and inspect.ismethod(getattr(m, taskName)):
     return getattr(m, taskName)
@@ -43,6 +51,16 @@ def get(methodName, taskName):
 
 
 def callImpl(methodName, taskName, configuration, optional, **kwargs):
+  overrides = {}
+  for need in configuration['needs']:
+    override = getMethod(need).getOverrides()
+    if override:
+      overrides[override] = need
+
+  if methodName in overrides:
+    print "use override %s" % overrides[methodName]
+    methodName = overrides[methodName]
+
   # print "calling %s@%s ..." % (methodName, taskName)
   fn = get(methodName, taskName)
   if fn:
