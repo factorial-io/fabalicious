@@ -69,11 +69,13 @@ def load_configuration(input_file):
 
 
 def get_all_configurations():
+  global fabfile_basedir
   # Find our configuration-file:
   candidates = ['fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
 
   config_file_name = find_configfiles(candidates, 3)
   if (config_file_name):
+    fabfile_basedir = os.path.dirname(config_file_name)
     try:
       return load_configuration(config_file_name)
     except IOError:
@@ -94,8 +96,6 @@ def find_configfiles(candidates, max_levels):
   while max_levels >= 0:
     for candidate in candidates:
       if os.path.isfile(start_folder + '/' + candidate):
-        if not fabfile_basedir:
-          fabfile_basedir = start_folder
         return start_folder + '/' + candidate
 
     max_levels = max_levels - 1
