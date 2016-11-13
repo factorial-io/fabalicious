@@ -409,28 +409,6 @@ def get_configuration_via_http(config_file_name):
   return False
 
 
-
-def get_docker_configuration(config_name, config):
-  if config_name[0:7] == 'http://' or config_name[0:8] == 'https://':
-    data = get_configuration_via_http(config_name)
-    return resolve_inheritance(data, {})
-  elif config_name[0:1] == '.':
-    data = get_configuration_via_file(config_name)
-    return resolve_inheritance(data, {})
-  else:
-    all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
-    config_name = config['docker']['configuration']
-    if config_name in all_docker_hosts:
-      data = resolve_inheritance(all_docker_hosts[config_name], all_docker_hosts)
-      print data
-      return data
-
-  return False
-
-
-
-
-
 def apply(config, name):
 
   env.config = config
