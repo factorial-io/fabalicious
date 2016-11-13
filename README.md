@@ -160,6 +160,7 @@ Fabalicious provides a set of so-called methods which implement all listed funct
 * docker
 * drupalconsole
 * slack
+* platform
 
 You declare your needs in the fabfile.yaml with the key `needs`, e.g.
 
@@ -247,10 +248,10 @@ After a successfull deployment the `reset`-taks will be run.
 
 **Available methods:**
 * `git` will deploy to the latest commit for the given branch defined in the host-configuration. Submodules will be synced, and updated.
+* `platform` will push the current branch to the `platform` remote, which will start the deployment-process on platform.sh
 
 **Configuration:**
 * your host-configuration needs a `branch`-key stating the branch to deploy.
-
 
 ## reset
 
