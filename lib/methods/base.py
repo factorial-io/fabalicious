@@ -17,6 +17,10 @@ class BaseMethod(object):
     self.methodName = methodName
     self.factory = factory
 
+  @staticmethod
+  def getOverrides():
+    return False
+
 
   def preflight(self, task, config, **kwargs):
     pass
