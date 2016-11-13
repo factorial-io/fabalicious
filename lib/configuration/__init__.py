@@ -94,7 +94,8 @@ def find_configfiles(candidates, max_levels):
   while max_levels >= 0:
     for candidate in candidates:
       if os.path.isfile(start_folder + '/' + candidate):
-        fabfile_basedir = start_folder
+        if not fabfile_basedir:
+          fabfile_basedir = start_folder
         return start_folder + '/' + candidate
 
     max_levels = max_levels - 1
