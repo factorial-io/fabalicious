@@ -59,8 +59,9 @@ def load_configuration(input_file):
   if 'requires' in data:
     check_fabalicious_version(data['requires'], 'file ' + input_file)
 
-  override_filename = os.path.dirname(input_file) + '/fabfile.local.yaml'
-  if os.path.isfile(override_filename):
+  override_filename = find_configfiles(['fabfile.local.yaml'], 3)
+  if override_filename:
+    print yellow('Using overrides from %s' % override_filename)
     override_data = yaml.load(open(override_filename, 'r'))
     data = data_merge(data, override_data)
 
@@ -68,37 +69,38 @@ def load_configuration(input_file):
 
 
 def get_all_configurations():
-  global fabfile_basedir
+  # Find our configuration-file:
+  candidates = ['fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
 
+  config_file_name = find_configfiles(candidates, 3)
+  if (config_file_name):
+    try:
+      return load_configuration(config_file_name)
+    except IOError:
+      print "could not read from %s " % (config_file_name)
+  else:
+    print red('could not find suitable configuration file!')
+
+  exit(1)
+
+def find_configfiles(candidates, max_levels):
+  global fabfile_basedir
 
   if fabfile_basedir:
     start_folder = fabfile_basedir
   else:
     start_folder = os.path.dirname(os.path.realpath(__file__))
 
-  max_levels = 3
-  from_cache = False
-
-  # Find our configuration-file:
-  candidates = ['fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
-
   while max_levels >= 0:
     for candidate in candidates:
-      try:
-        if os.path.isfile(start_folder + '/' + candidate):
-          fabfile_basedir = start_folder
-          return load_configuration(start_folder + '/' + candidate)
-
-      except IOError:
-        print "could not read from %s " % (start_folder + '/' + candidate)
+      if os.path.isfile(start_folder + '/' + candidate):
+        fabfile_basedir = start_folder
+        return start_folder + '/' + candidate
 
     max_levels = max_levels - 1
     start_folder = os.path.dirname(start_folder)
 
-  # if we get here, we didn't find a suitable configuration file
-  print(red('could not find suitable configuration file!'))
-  exit(1)
-
+  return False
 
 
 def validate_dict(keys, dict, message):

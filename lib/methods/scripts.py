@@ -130,6 +130,7 @@ class ScriptMethod(BaseMethod):
   def failOnMissingDirectory(self, context, directory, message):
     if not exists(directory):
       print red(message)
+      print red('Missing: %s' % directory)
       exit(1);
 
 

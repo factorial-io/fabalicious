@@ -5,6 +5,7 @@ from fabric.context_managers import settings as _settings
 from fabric.context_managers import env
 from fabric.colors import green, red
 from lib import configuration
+import copy
 
 class DockerMethod(BaseMethod):
 
@@ -26,7 +27,7 @@ class DockerMethod(BaseMethod):
     if not dockerHosts or docker_config_name not in dockerHosts:
       return False
 
-    docker_config = dockerHosts[docker_config_name]
+    docker_config = copy.deepcopy(dockerHosts[docker_config_name])
     docker_config = configuration.resolve_inheritance(docker_config, dockerHosts)
     if 'password' in docker_config:
       self.addPasswordToFabricCache(**docker_config)
