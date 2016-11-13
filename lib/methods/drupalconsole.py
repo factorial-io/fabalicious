@@ -3,6 +3,8 @@ from fabric.api import *
 from lib.utils import SSHTunnel, RemoteSSHTunnel
 from fabric.colors import green, red
 from lib import configuration
+from fabric.contrib.files import exists
+
 import copy
 
 class DrupalConsoleMethod(BaseMethod):
@@ -22,7 +24,14 @@ class DrupalConsoleMethod(BaseMethod):
 
   def run_drupalconsole(self, config, command):
     with cd(config['rootFolder']):
-      run('drupal %s' % command)
+      bin_path = '%svendor/bin/drupal' % config['gitRootFolder']
+      if exists(bin_path):
+        run('%s %s' % (bin_path, command))
+      elif exists('/usr/local/bin/drupal'):
+        run('drupal %s' % command)
+      else:
+        print red('Could not find drupal executable. You can install a global one with drupal:install')
+
 
   def drupalconsole(self, config, **kwargs):
     if kwargs['command'] == 'install':
