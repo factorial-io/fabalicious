@@ -62,8 +62,8 @@ def load_configuration(input_file):
   override_filename = os.path.dirname(input_file) + '/fabfile.local.yaml'
   if os.path.isfile(override_filename):
     override_data = yaml.load(open(override_filename, 'r'))
-    print override_data
     data = data_merge(data, override_data)
+
   return data
 
 
