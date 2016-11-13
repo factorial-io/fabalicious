@@ -27,6 +27,7 @@ class DockerMethod(BaseMethod):
       return False
 
     docker_config = dockerHosts[docker_config_name]
+    docker_config = configuration.resolve_inheritance(docker_config, dockerHosts)
     if 'password' in docker_config:
       self.addPasswordToFabricCache(**docker_config)
 

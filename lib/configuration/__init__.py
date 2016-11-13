@@ -1,12 +1,12 @@
 from fabric.api import *
 from fabric.state import output, env
-from fabric.colors import green, red
+from fabric.colors import green, red, yellow
 import os.path
 import urllib2
 import yaml
 import copy
 import hashlib
-
+import sys
 
 fabalicious_version = '2.0.3'
 
@@ -59,61 +59,12 @@ def load_configuration(input_file):
   if 'requires' in data:
     check_fabalicious_version(data['requires'], 'file ' + input_file)
 
-  if os.path.splitext(input_file)[1] == '.lock':
-    return data;
-
-  # create one big data-object
-
-  if 'dockerHosts' in data:
-    for config_name in data['dockerHosts']:
-      host = data['dockerHosts'][config_name]
-      host = resolve_inheritance(host, data['dockerHosts'])
-      data['dockerHosts'][config_name] = host
-      if 'requires' in host:
-        check_fabalicious_version(host['requires'], 'docker-configuration ' + config_name)
-
-  global settings
-  settings = copy.deepcopy(data)
-
-  if 'hosts' in data:
-    for config_name in data['hosts']:
-      host = data['hosts'][config_name]
-      host = resolve_inheritance(host, data['hosts'])
-      data['hosts'][config_name] = host
-
-      if 'requires' in host:
-        check_fabalicious_version(host['requires'], 'host ' + config_name)
-
-      if 'docker' in host and 'configuration' in host['docker']:
-        docker_config_name = host['docker']['configuration']
-        new_docker_config_name = hashlib.md5(docker_config_name).hexdigest()
-
-        docker_config = get_docker_configuration(docker_config_name, host)
-        if (docker_config):
-          data['dockerHosts'][new_docker_config_name] = docker_config
-          host['docker']['configuration'] = new_docker_config_name
-
-
-
-  output_file_name = os.path.dirname(input_file) + '/fabfile.yaml.lock'
-  try:
-    with open(output_file_name, 'w') as outfile:
-      outfile.write( yaml.dump(data, default_flow_style=False) )
-  except IOError as e:
-    print "Warning, could not safe fafile.yaml.lock: %s" % e
-
-  # print json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
-
+  override_filename = os.path.dirname(input_file) + '/fabfile.local.yaml'
+  if os.path.isfile(override_filename):
+    override_data = yaml.load(open(override_filename, 'r'))
+    print override_data
+    data = data_merge(data, override_data)
   return data
-
-def internet_on():
-  try:
-    urllib2.urlopen('http://www.google.com',timeout=2)
-    return True
-  except urllib2.URLError:
-    pass
-
-  return False
 
 
 def get_all_configurations():
@@ -130,10 +81,6 @@ def get_all_configurations():
 
   # Find our configuration-file:
   candidates = ['fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
-
-  if not internet_on():
-    print "No internet available, trying to read from lock-file ..."
-    candidates = ['fabfile.yaml.lock'] + candidates
 
   while max_levels >= 0:
     for candidate in candidates:
@@ -295,6 +242,8 @@ def get_configuration(name):
 
 
     host_config = config['hosts'][name]
+    host_config = resolve_inheritance(host_config, config['hosts'])
+
     if 'requires' in host_config:
       check_fabalicious_version(host_config['requires'], 'host-configuration ' + name)
 
@@ -417,6 +366,28 @@ def get_configuration_via_file(config_file_name):
 
   return data
 
+def remote_config_cache_get_filename(config_file_name):
+  m = hashlib.md5()
+  m.update(config_file_name);
+  filename = os.path.expanduser("~") + "/.fabalicious/" + m.hexdigest() + '.yaml'
+  if not os.path.exists(os.path.dirname(filename)):
+    os.makedirs(os.path.dirname(filename))
+
+  return filename
+
+def remote_config_cache_save(config_file_name, data):
+  filename = remote_config_cache_get_filename(config_file_name)
+  stream = open(filename, 'w')
+  yaml.dump(data, stream, default_flow_style=False)
+
+def remote_config_cache_load(config_file_name):
+  try:
+    filename = remote_config_cache_get_filename(config_file_name)
+    stream = open(filename, 'r')
+    data = yaml.load(stream)
+    return data
+  except:
+    return False
 
 
 def get_configuration_via_http(config_file_name):
@@ -424,12 +395,16 @@ def get_configuration_via_http(config_file_name):
     # print "Reading configuration from %s" % config_file_name
     response = urllib2.urlopen(config_file_name)
     html = response.read()
+    data = yaml.load(html)
+    remote_config_cache_save(config_file_name, data)
     return yaml.load(html)
-  except urllib2.HTTPError, err:
-    if err.code == 404:
-      print red('Could not read/find configuration at %s' %config_file_name)
-    else:
-      raise
+  except (urllib2.URLError, urllib2.HTTPError) as err:
+    data = remote_config_cache_load(config_file_name)
+    if data:
+      print yellow('Could not read configuration from %s, using cached data.' % config_file_name)
+      return data
+
+    print red('Could not read/find configuration from %s' % config_file_name)
 
   return False
 
@@ -446,7 +421,9 @@ def get_docker_configuration(config_name, config):
     all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
     config_name = config['docker']['configuration']
     if config_name in all_docker_hosts:
-      return all_docker_hosts[config_name]
+      data = resolve_inheritance(all_docker_hosts[config_name], all_docker_hosts)
+      print data
+      return data
 
   return False
 
