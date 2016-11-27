@@ -142,8 +142,8 @@ class DrushMethod(BaseMethod):
 
   def copyDBFrom(self, config, source_config=False, **kwargs):
     target_config = config
-    sql_name_source = source_config['tmpFolder'] + config['config_name'] + '.sql'
-    sql_name_target = target_config['tmpFolder'] + config['config_name'] + '_target.sql'
+    sql_name_source = source_config['tmpFolder'] + '/' + config['config_name'] + '.sql'
+    sql_name_target = target_config['tmpFolder'] + '/' + config['config_name'] + '_target.sql'
 
     if source_config['supportsZippedBackups']:
       sql_name_target += '.gz'
@@ -167,13 +167,13 @@ class DrushMethod(BaseMethod):
       )
     run(cmd)
     with _settings(host_string=source_host_string):
-      self.run_quietly('rm %s' % sql_name_source)
+      self.run_quietly('rm -f %s' % sql_name_source)
 
     self.importSQLFromFile(target_config, sql_name_target, True)
-    self.run_quietly('rm %s' % sql_name_target)
+    self.run_quietly('rm -f %s' % sql_name_target)
 
   def restoreSQLFromFile(self, config, sourceFile, **kwargs):
-    targetSQLFileName = config['tmpFolder'] + 'manual_upload.sql'
+    targetSQLFileName = config['tmpFolder'] + '/manual_upload.sql'
 
     fileName, fileExtension = os.path.splitext(sourceFile)
     zipped = fileExtension == '.gz'
@@ -183,7 +183,7 @@ class DrushMethod(BaseMethod):
     put(sourceFile, targetSQLFileName)
 
     self.importSQLFromFile(config, targetSQLFileName)
-    self.run_quietly('rm %s' % targetSQLFileName)
+    self.run_quietly('rm -f %s' % targetSQLFileName)
 
   def install(self, config, ask='True', distribution='minimal', **kwargs):
 
