@@ -262,7 +262,7 @@ def get_configuration(name):
       'supportsCopyFrom': True,
       'supportsInstalls': False,
       'supportsZippedBackups': True,
-      'tmpFolder': '/tmp/',
+      'tmpFolder': '/tmp',
       'gitRootFolder': host_config['rootFolder'],
       'gitOptions': settings['gitOptions'],
       'branch': 'master',
