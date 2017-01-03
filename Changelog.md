@@ -5,6 +5,7 @@
 ### new
 
 * fabfile.local.yaml will override existing fabfile.yaml-configuration. the file may reside up to three folders above the projects fabfile. See the readme for more info
+* support for platform.sh 
 
 ### changed
 
