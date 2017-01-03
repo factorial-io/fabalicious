@@ -1,5 +1,15 @@
 #Changelog
 
+## 2.0.x
+
+### new
+
+* fabfile.local.yaml will override existing fabfile.yaml-configuration. the file may reside up to three folders above the projects fabfile. See the readme for more info
+
+### changed
+
+* fabfile.yaml.lock is not used anymore. To support offline-mode, fabalicious will store all remote files in the `~/.fabalicious` folder. If loading a remote resource fails, fabalicious will use the local cached version of that file.
+
 
 ## 2.0.0
 
