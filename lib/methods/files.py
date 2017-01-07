@@ -6,11 +6,26 @@ import os.path
 import re
 from lib import utils
 from lib import configuration
+from lib.utils import validate_dict
 
 class FilesMethod(BaseMethod):
   @staticmethod
   def supports(methodName):
     return methodName == 'files'
+
+  @staticmethod
+  def validateConfig(config):
+    return validate_dict(['rootFolder', 'siteFolder', 'filesFolder', 'backupFolder'], config)
+
+  @staticmethod
+  def getDefaultConfig(config, settings, defaults):
+    pass
+
+  @staticmethod
+  def applyConfig(config, settings):
+    config['filesFolder'] = config['rootFolder'] + config['filesFolder']
+    config['siteFolder'] = config['rootFolder'] + config['siteFolder']
+
 
   def tarFiles(self, config, filename, source_folders, type):
     excludeFiles = configuration.getSettings('excludeFiles')

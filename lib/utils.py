@@ -61,3 +61,15 @@ class RemoteSSHTunnel:
   def entrance(self):
     return 'localhost:%d' % self.local_port
 
+
+def validate_dict(keys, dict, section=False):
+  result = {}
+  for key in keys:
+    if key not in dict:
+      if section:
+        result[key] = 'Key is missing in section \'%s\'' % section
+      else:
+        result[key] = 'Key is missing'
+
+  return result
+

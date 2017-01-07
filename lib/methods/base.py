@@ -13,6 +13,18 @@ class BaseMethod(object):
   def supports(methodName):
     return False
 
+  @staticmethod
+  def validateConfig(config):
+    return {}
+
+  @staticmethod
+  def getDefaultConfig(config, settings, defaults):
+    pass
+
+  @staticmethod
+  def applyConfig(config, settings):
+    pass
+
   def __init__(self, methodName, factory):
     self.methodName = methodName
     self.factory = factory

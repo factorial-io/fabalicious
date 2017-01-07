@@ -6,6 +6,7 @@ from fabric.context_managers import env
 from fabric.colors import green, red
 from lib import configuration
 import copy
+from lib.utils import validate_dict
 
 class DockerMethod(BaseMethod):
 
@@ -13,8 +14,21 @@ class DockerMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'docker'
 
+  @staticmethod
+  def validateConfig(config):
+    if 'docker' not in config:
+      return validate_dict(['docker'], config)
 
+    return validate_dict(['configuration', 'name'], config['docker'], 'docker')
 
+  @staticmethod
+  def getDefaultConfig(config, settings, defaults):
+    pass
+
+  @staticmethod
+  def applyConfig(config, settings):
+    if 'tag' not in config['docker']:
+      config['docker']['tag'] = 'latest'
 
   def getDockerConfig(self, config):
     if not 'docker' in config or 'configuration' not in config['docker']:
