@@ -4,11 +4,25 @@ from fabric.colors import green, red
 from lib import configuration
 import json
 import getpass
+from lib.utils import validate_dict
+from lib.configuration import data_merge
 
 class SlackMethod(BaseMethod):
   @staticmethod
   def supports(methodName):
     return methodName == 'slack'
+
+  @staticmethod
+  def validateConfig(config):
+    return validate_dict([], config)
+
+  @staticmethod
+  def getDefaultConfig(config, settings, defaults):
+    defaults['slack'] = {}
+
+  @staticmethod
+  def applyConfig(config, settings):
+    config['slack'] = data_merge(settings['slack'], config['slack'])
 
   def sendMessage(self, config, type, message):
     if 'slack' not in config:

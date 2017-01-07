@@ -4,6 +4,7 @@ from lib.utils import SSHTunnel, RemoteSSHTunnel
 from fabric.colors import green, red
 from lib import configuration
 import copy
+from lib.utils import validate_dict
 
 class SSHMethod(BaseMethod):
   tunnel_creating = False
@@ -16,6 +17,31 @@ class SSHMethod(BaseMethod):
   @staticmethod
   def supports(methodName):
     return methodName == 'ssh'
+
+  @staticmethod
+  def validateConfig(config):
+    keys = ['host', 'port', 'user'];
+    return validate_dict(keys, config)
+
+  @staticmethod
+  def getDefaultConfig(config, settings, defaults):
+    defaults['port'] = 22
+    defaults['usePty'] = settings['usePty']
+    defaults['useShell'] = settings['useShell']
+    defaults['disableKnownHosts'] = settings['disableKnownHosts']
+
+  @staticmethod
+  def applyConfig(config, settings):
+    if "sshTunnel" in config and "docker" in config:
+      docker_name = config["docker"]["name"]
+      config["sshTunnel"]["destHostFromDockerContainer"] = docker_name
+
+    if "sshTunnel" in config:
+      if not 'localPort' in config['sshTunnel']:
+        config['sshTunnel']['localPort'] = config['port']
+
+
+
 
   def openShell (self, config):
     with cd(config['rootFolder']):

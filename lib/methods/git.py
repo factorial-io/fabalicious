@@ -1,11 +1,27 @@
 from base import BaseMethod
 from fabric.api import *
 from fabric.colors import green, red
+from lib.utils import validate_dict
+from lib.configuration import data_merge
 
 class GitMethod(BaseMethod):
   @staticmethod
   def supports(methodName):
     return methodName == 'git'
+
+  @staticmethod
+  def validateConfig(config):
+    return validate_dict(['branch'], config)
+
+  @staticmethod
+  def getDefaultConfig(config, settings, defaults):
+    defaults['gitRootFolder'] = config['rootFolder']
+    defaults['ignoreSubmodules'] = False
+    defaults['gitOptions'] = {}
+
+  @staticmethod
+  def applyConfig(config, settings):
+    config['gitOptions'] = data_merge(settings['gitOptions'], config['gitOptions'])
 
   def getVersion(self, config):
     with cd(config['gitRootFolder']):

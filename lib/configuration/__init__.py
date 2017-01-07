@@ -8,6 +8,7 @@ import copy
 import hashlib
 import sys
 
+
 fabalicious_version = '2.0.3'
 
 settings = 0
@@ -185,6 +186,37 @@ def check_fabalicious_version(required_version, msg):
     print red('You are currently using %s. Please update your fabalicious installation.' % current_version)
     exit(1)
 
+def validate_config_against_methods(config):
+  from lib import methods
+
+  methodNames = config['needs']
+  errors = {}
+  for methodName in methodNames:
+    m = methods.getMethod(methodName)
+    errors = data_merge(errors, m.validateConfig(config))
+  if len(errors) > 0:
+    for (key, msg) in errors:
+      print red('Key %s in %s: %s' % (key, config['config_name'], msg))
+
+    exit(1)
+
+def get_default_config_from_methods(config, settings, defaults):
+  from lib import methods
+
+  methodNames = config['needs']
+  for methodName in methodNames:
+    m = methods.getMethod(methodName)
+    m.getDefaultConfig(config, settings, defaults)
+
+  return defaults
+
+def apply_config_by_methods(config, settings):
+  from lib import methods
+
+  methodNames = config['needs']
+  for methodName in methodNames:
+    m = methods.getMethod(methodName)
+    m.applyConfig(config, settings)
 
 
 def get_configuration(name):
@@ -250,85 +282,43 @@ def get_configuration(name):
     if 'requires' in host_config:
       check_fabalicious_version(host_config['requires'], 'host-configuration ' + name)
 
-    keys = ("host", "rootFolder")
-    validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
+    if 'needs' not in host_config:
+      host_config['needs'] = settings['needs']
+
+    config['needs'].append('script')
+
+    host_config['config_name'] = name
+
+    validate_config_against_methods(host_config)
 
     # add defaults
     defaults = {
-      'port': 22,
       'type': 'prod',
-      'ignoreSubmodules': False,
       'supportsBackups': True,
       'supportsCopyFrom': True,
       'supportsInstalls': False,
       'supportsZippedBackups': True,
       'tmpFolder': '/tmp',
-      'gitRootFolder': host_config['rootFolder'],
-      'gitOptions': settings['gitOptions'],
-      'branch': 'master',
-      'useShell': settings['useShell'],
-      'disableKnownHosts': settings['disableKnownHosts'],
-      'usePty': settings['usePty'],
-      'needs': settings['needs'],
       'scripts': {},
-      'slack': {},
-      'configurationManagement': settings['configurationManagement'],
     }
+
+    defaults = get_default_config_from_methods(host_config, settings, defaults)
 
     for key in defaults:
       if key not in host_config:
         host_config[key] = defaults[key]
 
-    # check keys again
-    if 'ssh' in host_config['needs']:
-      keys = ("rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
-      validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
-
-      host_config['siteFolder'] = host_config['rootFolder'] + host_config['siteFolder']
-      host_config['filesFolder'] = host_config['rootFolder'] + host_config['filesFolder']
-
-      host_config['gitOptions'] = data_merge(settings['gitOptions'], host_config['gitOptions'])
-
-    else:
-      # disable other settings, when ssh is not available
-      keys = ( 'ignoreSubmodules', 'supportsBackups', 'supportsCopyFrom', 'supportsInstalls')
-      for key in keys:
-        host_config[key] = False
-
-    if "docker" in host_config:
-      keys = ("name", "configuration")
-      validate_dict(keys, host_config["docker"], 'Configuraton '+name+' has missing key in docker')
-      if not 'tag' in host_config["docker"]:
-        host_config["docker"]["tag"] = "latest"
-
-    if "sshTunnel" in host_config and "docker" in host_config:
-      docker_name = host_config["docker"]["name"]
-      host_config["sshTunnel"]["destHostFromDockerContainer"] = docker_name
-
-    if "sshTunnel" in host_config:
-      if not 'localPort' in host_config['sshTunnel']:
-        host_config['sshTunnel']['localPort'] = host_config['port']
-
-    if "behatPath" in host_config:
-      host_config['behat'] = { 'presets': dict() }
-      host_config['behat']['run'] = host_config['behatPath']
-
-    if not 'behat' in host_config:
-      host_config['behat'] = { 'presets': dict() }
-
-    host_config['slack'] = data_merge(settings['slack'], host_config['slack'])
+    apply_config_by_methods(host_config, settings)
 
     if 'database' in host_config:
       if 'host' not in host_config['database']:
         host_config['database']['host'] = 'localhost'
 
     if not 'backupBeforeDeploy' in host_config:
-      host_config['backupBeforeDeploy'] = host_config['type'] != 'dev'
-
-    config['needs'].append('script')
+      host_config['backupBeforeDeploy'] = host_config['type'] != 'dev' and host_confog['type'] != 'test'
 
 
-    host_config['config_name'] = name
+
 
     for key in unsupported:
       if key in host_config:

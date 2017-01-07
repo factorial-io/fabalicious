@@ -7,6 +7,7 @@ from fabric.context_managers import settings as _settings
 from lib import configuration
 from lib import utils
 import re
+from lib.utils import validate_dict
 
 class DrushMethod(BaseMethod):
 
@@ -14,6 +15,18 @@ class DrushMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'drush7' or methodName == 'drush8' or methodName == 'drush'
 
+  @staticmethod
+  def validateConfig(config):
+    return validate_dict([], config)
+
+  @staticmethod
+  def getDefaultConfig(config, settings, defaults):
+    defaults['configurationManagement'] = settings['configurationManagement']
+    defaults['database'] = {}
+  @staticmethod
+  def applyConfig(config, settings):
+    if 'host' not in config['database']:
+      config['database']['host'] = 'localhost'
 
   def reset(self, config, **kwargs):
     if 'withPasswordReset' not in kwargs:
