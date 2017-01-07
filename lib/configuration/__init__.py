@@ -305,7 +305,7 @@ def get_configuration(name):
         host_config['database']['host'] = 'localhost'
 
     if not 'backupBeforeDeploy' in host_config:
-      host_config['backupBeforeDeploy'] = host_config['type'] != 'dev' and host_confog['type'] != 'test'
+      host_config['backupBeforeDeploy'] = host_config['type'] != 'dev' and host_config['type'] != 'test'
 
 
 
