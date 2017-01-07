@@ -7,7 +7,7 @@ import yaml
 import copy
 import hashlib
 import sys
-
+from lib.utils import validate_dict
 
 fabalicious_version = '2.0.3'
 
@@ -105,18 +105,6 @@ def find_configfiles(candidates, max_levels):
   return False
 
 
-def validate_dict(keys, dict, message):
-  validated = True
-  for key in keys:
-    if key not in dict:
-      print(red(message + ' ' + key))
-      validated = False
-
-  if not validated:
-    exit(1)
-
-
-
 def data_merge(a, b):
   output = {}
   for item, value in a.iteritems():
@@ -189,14 +177,16 @@ def check_fabalicious_version(required_version, msg):
 def validate_config_against_methods(config):
   from lib import methods
 
+  errors = validate_dict(['rootFolder', 'type', 'needs'], config)
   methodNames = config['needs']
-  errors = {}
   for methodName in methodNames:
     m = methods.getMethod(methodName)
-    errors = data_merge(errors, m.validateConfig(config))
+    e = m.validateConfig(config)
+    errors = data_merge(errors, e)
+
   if len(errors) > 0:
-    for (key, msg) in errors:
-      print red('Key %s in %s: %s' % (key, config['config_name'], msg))
+    for key, msg in errors.iteritems():
+      print red('Key \'%s\' in %s: %s' % (key, config['config_name'], msg))
 
     exit(1)
 
