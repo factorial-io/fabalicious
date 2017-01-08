@@ -17,12 +17,16 @@ class DrushMethod(BaseMethod):
 
   @staticmethod
   def validateConfig(config):
-    return validate_dict([], config)
+    if 'database' not in config:
+      return validate_dict([], config)
+    else:
+      return validate_dict(['user', 'pass', 'name'], config['database'], 'database')
 
   @staticmethod
   def getDefaultConfig(config, settings, defaults):
     defaults['configurationManagement'] = settings['configurationManagement']
     defaults['database'] = {}
+
   @staticmethod
   def applyConfig(config, settings):
     if 'host' not in config['database']:
