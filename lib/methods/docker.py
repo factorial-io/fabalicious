@@ -27,6 +27,18 @@ class DockerMethod(BaseMethod):
 
   @staticmethod
   def applyConfig(config, settings):
+    config_name = config['docker']['configuration']
+    data = False
+    # Check if configuration points to an external source.
+    if config_name[0:7] == 'http://' or config_name[0:8] == 'https://':
+      data = configuration.get_configuration_via_http(config_name)
+      data = configuration.resolve_inheritance(data, {})
+    elif config_name[0:1] == '.':
+      data = configuration.get_configuration_via_file(config_name)
+      data = configuration.resolve_inheritance(data, {})
+    if data:
+      settings['dockerHosts'][config_name] = data
+
     if 'tag' not in config['docker']:
       config['docker']['tag'] = 'latest'
 
