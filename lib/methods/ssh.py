@@ -2,6 +2,7 @@ from base import BaseMethod
 from fabric.api import *
 from lib.utils import SSHTunnel, RemoteSSHTunnel
 from fabric.colors import green, red
+from fabric.network import *
 from lib import configuration
 import copy
 from lib.utils import validate_dict
@@ -102,6 +103,34 @@ class SSHMethod(BaseMethod):
       self.tunnel_creating = True
       self.preflightImpl(task, config, **kwargs)
       self.tunnel_creating = False
+
+  def doctor(self, config, **kwargs):
+    with hide('output', 'running'), warn_only():
+      output = local(' echo xx${SSH_AUTH_SOCK}xx', capture=True)
+      if output.stdout.strip() == 'xxxx':
+        print red('SSH-Keyforwarding is not working correctly, SSH_AUTH_SOCK is not available!')
+        exit(1)
+      else:
+        print green('SSH-Keyforwarding seems to work.')
+
+      output = local('ssh-add -l', capture=True)
+      if output.return_code != 0:
+        print red('SSH-key-agent has no private keys, please add it via "ssh-add".')
+        exit(1)
+      else:
+        print green('SSH-key-agent has one or more private keys.')
+
+      output = local('ssh -o BatchMode=yes -o ConnectTimeout=5 -p {port} {user}@{host} echo ok'.format(**config), capture=True)
+      if output.return_code != 0:
+        print red('Cannot connect to host! Please check if your public key is added to authorized_keys on the remote host.')
+        print red('Try: ssh-copy-id -p {port} {user}@{host}'.format(**config))
+        print output.stdout
+        exit(1)
+      else:
+        print green('Can connect via SSH to remote host.')
+
+
+
 
 
 

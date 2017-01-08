@@ -317,3 +317,7 @@ def updateApp(**kwargs):
   backupDB()
   methods.runTask(configuration.current(), 'updateApp', **kwargs)
 
+@task
+def doctor(**kwargs):
+  configuration.check()
+  methods.runTask(configuration.current(), 'doctor', **kwargs)
