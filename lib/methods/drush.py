@@ -61,14 +61,15 @@ class DrushMethod(BaseMethod):
       else:
         self.run_drush('updb -y')
 
+      script_fn = self.factory.get('script', 'runScript')
 
       with warn_only():
         if self.methodName == 'drush8':
           if uuid:
             self.run_drush('cset system.site uuid %s -y' % uuid)
           if 'configurationManagement' in config:
-            for key in config['configurationManagement']:
-              self.run_drush('config-import %s -y' % key)
+            for key, cmds in config['configurationManagement'].iteritems():
+              script_fn(config, script=cmds, rootFolder=config['siteFolder'])
         else:
           self.run_drush('fra -y')
 
@@ -253,10 +254,6 @@ class DrushMethod(BaseMethod):
     with cd(config['siteFolder']):
       self.run_quietly('chmod u+w .');
       self.run_quietly('chmod u+w settings.php');
-
-      for configName in config['configurationManagement']:
-        cmd = 'grep -q -F \'$config_directories["{0}"] = "../config/{0}";\' settings.php || echo \'$config_directories["{0}"] = "../config/{0}";\' >> settings.php'.format(configName)
-        self.run_quietly(cmd)
 
 
   def updateApp(self, config, version=7, **kwargs):
