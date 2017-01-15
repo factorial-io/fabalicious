@@ -55,6 +55,19 @@ class DockerMethod(BaseMethod):
 
     docker_config = copy.deepcopy(dockerHosts[docker_config_name])
     docker_config = configuration.resolve_inheritance(docker_config, dockerHosts)
+
+    if 'runLocally' in docker_config:
+      keys = ['rootFolder', 'tasks']
+    else:
+      docker_config['runLocally'] = False
+      keys = ['tasks', 'rootFolder', 'user', 'host', 'port']
+
+    errors = validate_dict(keys, docker_config)
+    if len(errors) > 0:
+      for key in errors:
+        print red('Missing key \'%s\' in docker-configuration %s' % (key, docker_config_name))
+      return False
+
     if 'password' in docker_config:
       self.addPasswordToFabricCache(**docker_config)
 
@@ -214,7 +227,7 @@ class DockerMethod(BaseMethod):
 
     docker_config = self.getDockerConfig(config)
     if not docker_config:
-      print red('Missing docker-configuration in "%s"' % config.config_name)
+      print red('Missing or incorrect docker-configuration in "%s"' % config['config_name'])
       exit(1)
 
     if command not in docker_config['tasks']:
@@ -226,6 +239,8 @@ class DockerMethod(BaseMethod):
     script_fn = self.factory.get('script', 'runScript')
     variables = { 'dockerHost': docker_config }
     environment = docker_config['environment'] if 'environment' in docker_config else {}
-    host_str = docker_config['user'] + '@'+docker_config['host']+':'+str(docker_config['port'])
-
-    execute(script_fn, config, script=script, variables=variables, environment=environment, host=host_str, rootFolder = docker_config['rootFolder'])
+    if 'runLocally' in docker_config:
+      execute(script_fn, config, script=script, variables=variables, environment=environment, rootFolder = docker_config['rootFolder'], runLocally=docker_config['runLocally'])
+    else:
+      host_str = docker_config['user'] + '@'+docker_config['host']+':'+str(docker_config['port'])
+      execute(script_fn, config, script=script, variables=variables, environment=environment, host=host_str, rootFolder = docker_config['rootFolder'])

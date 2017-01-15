@@ -18,8 +18,13 @@ class ScriptMethod(BaseMethod):
       value = replacements[key]
       print "{key:<40}  |  {value}".format(key = key, value=value)
 
+  def cd(self, folder, runLocally):
+    if runLocally:
+      return lcd(folder)
+    else:
+      return cd(folder)
 
-  def runScriptImpl(self, rootFolder, commands, config, callbacks= {}, environment = {}, replacements = {}):
+  def runScriptImpl(self, rootFolder, commands, config, runLocally, callbacks= {}, environment = {}, replacements = {}):
 
     pattern = re.compile('\%(\S*)\%')
     state = { 'warnOnly': False, 'config': config, 'return_code': 0 }
@@ -44,7 +49,7 @@ class ScriptMethod(BaseMethod):
     env.output_prefix = False
 
     for line in commands:
-      with cd(rootFolder), shell_env(**environment), hide('running'), show('output'):
+      with self.cd(rootFolder, runLocally), shell_env(**environment), hide('running'), show('output'):
         handled = False
         start_p = line.find('(')
         end_p = line.rfind(')')
@@ -68,10 +73,10 @@ class ScriptMethod(BaseMethod):
         if not handled:
           if state['warnOnly']:
             with warn_only():
-              result = run(line)
+              result = local(line) if runLocally else run(line)
               state['return_code'] = state['return_code'] or result.return_code
           else:
-            result = run(line)
+            result = local(line) if runLocally else run(line)
             state['return_code'] = state['return_code'] or result.return_code
 
     env.output_prefix = saved_output_prefix
@@ -128,18 +133,27 @@ class ScriptMethod(BaseMethod):
       context['warnOnly'] = True
 
   def failOnMissingDirectory(self, context, directory, message):
-    if not exists(directory):
+    folder_exists = True
+    if self.runLocally:
+      folder_exists = os.path.exists(directory)
+    else:
+      folder_exists = exists(directory)
+
+    if not folder_exists:
       print red(message)
       print red('Missing: %s' % directory)
       exit(1);
 
 
   def runScript(self, config, **kwargs):
+
     script = kwargs['script']
     callbacks = kwargs['callbacks'] if 'callbacks' in kwargs else {}
     variables = kwargs['variables'] if 'variables' in kwargs else {}
     environment = kwargs['environment'] if 'environment' in kwargs else {}
     root_folder = kwargs['rootFolder'] if 'rootFolder' in kwargs else config['siteFolder']
+    runLocally = self.runLocally = kwargs['runLocally'] if 'runLocally' in kwargs else False
+
     if 'environment' in config:
       environment = configuration.data_merge(config['environment'], environment)
     variables['host'] = config
@@ -162,7 +176,7 @@ class ScriptMethod(BaseMethod):
     for need in config['needs']:
       environment[need.upper() + '_AVAILABLE'] = "1"
 
-    return_code = self.runScriptImpl(root_folder, commands, config, callbacks, environment, replacements)
+    return_code = self.runScriptImpl(root_folder, commands, config, runLocally, callbacks, environment, replacements)
     if return_code:
       print red('Due to earlier errors quitting now.')
       exit(return_code)
