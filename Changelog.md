@@ -3,9 +3,9 @@
 ## 2.0.x
 
 ### new
-
+* new task `doctor`. This will try to do all necessary connections and will inform of any problems. Good for troubleshooting.
 * fabfile.local.yaml will override existing fabfile.yaml-configuration. the file may reside up to three folders above the projects fabfile. See the readme for more info
-* support for platform.sh 
+* support for platform.sh
 
 ### changed
 

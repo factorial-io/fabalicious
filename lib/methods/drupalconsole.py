@@ -24,7 +24,7 @@ class DrupalConsoleMethod(BaseMethod):
 
   def run_drupalconsole(self, config, command):
     with cd(config['rootFolder']):
-      bin_path = '%svendor/bin/drupal' % config['gitRootFolder']
+      bin_path = '%s/vendor/bin/drupal' % config['gitRootFolder']
       if exists(bin_path):
         run('%s %s' % (bin_path, command))
       elif exists('/usr/local/bin/drupal'):

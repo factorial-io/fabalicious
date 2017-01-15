@@ -262,9 +262,13 @@ def get_configuration(name):
     if 'scripts' not in settings:
       settings['scripts'] = {}
 
+    # TODO: find a way to move method-specific settings into the method-implementation
     if 'configurationManagement' not in settings:
-      settings['configurationManagement'] = [ 'staging' ];
-
+      settings['configurationManagement'] = {
+        'staging': [
+          'drush config-import -y staging'
+        ]
+      }
 
     host_config = config['hosts'][name]
     host_config = resolve_inheritance(host_config, config['hosts'])
