@@ -27,7 +27,12 @@ class ScriptMethod(BaseMethod):
   def runScriptImpl(self, rootFolder, commands, config, runLocally, callbacks= {}, environment = {}, replacements = {}):
 
     pattern = re.compile('\%(\S*)\%')
-    state = { 'warnOnly': False, 'config': config, 'return_code': 0 }
+    state = {
+      'warnOnly': False,
+      'config': config,
+      'return_code': 0,
+      'runLocally': runLocally
+    }
 
     # preflight
     ok = True
@@ -134,7 +139,7 @@ class ScriptMethod(BaseMethod):
 
   def failOnMissingDirectory(self, context, directory, message):
     folder_exists = True
-    if self.runLocally:
+    if context['runLocally']:
       folder_exists = os.path.exists(directory)
     else:
       folder_exists = exists(directory)

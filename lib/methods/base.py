@@ -3,11 +3,13 @@ from fabric.state import output, env
 from fabric.colors import green, red
 from fabric.context_managers import env
 from fabric.network import *
+from fabric.contrib.files import exists
 
 
 class BaseMethod(object):
 
   verbose_output = True
+  run_locally = False
 
   @staticmethod
   def supports(methodName):
@@ -92,6 +94,23 @@ class BaseMethod(object):
     return file[0]
 
 
+  def setRunLocally(self, config):
+    self.run_locally = 'ssh' not in config['needs'] or self.methodName in config['runLocally']
+
+
+  def cd(self, path):
+    # print 'cd: ', self.run_locally, path
+    return lcd(path) if self.run_locally else cd(path)
+
+
+  def run(self, cmd, **kwargs):
+    # print "run: ", self.run_locally, cmd
+    return local(cmd, **kwargs) if self.run_locally else run(cmd, **kwargs)
+
+  def exists(self, fname):
+    return os.path.isfile(fname) if self.run_locally else exists(fname)
+
+
   def run_quietly(self, cmd, msg = '', hide_output = None, may_fail=False):
     if 'warn_only' in env and env['warn_only']:
       may_fail = True
@@ -108,7 +127,7 @@ class BaseMethod(object):
 
     with hide(*hide_output):
       try:
-        result = run(cmd)
+        result = self.run(cmd)
 
         if not may_fail and result.return_code != 0:
           print red('%s failed:' %s)

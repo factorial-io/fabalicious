@@ -33,6 +33,8 @@ class DrushMethod(BaseMethod):
       config['database']['host'] = 'localhost'
 
   def reset(self, config, **kwargs):
+    self.setRunLocally(config)
+
     if 'withPasswordReset' not in kwargs:
       kwargs['withPasswordReset'] = True
 
@@ -44,7 +46,7 @@ class DrushMethod(BaseMethod):
       if not uuid:
         print red('No uuid found in fabfile.yaml. config-import may fail!')
 
-    with cd(config['siteFolder']):
+    with self.cd(config['siteFolder']):
       if config['type'] == 'dev':
         admin_user = configuration.getSettings('adminUser', 'admin')
 
@@ -91,12 +93,14 @@ class DrushMethod(BaseMethod):
       args = []
 
     with hide(*args):
-      run(cmd)
+      self.run(cmd)
     env.output_prefix = True
 
 
   def backupSql(self, config, backup_file_name):
-    with cd(config['siteFolder']):
+    self.setRunLocally(config)
+
+    with self.cd(config['siteFolder']):
       with warn_only():
         dump_options = ''
         if configuration.getSettings('sqlSkipTables'):
@@ -112,13 +116,14 @@ class DrushMethod(BaseMethod):
 
 
   def drush(self, config, **kwargs):
-    with cd(config['siteFolder']):
+    self.setRunLocally(config)
+    with self.cd(config['siteFolder']):
       self.run_drush(kwargs['command'])
 
 
   def backup(self, config, **kwargs):
+    self.setRunLocally(config)
 
-    print(kwargs)
     baseName = kwargs['baseName']
     filename = config['backupFolder'] + "/" + '--'.join(baseName) + ".sql"
     self.backupSql(config, filename)
@@ -146,7 +151,7 @@ class DrushMethod(BaseMethod):
 
   def importSQLFromFile(self, config, sql_name_target, cleanupBeforeRestore=False):
 
-    with cd(config['siteFolder']):
+    with self.cd(config['siteFolder']):
       if cleanupBeforeRestore:
         self.run_drush('sql-drop -y')
 
@@ -159,6 +164,8 @@ class DrushMethod(BaseMethod):
 
 
   def copyDBFrom(self, config, source_config=False, **kwargs):
+    self.setRunLocally(config)
+
     target_config = config
     sql_name_source = source_config['tmpFolder'] + '/' + config['config_name'] + '.sql'
     sql_name_target = target_config['tmpFolder'] + '/' + config['config_name'] + '_target.sql'
@@ -183,7 +190,7 @@ class DrushMethod(BaseMethod):
       sql_name_target=sql_name_target,
       **source_config
       )
-    run(cmd)
+    self.run(cmd)
     with _settings(host_string=source_host_string):
       self.run_quietly('rm -f %s' % sql_name_source)
 
@@ -204,6 +211,7 @@ class DrushMethod(BaseMethod):
     self.run_quietly('rm -f %s' % targetSQLFileName)
 
   def install(self, config, ask='True', distribution='minimal', **kwargs):
+    self.setRunLocally(config)
 
     if 'database' not in config:
       print red('Missing database configuration!')
@@ -215,7 +223,7 @@ class DrushMethod(BaseMethod):
 
     o = config['database']
 
-    with cd(config['siteFolder']):
+    with self.cd(config['siteFolder']):
       self.run_quietly('mkdir -p %s' % config['siteFolder'])
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
 
@@ -251,12 +259,14 @@ class DrushMethod(BaseMethod):
       self.setupConfigurationManagement(config)
 
   def setupConfigurationManagement(self, config):
-    with cd(config['siteFolder']):
+    with self.cd(config['siteFolder']):
       self.run_quietly('chmod u+w .');
       self.run_quietly('chmod u+w settings.php');
 
 
   def updateApp(self, config, version=7, **kwargs):
+    self.setRunLocally(config)
+
     if 'composer' in config['needs']:
       # ignore update, as composer will handle this.
       return;
@@ -272,11 +282,11 @@ class DrushMethod(BaseMethod):
       drupal_folder = run('ls').stdout.strip()
       # print drupal_folder
 
-      run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, config['rootFolder']) )
+      self.run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, config['rootFolder']) )
 
 
     # remove temporary files
-    with cd(config['rootFolder']):
+    with self.cd(config['rootFolder']):
       self.run_quietly('rm -rf /tmp/drupal-update')
 
     print green("Updated drupal successfully to '%s'." % (drupal_folder))
