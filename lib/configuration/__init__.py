@@ -403,14 +403,12 @@ def apply(config, name):
   global current_config
   current_config = name
 
+  if 'ssh' not in config['needs']:
+    return;
+
   env.use_shell = config['useShell']
   env.always_use_pty = config['usePty']
   env.disable_known_hosts = config['disableKnownHosts']
-
-  # print "use_shell: %i, use_pty: %i" % (env.use_shell, env.always_use_pty)
-
-  if 'ssh' not in config['needs']:
-    return;
 
   if 'port' in config:
     env.port = config['port']
