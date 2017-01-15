@@ -8,15 +8,8 @@ import copy
 from lib.utils import validate_dict
 
 class SSHMethod(BaseMethod):
-  tunnel_creating = False
-  tunnel_created = False
-  source_tunnel_created = False
-  tunnel = None
-  source_tunnel = None
-  source_remote_tunnel = None
-  creatingTunnelFromLocalToHost = False
-  creatingTunnelFromHostToSource = False
-  creatingTunnelFromLocalToSourceHost = False
+  tunnels = {}
+  tunnelCreating = False
 
 
   @staticmethod
@@ -53,7 +46,22 @@ class SSHMethod(BaseMethod):
       open_shell()
 
 
-  def create_ssh_tunnel(self, source_config, target_config, remote=False):
+  def create_ssh_tunnel(self, msg, source_config, target_config, remote=False):
+
+    key = source_config['config_name'] + "--" + target_config['config_name']
+    if remote:
+      key = key + '--remote'
+
+    if key not in self.tunnels:
+      self.tunnels[key] = {'creating': False, 'tunnel': None, 'created': False }
+
+    if self.tunnels[key]['creating'] or self.tunnels[key]['created']:
+      return self.tunnels[key]['tunnel']
+
+    self.tunnels[key]['creating'] = True
+
+    print "%s" % msg,
+
     o = copy.deepcopy(target_config['sshTunnel'])
 
     if 'destHost' not in o:
@@ -75,79 +83,56 @@ class SSHMethod(BaseMethod):
     else:
       tunnel = SSHTunnel(o['bridgeUser'], o['bridgeHost'], o['destHost'], o['bridgePort'], o['destPort'], o['localPort'], strictHostKeyChecking)
 
+    self.tunnels[key]['tunnel'] = tunnel
+    self.tunnels[key]['created'] = tunnel != False
+    self.tunnels[key]['creating'] = False
+
+    if self.tunnels[key]['created']:
+      print green('Tunnel established')
+    else:
+      print red('Tunnel creation failed')
+
     return tunnel
 
 
   def createTunnelFromLocalToHost(self, config):
-    if self.creatingTunnelFromLocalToHost:
-      return
-    self.creatingTunnelFromLocalToHost = True
+    msg = "Establishing SSH-Tunnel from local to {config_name}...".format(**config),
+    self.create_ssh_tunnel(msg, config, config, False)
 
-    print "Establishing SSH-Tunnel from local to {config_name}...".format(**config),
-
-    self.tunnel = self.create_ssh_tunnel(config, config, False)
-
-    self.tunnel_created = self.tunnel != False
-    if self.tunnel_created:
-      print green('Tunnel is established')
-
-    self.creatingTunnelFromLocalToHost = False
 
 
   def createTunnelFromLocalToSource(self, config, source_config):
-    if self.creatingTunnelFromLocalToSourceHost:
-      return
-    self.creatingTunnelFromLocalToSourceHost = True
-
-    print "Establishing SSH-Tunnel from local to source {config_name}...".format(**source_config),
-
-    self.source_tunnel = self.create_ssh_tunnel(config, source_config, False)
-
-    self.source_tunnel_created = self.source_tunnel != False
-    if self.source_tunnel_created:
-      print green('Tunnel is established')
-
-    self.creatingTunnelFromLocalToSourceHost = False
+    msg = "Establishing SSH-Tunnel from local to source {config_name}...".format(**source_config),
+    self.create_ssh_tunnel(msg, config, source_config, False)
 
 
   def createTunnelFromHostToSource(self, config, source_config):
-    if self.creatingTunnelFromHostToSource:
-      return
-    self.creatingTunnelFromHostToSource = True
-
-    print "Establishing SSH-Tunnel from host %s to source %s..." % (config['config_name'], source_config['config_name']),
-
-    self.remote_source_tunnel = self.create_ssh_tunnel(config, source_config, True)
-
-    self.remote_source_tunnel_created = self.remote_source_tunnel != False
-    if self.remote_source_tunnel_created:
-      print green('Tunnel is established')
-
-    self.creatingTunnelFromHostToSource = False
+    msg = "Establishing SSH-Tunnel from host %s to source %s..." % (config['config_name'], source_config['config_name']),
+    self.create_ssh_tunnel(msg, config, source_config, True)
 
 
   def preflightImpl(self, task, config, **kwargs):
     # check if current config needs a tunnel
-    if task != 'doctor' and 'sshTunnel' in config and not self.tunnel_created:
+    if task != 'doctor' and 'sshTunnel' in config:
       self.createTunnelFromLocalToHost(config)
     # copyDBFrom and copyFilesFrom may need additional tunnels
     if (task == 'copyDBFrom' or task == 'copyFilesFrom'):
       source_config = kwargs['source_config']
-      if source_config and 'sshTunnel' in source_config and not self.source_tunnel_created:
+      if source_config and 'sshTunnel' in source_config:
         self.createTunnelFromLocalToSource(config, source_config)
         self.createTunnelFromHostToSource(config, source_config)
 
 
   def preflight(self, task, config, **kwargs):
     # print('ssh.preflight: %s %s' % (self.tunnel_creating, config['config_name']))
-    if not self.tunnel_creating:
-      self.tunnel_creating = True
+    if not self.tunnelCreating:
+      self.tunnelCreating = True
       self.preflightImpl(task, config, **kwargs)
-      self.tunnel_creating = False
+      self.tunnelCreating = False
 
 
   def doctor_ssh_connection(self, config):
-    output = local('ssh -o "StrictHostKeyChecking no" -o PasswordAuthentication=no -o BatchMode=yes -o ConnectTimeout=5 -p {port} {user}@{host} echo ok'.format(**config), capture=True)
+    output = local('ssh -A -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o BatchMode=yes -o ConnectTimeout=5 -p {port} {user}@{host} echo ok'.format(**config), capture=True)
     if output.return_code != 0:
       print red('Cannot connect to host! Please check if the host is running and reachable, and check if your public key is added to authorized_keys on the remote host.')
       print red('Try: ssh -p {port} {user}@{host}'.format(**config))
@@ -194,10 +179,39 @@ class SSHMethod(BaseMethod):
         remote_config = configuration.get(kwargs['remote'])
 
         if 'sshTunnel' in remote_config:
+          # First check if we can ssh into bridge-host.
           print "Check SSH tunnel to remote source: ",
           cfg = remote_config['sshTunnel']
           if not self.doctor_ssh_connection({ 'host': cfg['bridgeHost'], 'port': cfg['bridgePort'], 'user': cfg['bridgeUser']}):
             exit(1)
+
+          # create tunnel
+          self.createTunnelFromLocalToSource(config, remote_config)
+
+        # ssh from local into remote host
+        if not self.doctor_ssh_connection(remote_config):
+          exit(1)
+
+        # Test ssh connection from inside host to source host.
+        if 'sshTunnel' in remote_config:
+          self.createTunnelFromHostToSource(config, remote_config)
+
+        ssh_cmd = 'ssh -A -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o BatchMode=yes -o ConnectTimeout=5'
+        cmd_on_host = ssh_cmd + " -p {port} {user}@{host} echo ok".format(**remote_config)
+        cmd = ssh_cmd + ' -p {port} {user}@{host} "' + cmd_on_host + '"'
+
+        cmd = cmd.format(**config)
+        print "Check SSH-connection from %s to %s: " % (config['config_name'], remote_config['config_name']),
+        output = local(cmd, capture=True)
+        if output.return_code != 0:
+          print red('Connection failed!')
+          print red('Try: %s' % cmd)
+          print output.stdout
+          exit(1)
+        else:
+          print green('Connetion established!')
+
+
 
 
 
