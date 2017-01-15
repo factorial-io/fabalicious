@@ -75,7 +75,7 @@ class SSHMethod(BaseMethod):
 
   def preflightImpl(self, task, config, **kwargs):
     # check if current config needs a tunnel
-    if 'sshTunnel' in config and not self.tunnel_created:
+    if task != 'doctor' and 'sshTunnel' in config and not self.tunnel_created:
       print "Establishing SSH-Tunnel...",
 
       self.tunnel = self.create_ssh_tunnel(config, config, False)
@@ -104,30 +104,50 @@ class SSHMethod(BaseMethod):
       self.preflightImpl(task, config, **kwargs)
       self.tunnel_creating = False
 
+
+  def doctor_ssh_connection(self, config):
+    output = local('ssh -o "StrictHostKeyChecking no" -o PasswordAuthentication=no -o BatchMode=yes -o ConnectTimeout=5 -p {port} {user}@{host} echo ok'.format(**config), capture=True)
+    if output.return_code != 0:
+      print red('Cannot connect to host! Please check if the host is running and reachable, and check if your public key is added to authorized_keys on the remote host.')
+      print red('Try: ssh -p {port} {user}@{host}'.format(**config))
+      print red('Try: ssh-copy-id -p {port} {user}@{host}'.format(**config))
+      print red('Try: ssh-keyscan -t rsa,dsa -p {port} -H {host} and add the lines to known_hosts if not already in place.'.format(**config))
+      return False
+    else:
+      print green("Can connect to host {host} at port {port}!".format(**config))
+      return True
+
+
   def doctor(self, config, **kwargs):
     with hide('output', 'running'), warn_only():
+      print "Check SSH keyforwading: ",
       output = local(' echo xx${SSH_AUTH_SOCK}xx', capture=True)
       if output.stdout.strip() == 'xxxx':
-        print red('SSH-Keyforwarding is not working correctly, SSH_AUTH_SOCK is not available!')
+        print red('SSH Keyforwarding is not working correctly, SSH_AUTH_SOCK is not available!')
         exit(1)
       else:
-        print green('SSH-Keyforwarding seems to work.')
+        print green('SSH Keyforwarding seems to work.')
 
+      print "Check SSH key-agent: ",
       output = local('ssh-add -l', capture=True)
       if output.return_code != 0:
-        print red('SSH-key-agent has no private keys, please add it via "ssh-add".')
+        print red('SSH key-agent has no private keys, please add it via "ssh-add".')
         exit(1)
       else:
-        print green('SSH-key-agent has one or more private keys.')
+        print green('SSH key-agent has one or more private keys.')
 
-      output = local('ssh -o BatchMode=yes -o ConnectTimeout=5 -p {port} {user}@{host} echo ok'.format(**config), capture=True)
-      if output.return_code != 0:
-        print red('Cannot connect to host! Please check if your public key is added to authorized_keys on the remote host.')
-        print red('Try: ssh-copy-id -p {port} {user}@{host}'.format(**config))
-        print output.stdout
+      if 'sshTunnel' in config:
+        print "Check SSH tunnel: ",
+        cfg = config['sshTunnel']
+        if not self.doctor_ssh_connection({ 'host': cfg['bridgeHost'], 'port': cfg['bridgePort'], 'user': cfg['bridgeUser']}):
+          exit(1)
+
+        self.preflight('dummyTask', config)
+
+
+      print "Check SSH connection: ",
+      if not self.doctor_ssh_connection(config):
         exit(1)
-      else:
-        print green('Can connect via SSH to remote host.')
 
 
 
