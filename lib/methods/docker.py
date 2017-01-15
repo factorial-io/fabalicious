@@ -239,8 +239,8 @@ class DockerMethod(BaseMethod):
     script_fn = self.factory.get('script', 'runScript')
     variables = { 'dockerHost': docker_config }
     environment = docker_config['environment'] if 'environment' in docker_config else {}
-    if 'runLocally' in docker_config:
+    if 'runLocally' in docker_config and docker_config['runLocally']:
       execute(script_fn, config, script=script, variables=variables, environment=environment, rootFolder = docker_config['rootFolder'], runLocally=docker_config['runLocally'])
     else:
       host_str = docker_config['user'] + '@'+docker_config['host']+':'+str(docker_config['port'])
-      execute(script_fn, config, script=script, variables=variables, environment=environment, host=host_str, rootFolder = docker_config['rootFolder'])
+      execute(script_fn, config, script=script, variables=variables, environment=environment, host=host_str, runLocally=docker_config['runLocally'], rootFolder = docker_config['rootFolder'])
