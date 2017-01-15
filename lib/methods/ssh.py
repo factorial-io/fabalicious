@@ -14,6 +14,10 @@ class SSHMethod(BaseMethod):
   tunnel = None
   source_tunnel = None
   source_remote_tunnel = None
+  creatingTunnelFromLocalToHost = False
+  creatingTunnelFromHostToSource = False
+  creatingTunnelFromLocalToSourceHost = False
+
 
   @staticmethod
   def supports(methodName):
@@ -73,28 +77,65 @@ class SSHMethod(BaseMethod):
 
     return tunnel
 
+
+  def createTunnelFromLocalToHost(self, config):
+    if self.creatingTunnelFromLocalToHost:
+      return
+    self.creatingTunnelFromLocalToHost = True
+
+    print "Establishing SSH-Tunnel from local to {config_name}...".format(**config),
+
+    self.tunnel = self.create_ssh_tunnel(config, config, False)
+
+    self.tunnel_created = self.tunnel != False
+    if self.tunnel_created:
+      print green('Tunnel is established')
+
+    self.creatingTunnelFromLocalToHost = False
+
+
+  def createTunnelFromLocalToSource(self, config, source_config):
+    if self.creatingTunnelFromLocalToSourceHost:
+      return
+    self.creatingTunnelFromLocalToSourceHost = True
+
+    print "Establishing SSH-Tunnel from local to source {config_name}...".format(**source_config),
+
+    self.source_tunnel = self.create_ssh_tunnel(config, source_config, False)
+
+    self.source_tunnel_created = self.source_tunnel != False
+    if self.source_tunnel_created:
+      print green('Tunnel is established')
+
+    self.creatingTunnelFromLocalToSourceHost = False
+
+
+  def createTunnelFromHostToSource(self, config, source_config):
+    if self.creatingTunnelFromHostToSource:
+      return
+    self.creatingTunnelFromHostToSource = True
+
+    print "Establishing SSH-Tunnel from host %s to source %s..." % (config['config_name'], source_config['config_name']),
+
+    self.remote_source_tunnel = self.create_ssh_tunnel(config, source_config, True)
+
+    self.remote_source_tunnel_created = self.remote_source_tunnel != False
+    if self.remote_source_tunnel_created:
+      print green('Tunnel is established')
+
+    self.creatingTunnelFromHostToSource = False
+
+
   def preflightImpl(self, task, config, **kwargs):
     # check if current config needs a tunnel
     if task != 'doctor' and 'sshTunnel' in config and not self.tunnel_created:
-      print "Establishing SSH-Tunnel...",
-
-      self.tunnel = self.create_ssh_tunnel(config, config, False)
-
-      self.tunnel_created = self.tunnel != False
-      if self.tunnel_created:
-        print green('Tunnel is established')
-
+      self.createTunnelFromLocalToHost(config)
     # copyDBFrom and copyFilesFrom may need additional tunnels
     if (task == 'copyDBFrom' or task == 'copyFilesFrom'):
       source_config = kwargs['source_config']
       if source_config and 'sshTunnel' in source_config and not self.source_tunnel_created:
-        print "Establishing SSH-Tunnel to source ...",
-        self.source_tunnel = self.create_ssh_tunnel(config, source_config, False)
-        self.source_remote_tunnel = self.create_ssh_tunnel(config, source_config, True)
-
-        self.source_tunnel_created = self.source_tunnel != False and self.source_remote_tunnel != False
-        if self.source_tunnel_created:
-          print green('Tunnel is established')
+        self.createTunnelFromLocalToSource(config, source_config)
+        self.createTunnelFromHostToSource(config, source_config)
 
 
   def preflight(self, task, config, **kwargs):
@@ -148,6 +189,15 @@ class SSHMethod(BaseMethod):
       print "Check SSH connection: ",
       if not self.doctor_ssh_connection(config):
         exit(1)
+
+      if 'remote' in kwargs:
+        remote_config = configuration.get(kwargs['remote'])
+
+        if 'sshTunnel' in remote_config:
+          print "Check SSH tunnel to remote source: ",
+          cfg = remote_config['sshTunnel']
+          if not self.doctor_ssh_connection({ 'host': cfg['bridgeHost'], 'port': cfg['bridgePort'], 'user': cfg['bridgeUser']}):
+            exit(1)
 
 
 

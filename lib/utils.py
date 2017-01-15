@@ -20,7 +20,7 @@ class SSHTunnel:
   def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=45):
     self.local_port = local_port
 
-    cmd = self.getSSHCommand(bridge_user, bridge_host, dest_host, bridge_port, dest_port, local_port, strictHostKeyChecking)
+    self.cmd = cmd = self.getSSHCommand(bridge_user, bridge_host, dest_host, bridge_port, dest_port, local_port, strictHostKeyChecking)
 
     self.p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     start_time = time.time()
@@ -37,7 +37,7 @@ class SSHTunnel:
 class RemoteSSHTunnel:
 
   @staticmethod
-  def getSSHCommand(bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True):
+  def getSSHCommand(config, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True):
     if not strictHostKeyChecking:
       remote_cmd = 'ssh ' + ssh_no_strict_key_host_checking_params
       cmd = 'ssh ' + ssh_no_strict_key_host_checking_params
@@ -64,7 +64,7 @@ class RemoteSSHTunnel:
     self.bridge_host = bridge_host
     self.bridge_user = bridge_user
 
-    cmd = self.getSSHCommand(bridge_user, bridge_host, dest_hodet, bridge_port, dest_port, local_port, strictHostKeyChecking)
+    self.cmd = cmd = self.getSSHCommand(config, bridge_user, bridge_host, dest_host, bridge_port, dest_port, local_port, strictHostKeyChecking)
 
     self.p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
