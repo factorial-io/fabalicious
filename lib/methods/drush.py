@@ -262,6 +262,10 @@ class DrushMethod(BaseMethod):
     with self.cd(config['siteFolder']):
       self.run_quietly('chmod u+w .');
       self.run_quietly('chmod u+w settings.php');
+      for configName in config['configurationManagement']:
+        cmd = 'grep -q -F \'$config_directories["{0}"] = "../config/{0}";\' settings.php || echo \'$config_directories["{0}"] = "../config/{0}";\' >> settings.php'.format(configName)
+        self.run_quietly(cmd)
+
 
 
   def updateApp(self, config, version=7, **kwargs):
