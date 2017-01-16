@@ -39,6 +39,7 @@ class FilesMethod(BaseMethod):
     self.run_quietly(cmd)
 
   def backup(self, config, **kwargs):
+    self.setRunLocally(config)
     if 'withFiles' in kwargs and kwargs['withFiles'] != True:
       return
 
@@ -64,6 +65,7 @@ class FilesMethod(BaseMethod):
         results.append(backup_result)
 
   def restore(self, config, files=False, cleanupBeforeRestore=False, **kwargs):
+    self.setRunLocally(config)
 
     file = self.get_backup_result_for_method(files, 'files')
     if not file:
@@ -120,6 +122,7 @@ class FilesMethod(BaseMethod):
     get(remotePath, localPath)
 
   def copyFilesFrom(self, config, source_config=False, **kwargs):
+    self.setRunLocally(config)
     keys = ['filesFolder', 'privateFilesFolder']
     for key in keys:
       if key in source_config and key in config:

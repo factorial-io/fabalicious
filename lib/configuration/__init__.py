@@ -230,10 +230,6 @@ def get_configuration(name):
     if not "useShell" in settings:
       settings['useShell'] = True
 
-    if not "runLocally" in settings:
-      settings['runLocally'] = {}
-
-
     if not "disableKnownHosts" in settings:
       settings['disableKnownHosts'] = False
 
@@ -284,7 +280,7 @@ def get_configuration(name):
       host_config['needs'] = settings['needs']
 
     if 'runLocally' not in host_config:
-      host_config['runLocally'] = settings['runLocally']
+      host_config['runLocally'] = False
 
     config['needs'].append('script')
 

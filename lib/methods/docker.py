@@ -56,7 +56,7 @@ class DockerMethod(BaseMethod):
     docker_config = copy.deepcopy(dockerHosts[docker_config_name])
     docker_config = configuration.resolve_inheritance(docker_config, dockerHosts)
 
-    if 'runLocally' in docker_config or self.methodName in config['runLocally']:
+    if 'runLocally' in docker_config and docker_config['runLocally'] or config['runLocally']:
       keys = ['rootFolder', 'tasks']
     else:
       docker_config['runLocally'] = False

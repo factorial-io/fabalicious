@@ -6,6 +6,20 @@ from fabric.network import *
 from fabric.contrib.files import exists
 
 
+class LocallyContext():
+    def __init__(self, parent, config):
+      self.parent= parent
+      self.config = config
+
+    def __enter__(self):
+      self.saved = self.parent.run_locally
+      self.parent.setRunLocally(self.config)
+      return self
+
+    def __exit__(self, type, value, traceback):
+      self.parent.run_locally = self.saved
+
+
 class BaseMethod(object):
 
   verbose_output = True
@@ -94,17 +108,21 @@ class BaseMethod(object):
     return file[0]
 
 
-  def setRunLocally(self, config):
-    self.run_locally = 'ssh' not in config['needs'] or self.methodName in config['runLocally']
 
+
+  def runLocally(self, config):
+    return LocallyContext(self, config)
+
+  def setRunLocally(self, config):
+    self.run_locally = config['runLocally']
 
   def cd(self, path):
-    # print 'cd: ', self.run_locally, path
+    # print red('cd: %d %s'% (self.run_locally,  path))
     return lcd(path) if self.run_locally else cd(path)
 
 
   def run(self, cmd, **kwargs):
-    # print "run: ", self.run_locally, cmd
+    # print red("run: %d %s" % ( self.run_locally, cmd))
     return local(cmd, **kwargs) if self.run_locally else run(cmd, **kwargs)
 
   def exists(self, fname):

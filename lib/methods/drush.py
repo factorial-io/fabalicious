@@ -156,7 +156,7 @@ class DrushMethod(BaseMethod):
         self.run_drush('sql-drop -y')
 
       if config['supportsZippedBackups']:
-        self.run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
+        self.run_drush('gunzip -c '+ sql_name_target + ' | $(drush sql-connect)', False)
       else:
         self.run_drush('drush sql-cli < ' + sql_name_target, False)
 
@@ -176,7 +176,7 @@ class DrushMethod(BaseMethod):
     source_host_string = join_host_strings(source_config['user'], source_config['host'], source_config['port'])
 
     # create dump on source.
-    with _settings( host_string=source_host_string ):
+    with _settings( host_string=source_host_string ), self.runLocally(source_config):
       self.backupSql(source_config, sql_name_source)
 
     # copy dump to target:
@@ -185,17 +185,19 @@ class DrushMethod(BaseMethod):
 
     args = utils.ssh_no_strict_key_host_checking_params
 
-    cmd = 'scp -P {port} {args} {user}@{host}:{sql_name_source} {sql_name_target} >>/dev/null'.format(  args=args,
+    cmd = 'scp -P {port} {args} {user}@{host}:{sql_name_source} {sql_name_target} '.format(  args=args,
       sql_name_source=sql_name_source,
       sql_name_target=sql_name_target,
       **source_config
       )
     self.run(cmd)
-    with _settings(host_string=source_host_string):
+
+    with _settings(host_string=source_host_string), self.runLocally(source_config):
       self.run_quietly('rm -f %s' % sql_name_source)
 
     self.importSQLFromFile(target_config, sql_name_target, True)
-    self.run_quietly('rm -f %s' % sql_name_target)
+    # self.run_quietly('rm -f %s' % sql_name_target)
+
 
   def restoreSQLFromFile(self, config, sourceFile, **kwargs):
     targetSQLFileName = config['tmpFolder'] + '/manual_upload.sql'

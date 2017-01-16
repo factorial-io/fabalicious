@@ -151,13 +151,14 @@ class ScriptMethod(BaseMethod):
 
 
   def runScript(self, config, **kwargs):
+    self.setRunLocally(config)
 
     script = kwargs['script']
     callbacks = kwargs['callbacks'] if 'callbacks' in kwargs else {}
     variables = kwargs['variables'] if 'variables' in kwargs else {}
     environment = kwargs['environment'] if 'environment' in kwargs else {}
     root_folder = kwargs['rootFolder'] if 'rootFolder' in kwargs else config['siteFolder']
-    runLocally = self.runLocally = kwargs['runLocally'] if 'runLocally' in kwargs else False
+    runLocally = kwargs['runLocally'] if 'runLocally' in kwargs else self.run_locally
 
     if 'environment' in config:
       environment = configuration.data_merge(config['environment'], environment)
