@@ -220,7 +220,7 @@ class DockerMethod(BaseMethod):
       exit(1)
 
 
-    if hasattr(self, command):
+    if  command not in ['exists', 'run', 'cd'] and hasattr(self, command):
       fn = getattr(self, command)
       fn(config, **kwargs)
       return
@@ -239,7 +239,7 @@ class DockerMethod(BaseMethod):
     script_fn = self.factory.get('script', 'runScript')
     variables = { 'dockerHost': docker_config }
     environment = docker_config['environment'] if 'environment' in docker_config else {}
-    runLocally = self.methodName in config['runLocally']
+    runLocally = docker_config['runLocally'] if 'runLocally' in docker_config else config['runLocally']
 
     if runLocally:
       execute(script_fn, config, script=script, variables=variables, environment=environment, rootFolder = docker_config['rootFolder'], runLocally=runLocally)
