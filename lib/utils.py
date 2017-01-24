@@ -8,14 +8,22 @@ class SSHTunnel:
 
   @staticmethod
   def getSSHCommand(bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True):
+    args = {
+        "local_port": local_port,
+        "dest_host": dest_host,
+        "dest_port": dest_port,
+        "bridge_user": bridge_user,
+        "bridge_host": bridge_host,
+        "bridge_port": bridge_port
+    }
+
     if not strictHostKeyChecking:
       cmd = 'ssh ' + ssh_no_strict_key_host_checking_params
     else:
       cmd = 'ssh'
 
-    cmd = cmd + ' -o PasswordAuthentication=no -vAN -L %d:%s:%d %s@%s' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
+    cmd = cmd + ' -o PasswordAuthentication=no -vAN -L {local_port}:{dest_host}:{dest_port} -p {bridge_port} {bridge_user}@{bridge_host}'.format(**args)
     return cmd
-
 
   def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=45):
     self.local_port = local_port
@@ -38,13 +46,24 @@ class RemoteSSHTunnel:
 
   @staticmethod
   def getSSHCommand(config, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True):
+    args = {
+        "local_port": local_port,
+        "dest_host": dest_host,
+        "dest_port": dest_port,
+        "bridge_user": bridge_user,
+        "bridge_host": bridge_host,
+        "bridge_port": bridge_port,
+        "ssh_user": config['user'],
+        'ssh_host': config['host'],
+        'ssh_port': config['port'] if 'port' in config else 22
+    }
     if not strictHostKeyChecking:
       remote_cmd = 'ssh ' + ssh_no_strict_key_host_checking_params
       cmd = 'ssh ' + ssh_no_strict_key_host_checking_params
     else:
       remote_cmd = 'ssh'
       cmd = 'ssh'
-    remote_cmd = remote_cmd + ' -o PasswordAuthentication=no -v -L %d:%s:%d %s@%s -A -N -M ' % (local_port, dest_host, dest_port, bridge_user, bridge_host)
+    remote_cmd = remote_cmd + ' -o PasswordAuthentication=no -v -L {local_port}:{dest_host}:{dest_port} -p {bridge_port} {bridge_user}@{bridge_host} -A -N -M '
 
     with hide('running', 'output', 'warnings'):
       run('rm -f ~/.ssh-tunnel-from-fabric')
@@ -53,8 +72,9 @@ class RemoteSSHTunnel:
     if 'port' in config:
       ssh_port = config['port']
 
-    cmd = cmd + ' -o PasswordAuthentication=no -vA -p %d %s@%s' % (ssh_port, config['user'], config['host'])
+    cmd = cmd + ' -o PasswordAuthentication=no -vA -p {ssh_port} {ssh_user}@{ssh_host}'
     cmd = cmd + " '" + remote_cmd + "'"
+    cmd = cmd.format(**args)
 
     return cmd
 
