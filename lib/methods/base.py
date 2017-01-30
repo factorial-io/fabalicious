@@ -123,7 +123,12 @@ class BaseMethod(object):
 
   def run(self, cmd, **kwargs):
     # print red("run: %d %s" % ( self.run_locally, cmd))
-    return local(cmd, **kwargs) if self.run_locally else run(cmd, **kwargs)
+    if self.run_locally:
+      return local(cmd, **kwargs)
+    else:
+      if 'capture' in kwargs:
+        kwargs.pop('capture')
+      return run(cmd, **kwargs)
 
   def exists(self, fname):
     return os.path.isfile(fname) if self.run_locally else exists(fname)
