@@ -110,11 +110,19 @@ def ssh():
 @task
 def putFile(fileName):
   configuration.check()
+  if 'runLocally' in configuration.current():
+    print red("putFile not supported when 'runLocally' is set!")
+    exit(1)
+
   methods.call('files', 'put', configuration.current(), filename=fileName)
 
 @task
 def getFile(remotePath, localPath='./'):
   configuration.check()
+  if 'runLocally' in configuration.current():
+    print red("getFile not supported when 'runLocally' is set!")
+    exit(1)
+
   methods.call('files', 'get', configuration.current(), remotePath=remotePath, localPath=localPath)
 
 @task
