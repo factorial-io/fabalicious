@@ -33,6 +33,8 @@ class DrushMethod(BaseMethod):
       config['database']['host'] = 'localhost'
 
   def reset(self, config, **kwargs):
+    self.setRunLocally(config)
+
     if 'withPasswordReset' not in kwargs:
       kwargs['withPasswordReset'] = True
 
@@ -44,7 +46,7 @@ class DrushMethod(BaseMethod):
       if not uuid:
         print red('No uuid found in fabfile.yaml. config-import may fail!')
 
-    with cd(config['siteFolder']):
+    with self.cd(config['siteFolder']):
       if config['type'] == 'dev':
         admin_user = configuration.getSettings('adminUser', 'admin')
 
@@ -91,12 +93,14 @@ class DrushMethod(BaseMethod):
       args = []
 
     with hide(*args):
-      run(cmd)
+      self.run(cmd)
     env.output_prefix = True
 
 
   def backupSql(self, config, backup_file_name):
-    with cd(config['siteFolder']):
+    self.setRunLocally(config)
+
+    with self.cd(config['siteFolder']):
       with warn_only():
         dump_options = ''
         if configuration.getSettings('sqlSkipTables'):
@@ -112,13 +116,14 @@ class DrushMethod(BaseMethod):
 
 
   def drush(self, config, **kwargs):
-    with cd(config['siteFolder']):
+    self.setRunLocally(config)
+    with self.cd(config['siteFolder']):
       self.run_drush(kwargs['command'])
 
 
   def backup(self, config, **kwargs):
+    self.setRunLocally(config)
 
-    print(kwargs)
     baseName = kwargs['baseName']
     filename = config['backupFolder'] + "/" + '--'.join(baseName) + ".sql"
     self.backupSql(config, filename)
@@ -146,12 +151,12 @@ class DrushMethod(BaseMethod):
 
   def importSQLFromFile(self, config, sql_name_target, cleanupBeforeRestore=False):
 
-    with cd(config['siteFolder']):
+    with self.runLocally(config), self.cd(config['siteFolder']):
       if cleanupBeforeRestore:
         self.run_drush('sql-drop -y')
 
       if config['supportsZippedBackups']:
-        self.run_drush('zcat '+ sql_name_target + ' | $(drush sql-connect)', False)
+        self.run_drush('gunzip -c '+ sql_name_target + ' | $(drush sql-connect)', False)
       else:
         self.run_drush('drush sql-cli < ' + sql_name_target, False)
 
@@ -159,6 +164,8 @@ class DrushMethod(BaseMethod):
 
 
   def copyDBFrom(self, config, source_config=False, **kwargs):
+    self.setRunLocally(config)
+
     target_config = config
     sql_name_source = source_config['tmpFolder'] + '/' + config['config_name'] + '.sql'
     sql_name_target = target_config['tmpFolder'] + '/' + config['config_name'] + '_target.sql'
@@ -169,7 +176,7 @@ class DrushMethod(BaseMethod):
     source_host_string = join_host_strings(source_config['user'], source_config['host'], source_config['port'])
 
     # create dump on source.
-    with _settings( host_string=source_host_string ):
+    with _settings( host_string=source_host_string ), self.runLocally(source_config):
       self.backupSql(source_config, sql_name_source)
 
     # copy dump to target:
@@ -178,19 +185,22 @@ class DrushMethod(BaseMethod):
 
     args = utils.ssh_no_strict_key_host_checking_params
 
-    cmd = 'scp -P {port} {args} {user}@{host}:{sql_name_source} {sql_name_target} >>/dev/null'.format(  args=args,
+    cmd = 'scp -P {port} {args} {user}@{host}:{sql_name_source} {sql_name_target} '.format(  args=args,
       sql_name_source=sql_name_source,
       sql_name_target=sql_name_target,
       **source_config
       )
-    run(cmd)
-    with _settings(host_string=source_host_string):
+    self.run(cmd)
+
+    with _settings(host_string=source_host_string), self.runLocally(source_config):
       self.run_quietly('rm -f %s' % sql_name_source)
 
     self.importSQLFromFile(target_config, sql_name_target, True)
-    self.run_quietly('rm -f %s' % sql_name_target)
+    # self.run_quietly('rm -f %s' % sql_name_target)
+
 
   def restoreSQLFromFile(self, config, sourceFile, **kwargs):
+
     targetSQLFileName = config['tmpFolder'] + '/manual_upload.sql'
 
     fileName, fileExtension = os.path.splitext(sourceFile)
@@ -198,12 +208,18 @@ class DrushMethod(BaseMethod):
     if zipped:
       targetSQLFileName += '.gz'
 
-    put(sourceFile, targetSQLFileName)
+    if config['runLocally']:
+      local('cp %s %s' % (sourceFile, targetSQLFileName))
+    else:
+      put(sourceFile, targetSQLFileName)
 
     self.importSQLFromFile(config, targetSQLFileName)
-    self.run_quietly('rm -f %s' % targetSQLFileName)
+
+    with self.runLocally(config):
+      self.run_quietly('rm -f %s' % targetSQLFileName)
 
   def install(self, config, ask='True', distribution='minimal', **kwargs):
+    self.setRunLocally(config)
 
     if 'database' not in config:
       print red('Missing database configuration!')
@@ -215,7 +231,7 @@ class DrushMethod(BaseMethod):
 
     o = config['database']
 
-    with cd(config['siteFolder']):
+    with self.cd(config['siteFolder']):
       self.run_quietly('mkdir -p %s' % config['siteFolder'])
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
 
@@ -251,7 +267,7 @@ class DrushMethod(BaseMethod):
       self.setupConfigurationManagement(config)
 
   def setupConfigurationManagement(self, config):
-    with cd(config['siteFolder']):
+    with self.cd(config['siteFolder']):
       self.run_quietly('chmod u+w .');
       self.run_quietly('chmod u+w settings.php');
       for configName in config['configurationManagement']:
@@ -261,6 +277,8 @@ class DrushMethod(BaseMethod):
 
 
   def updateApp(self, config, version=7, **kwargs):
+    self.setRunLocally(config)
+
     if 'composer' in config['needs']:
       # ignore update, as composer will handle this.
       return;
@@ -276,11 +294,11 @@ class DrushMethod(BaseMethod):
       drupal_folder = run('ls').stdout.strip()
       # print drupal_folder
 
-      run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, config['rootFolder']) )
+      self.run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, config['rootFolder']) )
 
 
     # remove temporary files
-    with cd(config['rootFolder']):
+    with self.cd(config['rootFolder']):
       self.run_quietly('rm -rf /tmp/drupal-update')
 
     print green("Updated drupal successfully to '%s'." % (drupal_folder))

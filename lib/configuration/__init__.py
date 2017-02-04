@@ -279,6 +279,9 @@ def get_configuration(name):
     if 'needs' not in host_config:
       host_config['needs'] = settings['needs']
 
+    if 'runLocally' not in host_config:
+      host_config['runLocally'] = False
+
     config['needs'].append('script')
 
     host_config['config_name'] = name
@@ -403,14 +406,12 @@ def apply(config, name):
   global current_config
   current_config = name
 
+  if 'ssh' not in config['needs']:
+    return;
+
   env.use_shell = config['useShell']
   env.always_use_pty = config['usePty']
   env.disable_known_hosts = config['disableKnownHosts']
-
-  # print "use_shell: %i, use_pty: %i" % (env.use_shell, env.always_use_pty)
-
-  if 'ssh' not in config['needs']:
-    return;
 
   if 'port' in config:
     env.port = config['port']

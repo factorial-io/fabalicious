@@ -56,7 +56,7 @@ class DockerMethod(BaseMethod):
     docker_config = copy.deepcopy(dockerHosts[docker_config_name])
     docker_config = configuration.resolve_inheritance(docker_config, dockerHosts)
 
-    if 'runLocally' in docker_config:
+    if 'runLocally' in docker_config and docker_config['runLocally'] or config['runLocally']:
       keys = ['rootFolder', 'tasks']
     else:
       docker_config['runLocally'] = False
@@ -220,7 +220,7 @@ class DockerMethod(BaseMethod):
       exit(1)
 
 
-    if hasattr(self, command):
+    if  command not in ['exists', 'run', 'cd'] and hasattr(self, command):
       fn = getattr(self, command)
       fn(config, **kwargs)
       return
@@ -234,13 +234,15 @@ class DockerMethod(BaseMethod):
       print red('Can\'t find  docker-command "%s"'  % ( command ))
       self.listAvailableCommands(config)
       exit(1)
-    script = docker_config['tasks'][command]
 
+    script = docker_config['tasks'][command]
     script_fn = self.factory.get('script', 'runScript')
     variables = { 'dockerHost': docker_config }
     environment = docker_config['environment'] if 'environment' in docker_config else {}
-    if 'runLocally' in docker_config and docker_config['runLocally']:
-      execute(script_fn, config, script=script, variables=variables, environment=environment, rootFolder = docker_config['rootFolder'], runLocally=docker_config['runLocally'])
+    runLocally = docker_config['runLocally'] if 'runLocally' in docker_config else config['runLocally']
+
+    if runLocally:
+      execute(script_fn, config, script=script, variables=variables, environment=environment, rootFolder = docker_config['rootFolder'], runLocally=runLocally)
     else:
       host_str = docker_config['user'] + '@'+docker_config['host']+':'+str(docker_config['port'])
-      execute(script_fn, config, script=script, variables=variables, environment=environment, host=host_str, runLocally=docker_config['runLocally'], rootFolder = docker_config['rootFolder'])
+      execute(script_fn, config, script=script, variables=variables, environment=environment, host=host_str, runLocally=runLocally, rootFolder = docker_config['rootFolder'])

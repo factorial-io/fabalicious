@@ -619,6 +619,7 @@ fab config:staging about
 This will print all host configuration for the host `staging`.
 
 Here are all possible keys documented:
+
 * `host`, `user`, `port` and optionally `password` is used to connect via SSH to the remote machine. Please make sure SSH key forwarding is enabled on your installation. `password` should only used as an exception.
 * `type` defines the type of installation. Currently there are four types available:
     * `dev` for dev-installations, they won't backup the databases on deployment
@@ -629,6 +630,7 @@ Here are all possible keys documented:
 * `branch` the name of the branch to use for deployments, they get ususally checked out and pulled from origin. `gitRootFolder` should be the base-folder, where the local git-repository is. (If not explicitely set, fabalicious uses the `rootFolder`)
 * `rootFolder`  the web-root-folder of the installation, typically exposed to the public.
 * `backupFolder` the folder, where fabalicious should store its backups into
+* `runLocally` if set to true, all commands are run on the local host, not on a remote host. Good for local development on linux or tools like MAMP.
 * `siteFolder` is a drupal-specific folder, where the settings.php resides for the given installation. This allows to interact with multisites etc.
 * `filesFolder` the path to the files-folder, where user-assets get stored and which should be backed up by the `files`-method
 * `tmpFolder` name of tmp-folder, defaults to `/tmp`
@@ -668,6 +670,7 @@ Here's an example `dockerHosts`-entry:
 ```yaml
 dockerHosts:
   mbb:
+    runLocally: false
     host: multibasebox.dev
     user: vagrant
     password: vagrant
@@ -683,7 +686,8 @@ dockerHosts:
 
 Here's a list of all possible entries of a dockerHosts-entry:
 
-* `host`, `user`, `port` and `password`: all needed information to start a ssh-connection to that host. `port` and `password` are optional.
+* `runLocally`: if this is set to `true`, all docker-scripts are run locally, and not on a remote host.
+* `host`, `user`, `port` and `password`: all needed information to start a ssh-connection to that host. These settings are only respected, if `runLocally` is set to `false`. `port` and `password` are optional.
 * `environment` a keyed list of environment-variables to set, when running one of the tasks. The replacement-patterns of `scripts` are supported, see there for more information.
 * `tasks` a keyed list of commands to run for a given docker-subtask (similar to `scripts`). Note: these commands are running on the docker-host, not on the host. All replacement-patterns do work, and you can call even other tasks via `execute(<task>, <subtask>)` e.g. `execute(docker, stop)` See the `scripts`-section for more info.
 
