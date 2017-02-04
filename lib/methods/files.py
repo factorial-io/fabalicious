@@ -7,6 +7,7 @@ import re
 from lib import utils
 from lib import configuration
 from lib.utils import validate_dict
+from fabric.contrib.files import exists
 
 class FilesMethod(BaseMethod):
   @staticmethod
@@ -119,7 +120,10 @@ class FilesMethod(BaseMethod):
     put(filename, config['tmpFolder'])
 
   def get(self, config, remotePath, localPath):
-    get(remotePath, localPath)
+    if (exists(remotePath)):
+      get(remotePath, localPath)
+    else:
+      print red("Could not find file '%s' on remote!" % remotePath)
 
   def copyFilesFrom(self, config, source_config=False, **kwargs):
     self.setRunLocally(config)
