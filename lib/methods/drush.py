@@ -151,7 +151,7 @@ class DrushMethod(BaseMethod):
 
   def importSQLFromFile(self, config, sql_name_target, cleanupBeforeRestore=False):
 
-    with self.cd(config['siteFolder']):
+    with self.runLocally(config), self.cd(config['siteFolder']):
       if cleanupBeforeRestore:
         self.run_drush('sql-drop -y')
 
@@ -200,6 +200,7 @@ class DrushMethod(BaseMethod):
 
 
   def restoreSQLFromFile(self, config, sourceFile, **kwargs):
+
     targetSQLFileName = config['tmpFolder'] + '/manual_upload.sql'
 
     fileName, fileExtension = os.path.splitext(sourceFile)
@@ -207,10 +208,15 @@ class DrushMethod(BaseMethod):
     if zipped:
       targetSQLFileName += '.gz'
 
-    put(sourceFile, targetSQLFileName)
+    if 'runLocally' in config:
+      local('cp %s %s' % (sourceFile, targetSQLFileName))
+    else:
+      put(sourceFile, targetSQLFileName)
 
     self.importSQLFromFile(config, targetSQLFileName)
-    self.run_quietly('rm -f %s' % targetSQLFileName)
+
+    with self.runLocally(config):
+      self.run_quietly('rm -f %s' % targetSQLFileName)
 
   def install(self, config, ask='True', distribution='minimal', **kwargs):
     self.setRunLocally(config)
