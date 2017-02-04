@@ -110,7 +110,7 @@ def ssh():
 @task
 def putFile(fileName):
   configuration.check()
-  if 'runLocally' in configuration.current():
+  if configuration.current()['runLocally']:
     print red("putFile not supported when 'runLocally' is set!")
     exit(1)
 
@@ -135,7 +135,7 @@ def getSQLDump():
   if configuration.current('supportsZippedBackups'):
     file_name += '.gz'
   getFile(file_name)
-  if 'runLocally' in configuration.current():
+  if configuration.current()['runLocally']:
     local('rm ' + file_name)
   else:
     run('rm ' + file_name);

@@ -208,7 +208,7 @@ class DrushMethod(BaseMethod):
     if zipped:
       targetSQLFileName += '.gz'
 
-    if 'runLocally' in config:
+    if config['runLocally']:
       local('cp %s %s' % (sourceFile, targetSQLFileName))
     else:
       put(sourceFile, targetSQLFileName)
