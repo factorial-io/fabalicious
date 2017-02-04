@@ -119,9 +119,6 @@ def putFile(fileName):
 @task
 def getFile(remotePath, localPath='./'):
   configuration.check()
-  if 'runLocally' in configuration.current():
-    print red("getFile not supported when 'runLocally' is set!")
-    exit(1)
 
   methods.call('files', 'get', configuration.current(), remotePath=remotePath, localPath=localPath)
 
@@ -138,7 +135,10 @@ def getSQLDump():
   if configuration.current('supportsZippedBackups'):
     file_name += '.gz'
   getFile(file_name)
-  run('rm ' + file_name);
+  if 'runLocally' in configuration.current():
+    local('rm ' + file_name)
+  else:
+    run('rm ' + file_name);
 
 @task
 def backup(withFiles = True):

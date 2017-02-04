@@ -120,6 +120,10 @@ class FilesMethod(BaseMethod):
     put(filename, config['tmpFolder'])
 
   def get(self, config, remotePath, localPath):
+    if 'runLocally' in config:
+      local('cp %s %s' % (remotePath, localPath))
+      return
+
     if (exists(remotePath)):
       get(remotePath, localPath)
     else:
