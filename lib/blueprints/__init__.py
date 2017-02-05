@@ -69,7 +69,6 @@ def apply(identifier, template):
   replacements['%project-identifier%'] = project_name
   replacements['%project-slug%'] = slugify(project_name)
   replacements['%project-slug-with-hypen%'] = slugify(project_name, replacement='-')
-  print replacements
 
   result = apply_helper(template, replacements)
   return result
