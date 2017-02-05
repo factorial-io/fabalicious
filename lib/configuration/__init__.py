@@ -11,7 +11,7 @@ from lib.utils import validate_dict
 
 fabalicious_version = '2.0.3'
 
-settings = 0
+root_data = 0
 verbose_output = False
 current_config = 'unknown'
 
@@ -216,60 +216,9 @@ def get_configuration(name):
     'supportsSSH': '"%s" is unsupported, please add "ssh" to your "needs"',
     'useForDevelopment': '"%s" is unsupported, please use "type" with "dev|prod|stage" as value.'
   }
+  config = getAll()
 
-  config = get_all_configurations()
   if name in config['hosts']:
-    global settings
-    settings = config
-    if not 'common' in settings:
-      settings['common'] = { }
-
-    if not "usePty" in settings:
-      settings['usePty'] = True
-
-    if not "useShell" in settings:
-      settings['useShell'] = True
-
-    if not "disableKnownHosts" in settings:
-      settings['disableKnownHosts'] = False
-
-    if not "gitOptions" in settings:
-      settings['gitOptions'] = { 'pull' : [ '--no-edit', '--rebase'] }
-
-    if not 'sqlSkipTables' in settings:
-      settings['sqlSkipTables'] = [
-        'cache',
-        'cache_block',
-        'cache_bootstrap',
-        'cache_field',
-        'cache_filter',
-        'cache_form',
-        'cache_menu',
-        'cache_page',
-        'cache_path',
-        'cache_update',
-        'cache_views',
-        'cache_views_data',
-      ]
-
-    if not 'slack' in settings:
-      settings['slack'] = {}
-    settings['slack'] = data_merge( { 'notifyOn': [], 'username': 'Fabalicious', 'icon_emoji': ':tada:'}, settings['slack'])
-
-    if 'needs' not in settings:
-      settings['needs'] = ['ssh', 'git', 'drush7', 'files']
-
-    if 'scripts' not in settings:
-      settings['scripts'] = {}
-
-    # TODO: find a way to move method-specific settings into the method-implementation
-    if 'configurationManagement' not in settings:
-      settings['configurationManagement'] = {
-        'staging': [
-          'drush config-import -y staging'
-        ]
-      }
-
     host_config = config['hosts'][name]
     host_config = resolve_inheritance(host_config, config['hosts'])
 
@@ -277,7 +226,7 @@ def get_configuration(name):
       check_fabalicious_version(host_config['requires'], 'host-configuration ' + name)
 
     if 'needs' not in host_config:
-      host_config['needs'] = settings['needs']
+      host_config['needs'] = config['needs']
 
     if 'runLocally' not in host_config:
       host_config['runLocally'] = False
@@ -299,13 +248,13 @@ def get_configuration(name):
       'scripts': {},
     }
 
-    defaults = get_default_config_from_methods(host_config, settings, defaults)
+    defaults = get_default_config_from_methods(host_config, config, defaults)
 
     for key in defaults:
       if key not in host_config:
         host_config[key] = defaults[key]
 
-    apply_config_by_methods(host_config, settings)
+    apply_config_by_methods(host_config, config)
 
     if 'database' in host_config:
       if 'host' not in host_config['database']:
@@ -448,15 +397,75 @@ def get(name):
   return get_configuration(name)
 
 def current(key = False):
+  if not hasattr(env, 'config'):
+    return False
+
   if key:
     return env.config[key]
   else:
     return env.config
 
 def getAll():
-  return get_all_configurations()
+  global root_data
+
+  if not root_data:
+    root_data = get_all_configurations()
+
+    if not 'common' in root_data:
+      root_data['common'] = { }
+
+    if not "usePty" in root_data:
+      root_data['usePty'] = True
+
+    if not "useShell" in root_data:
+      root_data['useShell'] = True
+
+    if not "disableKnownHosts" in root_data:
+      root_data['disableKnownHosts'] = False
+
+    if not "gitOptions" in root_data:
+      root_data['gitOptions'] = { 'pull' : [ '--no-edit', '--rebase'] }
+
+    if not 'sqlSkipTables' in root_data:
+      root_data['sqlSkipTables'] = [
+        'cache',
+        'cache_block',
+        'cache_bootstrap',
+        'cache_field',
+        'cache_filter',
+        'cache_form',
+        'cache_menu',
+        'cache_page',
+        'cache_path',
+        'cache_update',
+        'cache_views',
+        'cache_views_data',
+      ]
+
+    if not 'slack' in root_data:
+      root_data['slack'] = {}
+    root_data['slack'] = data_merge( { 'notifyOn': [], 'username': 'Fabalicious', 'icon_emoji': ':tada:'}, root_data['slack'])
+
+    if 'needs' not in root_data:
+      root_data['needs'] = ['ssh', 'git', 'drush7', 'files']
+
+    if 'scripts' not in root_data:
+      root_data['scripts'] = {}
+
+    # TODO: find a way to move method-specific settings into the method-implementation
+    if 'configurationManagement' not in root_data:
+      root_data['configurationManagement'] = {
+        'staging': [
+          'drush config-import -y staging'
+        ]
+      }
+
+
+  return root_data
+
 
 def getSettings(key = False, defaultValue = False):
+  settings = getAll()
   if key:
     return settings[key] if key in settings else defaultValue
   else:
@@ -467,3 +476,37 @@ def getBaseDir():
   global fabfile_basedir
   return fabfile_basedir
 
+
+def getDockerConfig(docker_config_name, runLocally = False):
+
+  settings = getAll()
+
+  if 'dockerHosts' not in settings:
+    return False
+
+  dockerHosts = settings['dockerHosts']
+
+  if not dockerHosts or docker_config_name not in dockerHosts:
+    return False
+
+  docker_config = copy.deepcopy(dockerHosts[docker_config_name])
+  docker_config = resolve_inheritance(docker_config, dockerHosts)
+
+  if 'runLocally' in docker_config and docker_config['runLocally'] or runLocally:
+    keys = ['rootFolder', 'tasks']
+  else:
+    docker_config['runLocally'] = False
+    keys = ['tasks', 'rootFolder', 'user', 'host', 'port']
+
+  errors = validate_dict(keys, docker_config)
+  if len(errors) > 0:
+    for key in errors:
+      print red('Missing key \'%s\' in docker-configuration %s' % (key, docker_config_name))
+    return False
+
+  return docker_config
+
+
+def add(config_name, config):
+  settings = getAll()
+  settings['hosts'][config_name] = config
