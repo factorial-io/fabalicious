@@ -448,6 +448,9 @@ def get(name):
   return get_configuration(name)
 
 def current(key = False):
+  if not hasattr(env, 'config'):
+    return False
+
   if key:
     return env.config[key]
   else:
@@ -466,4 +469,36 @@ def getSettings(key = False, defaultValue = False):
 def getBaseDir():
   global fabfile_basedir
   return fabfile_basedir
+
+
+def getDockerConfig(docker_config_name, runLocally = False):
+  global settings
+
+  if not settings:
+    settings = get_all_configurations()
+
+  if 'dockerHosts' not in settings:
+    return False
+
+  dockerHosts = settings['dockerHosts']
+
+  if not dockerHosts or docker_config_name not in dockerHosts:
+    return False
+
+  docker_config = copy.deepcopy(dockerHosts[docker_config_name])
+  docker_config = resolve_inheritance(docker_config, dockerHosts)
+
+  if 'runLocally' in docker_config and docker_config['runLocally'] or runLocally:
+    keys = ['rootFolder', 'tasks']
+  else:
+    docker_config['runLocally'] = False
+    keys = ['tasks', 'rootFolder', 'user', 'host', 'port']
+
+  errors = validate_dict(keys, docker_config)
+  if len(errors) > 0:
+    for key in errors:
+      print red('Missing key \'%s\' in docker-configuration %s' % (key, docker_config_name))
+    return False
+
+  return docker_config
 

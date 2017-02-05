@@ -47,28 +47,9 @@ class DockerMethod(BaseMethod):
       return False
 
     docker_config_name = config['docker']['configuration']
+    docker_config = configuration.getDockerConfig(docker_config_name, config['runLocally'])
 
-    dockerHosts = configuration.getSettings('dockerHosts')
-
-    if not dockerHosts or docker_config_name not in dockerHosts:
-      return False
-
-    docker_config = copy.deepcopy(dockerHosts[docker_config_name])
-    docker_config = configuration.resolve_inheritance(docker_config, dockerHosts)
-
-    if 'runLocally' in docker_config and docker_config['runLocally'] or config['runLocally']:
-      keys = ['rootFolder', 'tasks']
-    else:
-      docker_config['runLocally'] = False
-      keys = ['tasks', 'rootFolder', 'user', 'host', 'port']
-
-    errors = validate_dict(keys, docker_config)
-    if len(errors) > 0:
-      for key in errors:
-        print red('Missing key \'%s\' in docker-configuration %s' % (key, docker_config_name))
-      return False
-
-    if 'password' in docker_config:
+    if docker_config and 'password' in docker_config:
       self.addPasswordToFabricCache(**docker_config)
 
 
