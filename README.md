@@ -718,7 +718,7 @@ Here are all possible keys documented:
     * `bridgeHost`: the host acting as a bridge.
     * `bridgeUser`: the ssh-user on the bridge-host
     * `bridgePort`: the port to connect to on the bridge-host
-    * `localPort`: the local port which gets forwarded to the `destPort`. If `localPort` is omitted, the ssh-port of the host-configuration is used.
+    * `localPort`: the local port which gets forwarded to the `destPort`. If `localPort` is omitted, the ssh-port of the host-configuration is used. If the host-configuration does not have a port-property a random port is used.
     * `destHost`: the destination host to forward to
     * `destHostFromDockerContainer`: if set, the docker's Ip address is used for destHost. This is automatically set when using a `docker`-configuration, see there.
     * `destPort`: the destination port to forward to
