@@ -13,6 +13,7 @@ root_folder = os.path.dirname(os.path.realpath(os.path.dirname(__file__) + '/fab
 sys.path.append(root_folder)
 from lib import methods
 from lib import configuration
+from lib import blueprints
 
 configuration.fabfile_basedir = root_folder
 
@@ -21,6 +22,21 @@ configuration.fabfile_basedir = root_folder
 def config(configName='local'):
   c = configuration.get(configName)
   configuration.apply(c, configName)
+
+@task
+def blueprint(branch, config=False, output=False):
+  template = blueprints.getTemplate(config)
+  if not template:
+    print red('No blueprint found in configuration!')
+    exit(1)
+
+  # methods.runTask(configuration.current(), 'blueprint', blueprint=template)
+
+  config = blueprints.apply(branch, template)
+  if (output):
+    blueprints.output(config)
+  # else:
+    # Create temporary configuration out of blueprint and set it to current
 
 @task
 def getProperty(in_key):
@@ -68,7 +84,6 @@ def about(config_name=False):
     for key, val in additional_info.items():
       print ""
       about_helper(key + ' for ' + config_name, val, 2)
-
 
 
 @task
