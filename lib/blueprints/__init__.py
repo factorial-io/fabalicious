@@ -1,5 +1,6 @@
 import yaml
 import re
+from fabric.colors import green, red, yellow
 from lib import configuration
 
 
@@ -33,7 +34,7 @@ def getTemplate(configName):
 
 
 def slugify(str, replacement=''):
-  return re.sub('(\s|_|\-|\/)', replacement, str)
+  return re.sub('(\s|_|\-|\/)', replacement, str.lower())
 
 
 
@@ -54,6 +55,15 @@ def apply_helper(value, replacements):
     pattern = re.compile('|'.join(re.escape(key) for key in replacements.keys()))
     result = pattern.sub(lambda x: replacements[x.group()], value)
 
+    p2 = re.compile('\%(\S*)\%')
+    if p2.search(result):
+      print red('Found replacement pattern in "%s"' % result)
+      print "Available replacement patterns:"
+      for key, val in replacements.items():
+        print '- ' + key
+
+      exit(1)
+
     return result
 
 
@@ -65,10 +75,12 @@ def apply(identifier, template):
   replacements = {}
   replacements['%identifier%'] = identifier
   replacements['%slug%'] = slugify(identifier)
-  replacements['%slug-with-hyphen%'] = slugify(identifier, replacement='-')
+  replacements['%slug.with-hyphens%'] = slugify(identifier, replacement='-')
+  replacements['%slug.without-feature%'] = slugify(identifier.replace('feature/', ''), replacement='')
+  replacements['%slug.with-hyphens.without-feature%'] = slugify(identifier.replace('feature/', ''), replacement='-')
   replacements['%project-identifier%'] = project_name
   replacements['%project-slug%'] = slugify(project_name)
-  replacements['%project-slug-with-hypen%'] = slugify(project_name, replacement='-')
+  replacements['%project-slug.with-hypens%'] = slugify(project_name, replacement='-')
 
   result = apply_helper(template, replacements)
   return result
