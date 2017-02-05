@@ -24,19 +24,18 @@ def config(configName='local'):
   configuration.apply(c, configName)
 
 @task
-def blueprint(branch, config=False, output=False):
-  template = blueprints.getTemplate(config)
+def blueprint(branch, configName=False, output=False):
+  template = blueprints.getTemplate(configName)
   if not template:
     print red('No blueprint found in configuration!')
     exit(1)
 
-  # methods.runTask(configuration.current(), 'blueprint', blueprint=template)
-
-  config = blueprints.apply(branch, template)
+  c = blueprints.apply(branch, template)
   if (output):
-    blueprints.output(config)
-  # else:
-    # Create temporary configuration out of blueprint and set it to current
+    blueprints.output(c)
+  else:
+    configuration.add(c['configName'], c)
+    config(c['configName'])
 
 @task
 def getProperty(in_key):
