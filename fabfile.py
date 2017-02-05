@@ -38,6 +38,20 @@ def getProperty(in_key):
   print c
   exit(0)
 
+def about_helper(key, value, indent):
+  print ' '.ljust(indent) + key.ljust(30 - indent),
+  if isinstance(value, dict):
+    print ""
+    for dict_key, dict_value in value.items():
+      about_helper(dict_key, dict_value, indent + 2)
+  elif hasattr(value, "__len__") and not hasattr(value, 'strip'):
+    print ""
+    for list_value in value:
+      about_helper('', list_value, indent + 2)
+  else:
+    print(': ' + str(value))
+
+
 @task
 def about(config_name=False):
   if not config_name:
@@ -46,18 +60,16 @@ def about(config_name=False):
   else:
     config = configuration.get(config_name)
   if config:
-    print("Configuration for " + config_name)
-    for key, value in config.items():
-      if isinstance(value, dict):
-        print(key)
-        for dict_key, dict_value in value.items():
-          print('  ' + dict_key.ljust(23) + ': '+ str(dict_value))
-      elif hasattr(value, "__len__") and not hasattr(value, 'strip'):
-          print key
-          for list_value in value:
-            print(' '.ljust(25) + ': '+ str(list_value))
-      else:
-        print(key.ljust(25) + ': '+ str(value))
+
+    additional_info = {}
+    methods.runTask(config, 'about', data = additional_info)
+
+    about_helper('Host-configuration for ' + config_name, config, 2)
+    for key, val in additional_info.items():
+      print ""
+      about_helper(key + ' for ' + config_name, val, 2)
+
+
 
 @task
 def info():

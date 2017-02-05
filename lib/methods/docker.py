@@ -122,6 +122,11 @@ class DockerMethod(BaseMethod):
     local("ssh -L%s:%s:%s:%s -p %s %s@%s" % (public_ip, publicPort, ip, port, docker_config['port'], docker_config['user'], docker_config['host']))
     exit(0)
 
+  def about(self, config, **kwargs):
+    data = kwargs['data']
+    docker_config = self.getDockerConfig(config)
+    if docker_config:
+      data['DockerHost-configuration'] = docker_config
 
 
   def copySSHKeys(self, config, **kwargs):
