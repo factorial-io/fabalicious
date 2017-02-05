@@ -5,6 +5,7 @@ from fabric.colors import green, red
 from fabric.network import *
 from lib import configuration
 import copy
+import random
 from lib.utils import validate_dict
 
 class SSHMethod(BaseMethod):
@@ -18,12 +19,11 @@ class SSHMethod(BaseMethod):
 
   @staticmethod
   def validateConfig(config):
-    keys = ['host', 'port', 'user'];
+    keys = ['host', 'user'];
     return validate_dict(keys, config)
 
   @staticmethod
   def getDefaultConfig(config, settings, defaults):
-    defaults['port'] = 22
     defaults['usePty'] = settings['usePty']
     defaults['useShell'] = settings['useShell']
     defaults['disableKnownHosts'] = settings['disableKnownHosts']
@@ -36,7 +36,15 @@ class SSHMethod(BaseMethod):
 
     if "sshTunnel" in config:
       if not 'localPort' in config['sshTunnel']:
-        config['sshTunnel']['localPort'] = config['port']
+        if 'port' in config:
+          config['sshTunnel']['localPort'] = config['port']
+        else:
+          port = random.randrange(1025, 65535)
+          config['sshTunnel']['localPort'] = port
+          config['port'] = port
+
+    if 'port' not in config:
+      config['port'] = 22
 
 
 
