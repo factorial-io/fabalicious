@@ -3,6 +3,7 @@
 ## 2.0.x
 
 ### new
+* new task `blueprint`. This task will load a template from the fabfile.yaml, do some pattern replacement and use the resulting data as the current configuration. With this task it is easy to create dynamic configurations e.g. for CI-integration or similar scenarios.
 * `runLocally` for dockerHosts: if set to true for a given dockerHost-configuration, the commands get executed locally.
 * `runLocally` for hosts: if set to true for a given host-configuration, all commands are run locally.
 * new task `doctor`. This will try to do all necessary connections and will inform of any problems. Good for troubleshooting.

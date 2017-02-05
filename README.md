@@ -24,6 +24,8 @@ Fabalicious is using [fabric](http://www.fabfile.org) to run tasks on remote mac
     * [config](#config)
     * [list](#list)
     * [about](#about)
+    * [blueprint](#blueprint)
+    * [doctor](#doctor)
     * [getProperty](#getproperty)
     * [version](#version)
     * [deploy](#deploy)
@@ -206,6 +208,71 @@ fab config:<your-config> about
 ```
 
 will display the configuration of host `<your-config>`.
+
+## blueprint
+
+```shell
+fab config:<your-config> blueprint:<branch-name>
+fab blueprint:<branch-name>,configName=<config-name>
+fab blueprint:<branch-name>,configNmae=<config-name>,output=True
+```
+
+`blueprint` will try to load a blueprint-template from the fabfile.yaml and apply the input given as `<branch-name>` to the template. This is helpful if you want to create/ use a new configuration which has some dynamic parts like the name of the database, the name of the docker-container, etc.
+
+The task will look first in the host-config for the property `blueprint`, afterwards in the dockerHost-configuration `<config-name>` and eventually in the global namespace. If you wnat to print the generated configuration as yaml, then add `,output=true` to the command. If not, the generated configuration is used as the current configuration, that means, you can run other tasks against the generated configuration.
+
+**Available replacement-patterns** and what they do. Input is `feature/XY-123-my_Branch-name`, the project-name is `Example project`:
+
+- `%slug.with-hyphens.without-feature%` => `xy-123-my-branch-name`
+- `%slug.with-hyphens%` => `feature-xy-123-my-branch-name`
+- `%project-slug.with-hypens%` => `example-project`
+- `%slug%` => `featurexy123mybranchname`
+- `%project-slug%` => `exampleproject`
+- `%project-identifier%` => `Example project`
+- `%identifier%` => `feature/XY-123-my_Branch-name`
+- `%slug.without-feature%` => `xy123mybranchname`
+
+Here's an example blueprint:
+
+```yaml
+blueprint:
+  inheritsFrom: http://some.host/data.yaml
+  configName: '%project-slug%-%slug.with-hyphens.without-feature%.some.host.tld'
+  branch: '%identifier%'
+  database:
+    name: '%slug.without-feature%_mysql'
+  docker:
+    projectFolder: '%project-slug%--%slug.with-hyphens.without-feature%'
+    vhost: '%project-slug%-%slug.without-feature%.some.host.tld'
+    name: '%project-slug%%slug.without-feature%_web_1'
+```
+
+And the output of `fab blueprint:feature/XY-123-my_Branch-name,configNamy=<config-name>,output=true` is
+
+```yaml
+hosts:
+  phbackend-xy-123-my-branch-name.some.host.tld:
+    branch: feature/XY-123-my_Branch-name
+    configName: phbackend-xy-123-my-branch-name.some.host.tld
+    database:
+      name: xy123mybranchname_mysql
+    docker:
+      name: phbackendxy123mybranchname_web_1
+      projectFolder: phbackend--xy-123-my-branch-name
+      vhost: phbackend-xy123mybranchname.some.host.tld
+    inheritsFrom: http://some.host/data.yaml
+```
+
+
+## doctor
+
+The `doctor`-task will try to establish all needed ssh-connections and tunnels and give feedback if anything fails. This should be the task you run if you have any problems connecting to a remote instance.
+
+```shell
+fab config:<your-config> doctor
+fab config:<your-config> doctor:remote=<your-remote-config>
+```
+Running the doctor-task without an argument, will test the connectivity to the configuration `<your-cofig>`. If you provide a remote configuration with `:remote=<your-remote-config>` the doctor command will create and test any necessary tunnels to test the connections betwenn `<your-config>` and `<your-remote-config>`. Might be handy if the task `copyFrom` fails.
 
 
 ## getProperty
