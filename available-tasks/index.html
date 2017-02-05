@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Factorial GmbH, Hamburg">
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Available tasks - Fabalicious</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Available tasks";
+    var mkdocs_page_input_path = "available-tasks.md";
+    var mkdocs_page_url = "/available-tasks/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Fabalicious</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="..">Home</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../installation/">Installation</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../usage/">Usage</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 current">
+        <a class="current" href="./">Available tasks</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#config">config</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#list">list</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#about">about</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#blueprint">blueprint</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#doctor">doctor</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#getproperty">getProperty</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#version">version</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#deploy">deploy</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#reset">reset</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#backup">backup</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#backupdb">backupDB</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#listbackups">listBackups</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#restore">restore</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#getbackup">getBackup</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#copyfrom">copyFrom</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#copydbfrom">copyDBFrom</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#copyfilesfrom">copyFilesFrom</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#drush">drush</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#drupalconsole">drupalconsole</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#getfile">getFile</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#putfile">putFile</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#getsqldump">getSQLDump</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#restoresqlfromfile">restoreSQLFromFile</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#script">script</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#docker">docker</a></li>
+                
+                    <li><a class="toctree-l4" href="#copysshkeys">copySSHKeys</a></li>
+                
+                    <li><a class="toctree-l4" href="#startremoteaccess">startRemoteAccess</a></li>
+                
+                    <li><a class="toctree-l4" href="#waitforservices">waitForServices</a></li>
+                
+            
+            </ul>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../configuration/">Configuration</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../docker-integration/">Docker integration</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../local-overrides/">Local overrides</a>
+        
+    </li>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Fabalicious</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Available tasks</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/factorial-io/fabalicious/edit/develop/docs/docs/available-tasks.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h2 id="config">config</h2>
+<pre><code class="shell">fab config:&lt;your-config&gt;
+</code></pre>
+
+<p>This is one of the most fundamental commands fabalicious provides. This will lookup <code>&lt;your-config&gt;</code> in the <code>hosts</code>-section of your <code>fabfile.yaml</code> and feed the data to <code>fabric</code> so it can connect to the host.</p>
+<h2 id="list">list</h2>
+<pre><code class="shell">fab list
+</code></pre>
+
+<p>This task will list all your hosts defined in your <code>hosts</code>-section of your <code>fabfile.yaml</code>.</p>
+<h2 id="about">about</h2>
+<pre><code class="shell">fab config:&lt;your-config&gt; about
+</code></pre>
+
+<p>will display the configuration of host <code>&lt;your-config&gt;</code>.</p>
+<h2 id="blueprint">blueprint</h2>
+<pre><code class="shell">fab config:&lt;your-config&gt; blueprint:&lt;branch-name&gt;
+fab blueprint:&lt;branch-name&gt;,configName=&lt;config-name&gt;
+fab blueprint:&lt;branch-name&gt;,configNmae=&lt;config-name&gt;,output=True
+</code></pre>
+
+<p><code>blueprint</code> will try to load a blueprint-template from the fabfile.yaml and apply the input given as <code>&lt;branch-name&gt;</code> to the template. This is helpful if you want to create/ use a new configuration which has some dynamic parts like the name of the database, the name of the docker-container, etc.</p>
+<p>The task will look first in the host-config for the property <code>blueprint</code>, afterwards in the dockerHost-configuration <code>&lt;config-name&gt;</code> and eventually in the global namespace. If you wnat to print the generated configuration as yaml, then add <code>,output=true</code> to the command. If not, the generated configuration is used as the current configuration, that means, you can run other tasks against the generated configuration.</p>
+<p><strong>Available replacement-patterns</strong> and what they do. Input is <code>feature/XY-123-my_Branch-name</code>, the project-name is <code>Example project</code>:</p>
+<ul>
+<li><code>%slug.with-hyphens.without-feature%</code> =&gt; <code>xy-123-my-branch-name</code></li>
+<li><code>%slug.with-hyphens%</code> =&gt; <code>feature-xy-123-my-branch-name</code></li>
+<li><code>%project-slug.with-hypens%</code> =&gt; <code>example-project</code></li>
+<li><code>%slug%</code> =&gt; <code>featurexy123mybranchname</code></li>
+<li><code>%project-slug%</code> =&gt; <code>exampleproject</code></li>
+<li><code>%project-identifier%</code> =&gt; <code>Example project</code></li>
+<li><code>%identifier%</code> =&gt; <code>feature/XY-123-my_Branch-name</code></li>
+<li><code>%slug.without-feature%</code> =&gt; <code>xy123mybranchname</code></li>
+</ul>
+<p>Here's an example blueprint:</p>
+<pre><code class="yaml">blueprint:
+  inheritsFrom: http://some.host/data.yaml
+  configName: '%project-slug%-%slug.with-hyphens.without-feature%.some.host.tld'
+  branch: '%identifier%'
+  database:
+    name: '%slug.without-feature%_mysql'
+  docker:
+    projectFolder: '%project-slug%--%slug.with-hyphens.without-feature%'
+    vhost: '%project-slug%-%slug.without-feature%.some.host.tld'
+    name: '%project-slug%%slug.without-feature%_web_1'
+</code></pre>
+
+<p>And the output of <code>fab blueprint:feature/XY-123-my_Branch-name,configNamy=&lt;config-name&gt;,output=true</code> is</p>
+<pre><code class="yaml">hosts:
+  phbackend-xy-123-my-branch-name.some.host.tld:
+    branch: feature/XY-123-my_Branch-name
+    configName: phbackend-xy-123-my-branch-name.some.host.tld
+    database:
+      name: xy123mybranchname_mysql
+    docker:
+      name: phbackendxy123mybranchname_web_1
+      projectFolder: phbackend--xy-123-my-branch-name
+      vhost: phbackend-xy123mybranchname.some.host.tld
+    inheritsFrom: http://some.host/data.yaml
+</code></pre>
+
+<h2 id="doctor">doctor</h2>
+<p>The <code>doctor</code>-task will try to establish all needed ssh-connections and tunnels and give feedback if anything fails. This should be the task you run if you have any problems connecting to a remote instance.</p>
+<pre><code class="shell">fab config:&lt;your-config&gt; doctor
+fab config:&lt;your-config&gt; doctor:remote=&lt;your-remote-config&gt;
+</code></pre>
+
+<p>Running the doctor-task without an argument, will test the connectivity to the configuration <code>&lt;your-cofig&gt;</code>. If you provide a remote configuration with <code>:remote=&lt;your-remote-config&gt;</code> the doctor command will create and test any necessary tunnels to test the connections betwenn <code>&lt;your-config&gt;</code> and <code>&lt;your-remote-config&gt;</code>. Might be handy if the task <code>copyFrom</code> fails.</p>
+<h2 id="getproperty">getProperty</h2>
+<pre><code class="shell">fab config:&lt;your-config&gt; getProperty:&lt;name-of-property&gt;
+</code></pre>
+
+<p>This will print the property-value to the console. Suitable if you want to use fabalicious from within other scripts.</p>
+<p><strong>Examples</strong>
+<em> <code>fab config:mbb getProperty:host</code> will print the hostname of configuration <code>mbb</code>.
+</em> <code>fab config:mbb getProperty:docker/tag</code> will print the tag of the docker-configuration of <code>mbb</code>.</p>
+<h2 id="version">version</h2>
+<pre><code class="shell">fab config:&lt;your-config&gt; version
+</code></pre>
+
+<p>This command will display the installed version of the code on the installation <code>&lt;your-config&gt;</code>.</p>
+<p><strong>Available methods</strong>:
+* <code>git</code>. The task will get the installed version via <code>git describe</code>, so if you tag your source properly (hint git flow), you'll get a nice version-number.</p>
+<p><strong>Configuration:</strong>
+* your host-configuration needs a <code>branch</code>-key stating the branch to deploy.</p>
+<h2 id="deploy">deploy</h2>
+<pre><code class="shell">fab config:&lt;your-config&gt; deploy
+fab config:&lt;your-config&gt; deploy:&lt;branch-to-deploy&gt;
+</code></pre>
+
+<p>This task will deploy the latest code to the given installation. If the installation-type is not <code>dev</code> or <code>test</code> the <code>backupDB</code>-task is run before the deployment starts. If <code>&lt;branch-to-deploy&gt;</code> is stated the specific branch gets deployed.</p>
+<p>After a successfull deployment the <code>reset</code>-taks will be run.</p>
+<p><strong>Available methods:</strong>
+<em> <code>git</code> will deploy to the latest commit for the given branch defined in the host-configuration. Submodules will be synced, and updated.
+</em> <code>platform</code> will push the current branch to the <code>platform</code> remote, which will start the deployment-process on platform.sh</p>
+<p><strong>Configuration:</strong>
+* your host-configuration needs a <code>branch</code>-key stating the branch to deploy.</p>
+<h2 id="reset">reset</h2>
+<pre><code class="shell">fab config:&lt;your-config&gt; reset
+</code></pre>
+
+<p>This task will reset your installation</p>
+<p><strong>Available methods:</strong>
+<em> <code>composer</code> will run <code>composer install</code> to update any dependencies before doing the reset
+</em> <code>drush</code> will
+  * set the site-uuid from fabfile.yaml (drupal 8)
+  * revert features (drupal 7) / import the configuration <code>staging</code> (drupal 8),
+  * run update-hooks
+  * enable a deployment-module if any stated in the fabfile.yaml
+  * and does a cache-clear.
+  * if your host-type is <code>dev</code> and <code>withPasswordReset</code> is not false, the password gets reset to admin/admin</p>
+<p><strong>Configuration:</strong>
+<em> your host-configuration needs a <code>branch</code>-key stating the branch to deploy.
+</em> your configuration needs a <code>uuid</code>-entry, this is the site uuid (drupal 8). You can get the site-uuid via <code>drush cget system.site</code>
+* you can customize which configuration to import with the <code>configurationManagement</code>-setting inside your host- or global-setting.</p>
+<p><strong>Examples:</strong>
+* <code>fab config:mbb reset:withPasswordReset=0</code> will reset the installation and will not reset the password.</p>
+<h2 id="backup">backup</h2>
+<pre><code class="shell">fab config:&lt;your-config&gt; backup
+</code></pre>
+
+<p>This command will backup your files and database into the specified <code>backup</code>-directory. The file-names will include configuration-name, a timestamp and the git-SHA1. Every backup can be referenced by its filename (w/o extension) or, when git is abailable via the git-commit-hash.</p>
+<p><strong>Available methods:</strong>
+<em> <code>git</code> will prepend the file-names with a hash of the current revision.
+</em> <code>files</code> will tar all files in the <code>filesFolder</code> and save it into the <code>backupFolder</code>
+* <code>drush</code> will dump the databases and save it to the <code>backupFolder</code></p>
+<p><strong>Configuration:</strong>
+* your host-configuration will need a <code>backupFolder</code> and a <code>filesFolder</code></p>
+<h2 id="backupdb">backupDB</h2>
+<pre><code class="shell">fab config:&lt;your-config&gt; backupDB
+</code></pre>
+
+<p>This command will backup only the database. See the task <code>backup</code> for more info.</p>
+<h2 id="listbackups">listBackups</h2>
+<pre><code class="shell">fab config:&lt;your-config&gt; listBackups
+</code></pre>
+
+<p>This command will print all available backups to the console.</p>
+<h2 id="restore">restore</h2>
+<pre><code class="shell">fab config:&lt;your-config&gt; restore:&lt;commit-hash|file-name&gt;
+</code></pre>
+
+<p>This will restore a backup-set. A backup-set consists typically of a database-dump and a gzupped-file-archive. You can a list of candidates via <code>fab config:&lt;config&gt; listBackups</code></p>
+<p><strong>Available methods</strong>
+<em> <code>git</code> git will checkout the given hash encoded in the filename.
+</em> <code>files</code> all files will be restored. An existing files-folder will be renamed for safety reasons.
+* <code>drush</code> will import the database-dump.</p>
+<h2 id="getbackup">getBackup</h2>
+<pre><code class="shell">fab config:&lt;config&gt; getBackup:&lt;commit-hash|file-name&gt;
+</code></pre>
+
+<p>This command will copy a remote backup-set to your local computer into the current working-directory.</p>
+<p><strong>See also:</strong>
+<em> restore
+</em> backup</p>
+<h2 id="copyfrom">copyFrom</h2>
+<pre><code class="shell">fab config:&lt;dest-config&gt; copyFrom:&lt;source-config&gt;
+</code></pre>
+
+<p>This task will copy all files via rsync from <code>source-config</code>to <code>dest-config</code> and will dump the database from <code>source-config</code> and restore it to <code>dest-config</code>. After that the <code>reset</code>-task gets executed. This is the ideal task to copy a complete installation from one host to another.</p>
+<p><strong>Available methods</strong>
+<em> <code>ssh</code> will create all necessary tunnels to access the hosts.
+</em> <code>files</code> will rsync all new and changed files from source to dest
+* <code>drush</code> will dump the database and restore it on the dest-host.</p>
+<h2 id="copydbfrom">copyDBFrom</h2>
+<pre><code class="shell">fab config:&lt;dest-config&gt; copyDBFrom:&lt;source-config&gt;
+</code></pre>
+
+<p>Basically the same as the <code>copyFrom</code>-task, but only the database gets copied.</p>
+<h2 id="copyfilesfrom">copyFilesFrom</h2>
+<pre><code class="shell">fab config:&lt;dest-config&gt; copyFileFrom:&lt;source-config&gt;
+</code></pre>
+
+<p>Basically the same as the <code>copyFrom</code>-task, but only the new and updated files get copied.</p>
+<h2 id="drush">drush</h2>
+<pre><code class="shell">fab config:&lt;config&gt; drush:&lt;drush-command&gt;
+</code></pre>
+
+<p>This task will execute the <code>drush-command</code> on the remote host specified in <config>. Please note, that you'll have to quote the drush-command when it contains spaces. Signs should be excaped, so python does not interpret them.</p>
+<p><strong>Available methods</strong>
+* Only available for the <code>drush</code>-method</p>
+<p><strong>Examples</strong>
+<em> <code>fab config:staging drush:"cc all"</code>
+</em> <code>fab config:local drush:fra</code></p>
+<h2 id="drupalconsole">drupalconsole</h2>
+<p>This task will execute a drupal-console task on the remote host. Please note, that you'll have to quote the command when it contains spaces. There's a special command to install the drupal-console on the host: <code>fab config:&lt;config&gt; drupalconsole:install</code></p>
+<p><strong>Available methods</strong>
+* Only available for the <code>drupalconsole</code>-method</p>
+<p><strong>Examples</strong>
+<em> <code>fab config:local drupalconsole:cache:rebuild</code>
+</em> <code>fab config:local drupalconsole:"generate:module --module helloworld"</code></p>
+<h2 id="getfile">getFile</h2>
+<pre><code class="shell">fab config:&lt;config&gt; getFile:&lt;path-to-remote-file&gt;
+</code></pre>
+
+<p>Copy a remote file to the current working directory of your current machine.</p>
+<h2 id="putfile">putFile</h2>
+<pre><code class="shell">fab config:&lt;config&gt; putFile:&lt;path-to-local-file&gt;
+</code></pre>
+
+<p>Copy a local file to the tmp-folder of a remote machine.</p>
+<p><strong>Configuration</strong>
+* this command will use the <code>tmpFolder</code>-host-setting for the destination directory.</p>
+<h2 id="getsqldump">getSQLDump</h2>
+<pre><code class="shell">fab config:&lt;config&gt; getSQLDump
+</code></pre>
+
+<p>Get a current dump of the remote database and copy it to the local machine into the current working directory.</p>
+<p><strong>Available methods</strong>
+* currently only implemented for the <code>drush</code>-method</p>
+<h2 id="restoresqlfromfile">restoreSQLFromFile</h2>
+<pre><code class="shell">fab config:&lt;config&gt; restoreSQLFromFile:&lt;path-to-local-sql-dump&gt;
+</code></pre>
+
+<p>This command will copy the dump-file <code>path-to-local-sql-dump</code> to the remote machine and import it into the database.</p>
+<p><strong>Available methods</strong>
+* currently only implemented for the <code>drush</code>-method</p>
+<h2 id="script">script</h2>
+<pre><code class="shell">fab config:&lt;config&gt; script:&lt;script-name&gt;
+</code></pre>
+
+<p>This command will run custom scripts on a remote machine. You can declare scripts globally or per host. If the <code>script-name</code> can't be found in the fabfile.yaml you'll get a list of all available scripts.</p>
+<p>Additional arguments get passed to the script. You'll have to use the python-syntax to feed additional arguments to the script. See the examples.</p>
+<p><strong>Examples</strong>
+<em> <code>fab config:mbb script</code>. List all available scripts for configuration <code>mbb</code>
+</em> <code>fab config:mbb script:behat</code> Run the <code>behat</code>-script
+* <code>fab config:mbb script:behat,--name="Login feature",--format=pretty</code> Run the behat-test, apply <code>--name</code> and <code>--format</code> parameters to the script</p>
+<p>The <code>script</code>-command is rather powerful, have a read about it in the extra section.</p>
+<h2 id="docker">docker</h2>
+<pre><code class="shell">fab config:&lt;config&gt; docker:&lt;docker-task&gt;
+</code></pre>
+
+<p>The docker command is suitable for orchestrating and administering remote instances of docker-containers. The basic setup is that your host-configuration has a <code>docker</code>-section, which contains a <code>configuration</code>-key. The <code>dockerHosts</code>-section of your fabfile.yaml has a list of tasks which are executed on the "parent-host" of the configuration. Please have a look at the docker-section for more information.</p>
+<p>Most of the time the docker-container do not have a public or known ip-address. Fabalicious tries to find out the ip-address of a given instance and use that for communicating with its services.</p>
+<p>There are three implicit tasks available:</p>
+<h3 id="copysshkeys">copySSHKeys</h3>
+<pre><code class="shell">fab config:mbb docker:copySSHKeys
+</code></pre>
+
+<p>This will copy the ssh-keys into the docker-instance. You'll need to provide the paths to the files via the three configurations:
+<em> <code>dockerKeyFile</code>, the path to the private ssh-key to use.
+</em> <code>dockerAuthorizedKeyFile</code>, the path to the file for <code>authoried_keys</code>
+* <code>dockerKnownHostsFile</code>, the path to the file for <code>known_hosts</code></p>
+<p>As docker-container do not have any state, this task is used to copy any necessary ssh-configuration into the docker-container, so communication per ssh does not need any passwords.</p>
+<h3 id="startremoteaccess">startRemoteAccess</h3>
+<pre><code class="shell">fab config:&lt;config&gt; docker:startRemoteAccess
+fab config:&lt;config&gt; docker:startRemoteAccess,port=&lt;port&gt;,publicPort=&lt;public-port&gt;
+</code></pre>
+
+<p>This docker-task will run a ssh-command to forward a local port to a port inside the docker-container. It starts a new ssh-session which will do the forwarding. When finished, type <code>exit</code>.</p>
+<p><strong>Examples</strong>
+<em> <code>fab config:mbb docker:startRemoteAccess</code> will forward <code>localhost:8888</code> to port <code>80</code> of the docker-container
+</em> <code>fab config:mbb docker:startRemoteAccess,port=3306,publicPort=33060</code> will forward <code>localhost:33060</code>to port <code>3306</code> of the docker-container</p>
+<h3 id="waitforservices">waitForServices</h3>
+<p>This task will try to establish a ssh-connection into the docker-container and if the connection succeeds, waits for <code>supervisorctl status</code> to return success. This is useful in scripts to wait for any services that need some time to start up. Obviously this task depends on <code>supervisorctl</code>.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../configuration/" class="btn btn-neutral float-right" title="Configuration">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../usage/" class="btn btn-neutral" title="Usage"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>© 2017 Factorial GmbH, Hamburg</p>
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+    
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/factorial-io/fabalicious/" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../usage/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../configuration/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script src="../js/theme.js"></script>
+
+</body>
+</html>

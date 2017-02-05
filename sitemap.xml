@@ -9,4 +9,52 @@
     </url>
     
 
+    
+    <url>
+     <loc>/installation/</loc>
+     <lastmod>2017-02-06</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
+     <loc>/usage/</loc>
+     <lastmod>2017-02-06</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
+     <loc>/available-tasks/</loc>
+     <lastmod>2017-02-06</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
+     <loc>/configuration/</loc>
+     <lastmod>2017-02-06</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
+     <loc>/docker-integration/</loc>
+     <lastmod>2017-02-06</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
+     <loc>/local-overrides/</loc>
+     <lastmod>2017-02-06</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
 </urlset>
