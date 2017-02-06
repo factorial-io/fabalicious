@@ -22,23 +22,29 @@ Create a file called "fabfile.yaml" and add your hosts to this file. See this fi
 
 There are 2 alternative ways to install fabalicious. Because of historic reasons we install fabalicious into the folder `_tools/fabalicious`
 
-1. Clone this repository, or add this repository as a submodule.
+## as git-submodule
 
-      ```shell
-      mkdir _tools/fabalicious
-      git submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious
-      ln -s _tools/fabalicious/fabfile.py fabfile.py
-      ```
+Clone this repository, or add this repository as a submodule.
 
-2. If you are using composer you can add fabalicious as a dependency
+```shell
+mkdir _tools/fabalicious
+git submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious
+ln -s _tools/fabalicious/fabfile.py fabfile.py
+```
+
+## as composer dependency
+
+If you are using composer you can add fabalicious as a dependency
 
 ```shell
 composer require factorial/fabalicious 2.*
 ln -s _tools/fabalicious/fabfile.py fabfile.py
 ```
 
-3. Run `fab --list`, this should give you a list of available commands.
-4. Create a configuration file called `fabfile.yaml`
+## and then ...
+
+1. Run `fab --list`, this should give you a list of available commands.
+2. Create a configuration file called `fabfile.yaml`
 
 # A simple configuration-example
 
