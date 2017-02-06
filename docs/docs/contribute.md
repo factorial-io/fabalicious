@@ -18,10 +18,11 @@ _@TODO_
 
 !!! note
     This document is build using [MkDocs](http://www.mkdocs.org/) and served using [GitHub Pages](https://pages.github.com/)
-    1. [Install MkDocs](http://www.mkdocs.org/#installation).
-    2. Clone [this repo](https://github.com/factorial-io/fabalicious) and switch to `develop` branch.
-    3. Using Terminal, navigate to `/docs` folder.
-    4. Run `mkdocs gh-deploy`
+
+    - [Install MkDocs](http://www.mkdocs.org/#installation).
+    - Clone [the repo](https://github.com/factorial-io/fabalicious) locally and switch to `develop` branch.
+    - Using Terminal, navigate to `/docs` folder.
+    - Run `mkdocs gh-deploy`
 
 ### Resources
 * [Writing your docs in MKdocs](http://www.mkdocs.org/user-guide/writing-your-docs/)
