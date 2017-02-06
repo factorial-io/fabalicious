@@ -168,22 +168,22 @@ pip install pyyaml
 <h1 id="installation-of-fabalicious">Installation of fabalicious</h1>
 <p>There are 2 alternative ways to install fabalicious. Because of historic reasons we install fabalicious into the folder <code>_tools/fabalicious</code></p>
 <ol>
-<li>
-<p>Clone this repository, or add this repository as a submodule.</p>
-<p><code>shell
-mkdir _tools/fabalicious
+<li>Clone this repository, or add this repository as a submodule.</li>
+</ol>
+<pre><code class="shell">mkdir _tools/fabalicious
 git submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious
-ln -s _tools/fabalicious/fabfile.py fabfile.py</code></p>
-</li>
-<li>
-<p>If you are using composer you can add fabalicious as a dependency</p>
-<p><code>shell
-composer require factorial/fabalicious 2.*
-ln -s _tools/fabalicious/fabfile.py fabfile.py</code></p>
-</li>
-<li>
-<p>Run <code>fab --list</code>, this should give you a list of available commands.</p>
-</li>
+ln -s _tools/fabalicious/fabfile.py fabfile.py
+</code></pre>
+
+<ol>
+<li>If you are using composer you can add fabalicious as a dependency</li>
+</ol>
+<pre><code class="shell">composer require factorial/fabalicious 2.*
+ln -s _tools/fabalicious/fabfile.py fabfile.py
+</code></pre>
+
+<ol>
+<li>Run <code>fab --list</code>, this should give you a list of available commands.</li>
 <li>Create a configuration file called <code>fabfile.yaml</code></li>
 </ol>
 <h1 id="a-simple-configuration-example">A simple configuration-example</h1>

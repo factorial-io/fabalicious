@@ -245,17 +245,50 @@ fab blueprint:&lt;branch-name&gt;,configNmae=&lt;config-name&gt;,output=True
 
 <p><code>blueprint</code> will try to load a blueprint-template from the fabfile.yaml and apply the input given as <code>&lt;branch-name&gt;</code> to the template. This is helpful if you want to create/ use a new configuration which has some dynamic parts like the name of the database, the name of the docker-container, etc.</p>
 <p>The task will look first in the host-config for the property <code>blueprint</code>, afterwards in the dockerHost-configuration <code>&lt;config-name&gt;</code> and eventually in the global namespace. If you wnat to print the generated configuration as yaml, then add <code>,output=true</code> to the command. If not, the generated configuration is used as the current configuration, that means, you can run other tasks against the generated configuration.</p>
-<p><strong>Available replacement-patterns</strong> and what they do. Input is <code>feature/XY-123-my_Branch-name</code>, the project-name is <code>Example project</code>:</p>
-<ul>
-<li><code>%slug.with-hyphens.without-feature%</code> =&gt; <code>xy-123-my-branch-name</code></li>
-<li><code>%slug.with-hyphens%</code> =&gt; <code>feature-xy-123-my-branch-name</code></li>
-<li><code>%project-slug.with-hypens%</code> =&gt; <code>example-project</code></li>
-<li><code>%slug%</code> =&gt; <code>featurexy123mybranchname</code></li>
-<li><code>%project-slug%</code> =&gt; <code>exampleproject</code></li>
-<li><code>%project-identifier%</code> =&gt; <code>Example project</code></li>
-<li><code>%identifier%</code> =&gt; <code>feature/XY-123-my_Branch-name</code></li>
-<li><code>%slug.without-feature%</code> =&gt; <code>xy123mybranchname</code></li>
-</ul>
+<p><strong>Available replacement-patterns</strong> and what they do.</p>
+<p><em>Input is <code>feature/XY-123-my_Branch-name</code>, the project-name is <code>Example project</code></em></p>
+<table>
+<thead>
+<tr>
+<th>Replacement Pattern</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>%slug.with-hyphens.without-feature%</strong></td>
+<td>xy-123-my-branch-name</td>
+</tr>
+<tr>
+<td><strong>%slug.with-hyphens%</strong></td>
+<td>feature-xy-123-my-branch-name</td>
+</tr>
+<tr>
+<td><strong>%project-slug.with-hypens%</strong></td>
+<td>example-project</td>
+</tr>
+<tr>
+<td><strong>%slug%</strong></td>
+<td>featurexy123mybranchname</td>
+</tr>
+<tr>
+<td><strong>%project-slug%</strong></td>
+<td>exampleproject</td>
+</tr>
+<tr>
+<td><strong>%project-identifier%</strong></td>
+<td>Example project</td>
+</tr>
+<tr>
+<td><strong>%identifier%</strong></td>
+<td>feature/XY-123-my_Branch-name</td>
+</tr>
+<tr>
+<td><strong>%slug.without-feature%</strong></td>
+<td>xy123mybranchname</td>
+</tr>
+</tbody>
+</table>
 <p>Here's an example blueprint:</p>
 <pre><code class="yaml">blueprint:
   inheritsFrom: http://some.host/data.yaml
