@@ -12,7 +12,7 @@
         }, 
         {
             "location": "/installation/", 
-            "text": "Installation of needed dependencies\n\n\non Mac OS X:\n\n\nbrew install python\npip install fabric\npip install pyyaml\n\n\n\non Debian/Ubuntu\n\n\napt-get install python-pip\npip install fabric\npip install pyyaml\n\n\n\nIf you want to use the slack-integration, install slacker, but it's optional.\n\n\npip install slacker\n\n\n\nCreate a file called \"fabfile.yaml\" and add your hosts to this file. See this file for more information.\n\n\nInstallation of fabalicious\n\n\nThere are 2 alternative ways to install fabalicious. Because of historic reasons we install fabalicious into the folder \n_tools/fabalicious\n\n\n\n\nClone this repository, or add this repository as a submodule.\n\n\n\n\nmkdir _tools/fabalicious\ngit submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious\nln -s _tools/fabalicious/fabfile.py fabfile.py\n\n\n\n\n\n\nIf you are using composer you can add fabalicious as a dependency\n\n\n\n\ncomposer require factorial/fabalicious 2.*\nln -s _tools/fabalicious/fabfile.py fabfile.py\n\n\n\n\n\n\nRun \nfab --list\n, this should give you a list of available commands.\n\n\nCreate a configuration file called \nfabfile.yaml\n\n\n\n\nA simple configuration-example\n\n\nname: My awesome project\n\n# We'll need fabalicious \n= 2.0\nrequires: 2.0\n\n# We need git and ssh, there are more options\nneeds:\n  - ssh\n  - git\n\n# Our list of host-configurations\nhosts:\n  dev:\n    host: myhost.dev\n    user: root\n    port: 22\n    rootFolder: /var/www\n    filesFolder: /var/www\n    siteFolder: /var/www\n    backupFolder: /var/backups\n\n\n\n\nFor more infos about the file-format have a look at the file-format-section.", 
+            "text": "Installation of needed dependencies\n\n\non Mac OS X:\n\n\nbrew install python\npip install fabric\npip install pyyaml\n\n\n\non Debian/Ubuntu\n\n\napt-get install python-pip\npip install fabric\npip install pyyaml\n\n\n\nIf you want to use the slack-integration, install slacker, but it's optional.\n\n\npip install slacker\n\n\n\nCreate a file called \"fabfile.yaml\" and add your hosts to this file. See this file for more information.\n\n\nInstallation of fabalicious\n\n\nThere are 2 alternative ways to install fabalicious. Because of historic reasons we install fabalicious into the folder \n_tools/fabalicious\n\n\nas git-submodule\n\n\nClone this repository, or add this repository as a submodule.\n\n\nmkdir _tools/fabalicious\ngit submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious\nln -s _tools/fabalicious/fabfile.py fabfile.py\n\n\n\n\nas composer dependency\n\n\nIf you are using composer you can add fabalicious as a dependency\n\n\ncomposer require factorial/fabalicious 2.*\nln -s _tools/fabalicious/fabfile.py fabfile.py\n\n\n\n\nand then ...\n\n\n\n\nRun \nfab --list\n, this should give you a list of available commands.\n\n\nCreate a configuration file called \nfabfile.yaml\n\n\n\n\nA simple configuration-example\n\n\nname: My awesome project\n\n# We'll need fabalicious \n= 2.0\nrequires: 2.0\n\n# We need git and ssh, there are more options\nneeds:\n  - ssh\n  - git\n\n# Our list of host-configurations\nhosts:\n  dev:\n    host: myhost.dev\n    user: root\n    port: 22\n    rootFolder: /var/www\n    filesFolder: /var/www\n    siteFolder: /var/www\n    backupFolder: /var/backups\n\n\n\n\nFor more infos about the file-format have a look at the file-format-section.", 
             "title": "Installation"
         }, 
         {
@@ -22,8 +22,23 @@
         }, 
         {
             "location": "/installation/#installation-of-fabalicious", 
-            "text": "There are 2 alternative ways to install fabalicious. Because of historic reasons we install fabalicious into the folder  _tools/fabalicious   Clone this repository, or add this repository as a submodule.   mkdir _tools/fabalicious\ngit submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious\nln -s _tools/fabalicious/fabfile.py fabfile.py   If you are using composer you can add fabalicious as a dependency   composer require factorial/fabalicious 2.*\nln -s _tools/fabalicious/fabfile.py fabfile.py   Run  fab --list , this should give you a list of available commands.  Create a configuration file called  fabfile.yaml", 
+            "text": "There are 2 alternative ways to install fabalicious. Because of historic reasons we install fabalicious into the folder  _tools/fabalicious", 
             "title": "Installation of fabalicious"
+        }, 
+        {
+            "location": "/installation/#as-git-submodule", 
+            "text": "Clone this repository, or add this repository as a submodule.  mkdir _tools/fabalicious\ngit submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious\nln -s _tools/fabalicious/fabfile.py fabfile.py", 
+            "title": "as git-submodule"
+        }, 
+        {
+            "location": "/installation/#as-composer-dependency", 
+            "text": "If you are using composer you can add fabalicious as a dependency  composer require factorial/fabalicious 2.*\nln -s _tools/fabalicious/fabfile.py fabfile.py", 
+            "title": "as composer dependency"
+        }, 
+        {
+            "location": "/installation/#and-then", 
+            "text": "Run  fab --list , this should give you a list of available commands.  Create a configuration file called  fabfile.yaml", 
+            "title": "and then ..."
         }, 
         {
             "location": "/installation/#a-simple-configuration-example", 
@@ -307,7 +322,7 @@
         }, 
         {
             "location": "/contribute/", 
-            "text": "Contributing to Fabalicious\n\n\nIf you get stuck at any point you can create a \nticket on GitHub\n.\n\n\nContributing to development\n\n\n@TODO\n\n\nImproving Documenation\n\n\n@TODO\n\n\n\n\nTip\n\n\nTo edit existing pages, use the \nEdit on GitHub\n link on the top right corner of the page.\n\n\nTo add a new page to documentation please follow \nthe guideline provided by MKdocs\n to add new page and link them within the documentation.\n\n\n\n\n\n\nNote\n\n\nRun \nmkdocs gh-deploy\n in \n\"/docs\"\n folder to rebuild and publish the documentation to gh-pages branch on GitHub.\n\n\n\n\nResources\n\n\n\n\nWriting your docs in MKdocs", 
+            "text": "Contributing to Fabalicious\n\n\nIf you get stuck at any point you can create a \nticket on GitHub\n.\n\n\nContributing to development\n\n\n@TODO\n\n\nImproving Documenation\n\n\n@TODO\n\n\n\n\nTip\n\n\nTo edit existing pages, use the \nEdit on GitHub\n link on the top right corner of the page.\n\n\nTo add a new page to documentation please follow \nthe guideline provided by MKdocs\n to add new page and link them within the documentation.\n\n\n\n\n\n\nNote\n\n\nThis document is build using \nMkDocs\n and served using \nGitHub Pages\n\n\n\n\nInstall MkDocs\n.\n\n\nClone \nthe repo\n locally and switch to \ndevelop\n branch.\n\n\nUsing Terminal, navigate to \n/docs\n folder.\n\n\nRun \nmkdocs gh-deploy\n\n\n\n\n\n\nResources\n\n\n\n\nWriting your docs in MKdocs", 
             "title": "Contribute"
         }, 
         {
@@ -322,7 +337,7 @@
         }, 
         {
             "location": "/contribute/#improving-documenation", 
-            "text": "@TODO   Tip  To edit existing pages, use the  Edit on GitHub  link on the top right corner of the page.  To add a new page to documentation please follow  the guideline provided by MKdocs  to add new page and link them within the documentation.    Note  Run  mkdocs gh-deploy  in  \"/docs\"  folder to rebuild and publish the documentation to gh-pages branch on GitHub.", 
+            "text": "@TODO   Tip  To edit existing pages, use the  Edit on GitHub  link on the top right corner of the page.  To add a new page to documentation please follow  the guideline provided by MKdocs  to add new page and link them within the documentation.    Note  This document is build using  MkDocs  and served using  GitHub Pages   Install MkDocs .  Clone  the repo  locally and switch to  develop  branch.  Using Terminal, navigate to  /docs  folder.  Run  mkdocs gh-deploy", 
             "title": "Improving Documenation"
         }, 
         {
