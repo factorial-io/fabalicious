@@ -304,6 +304,31 @@
             "location": "/local-overrides/#local-overrides", 
             "text": "fabfile.local.yaml  is used to override parts of your fabfile-configuration. If you run a fab-command the code will try to find the  fabfile.local.yaml  up to three folder levels up and merge the data with your fabfile.yaml.  A small example:  fabfile.local.yaml\n+ project\n  fabfile.yaml  Contents fo fabfile.yaml  hosts:\n  local:\n    host: multibasebox.dev\n    port: 22\n    [...]  Contents of fabfile.local.yaml:  hosts:\n  local:\n    host: localhost\n    port: 2222  This will override the  host  and  port  settings of the  local -configuration. With this technique you can alter an existing fabfile.yaml with local overrides. (In this example,   host=localhost  and  port=2222", 
             "title": "Local overrides"
+        }, 
+        {
+            "location": "/contribute/", 
+            "text": "Contributing to Fabalicious\n\n\nIf you get stuck at any point you can create a \nticket on GitHub\n.\n\n\nContributing to development\n\n\n@TODO\n\n\nImproving Documenation\n\n\n@TODO\n\n\n\n\nTip\n\n\nTo edit existing pages, use the \nEdit on GitHub\n link on the top right corner of the page.\n\n\nTo add a new page to documentation please follow \nthe guideline provided by MKdocs\n to add new page and link them within the documentation.\n\n\n\n\nResources\n\n\n\n\nWriting your docs in MKdocs", 
+            "title": "Contribute"
+        }, 
+        {
+            "location": "/contribute/#contributing-to-fabalicious", 
+            "text": "If you get stuck at any point you can create a  ticket on GitHub .", 
+            "title": "Contributing to Fabalicious"
+        }, 
+        {
+            "location": "/contribute/#contributing-to-development", 
+            "text": "@TODO", 
+            "title": "Contributing to development"
+        }, 
+        {
+            "location": "/contribute/#improving-documenation", 
+            "text": "@TODO   Tip  To edit existing pages, use the  Edit on GitHub  link on the top right corner of the page.  To add a new page to documentation please follow  the guideline provided by MKdocs  to add new page and link them within the documentation.", 
+            "title": "Improving Documenation"
+        }, 
+        {
+            "location": "/contribute/#resources", 
+            "text": "Writing your docs in MKdocs", 
+            "title": "Resources"
         }
     ]
 }

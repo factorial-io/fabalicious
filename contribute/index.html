@@ -8,7 +8,7 @@
   
   <meta name="author" content="Factorial GmbH, Hamburg">
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Installation - Fabalicious</title>
+  <title>Contribute - Fabalicious</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,9 +17,9 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Installation";
-    var mkdocs_page_input_path = "installation.md";
-    var mkdocs_page_url = "/installation/";
+    var mkdocs_page_name = "Contribute";
+    var mkdocs_page_input_path = "contribute.md";
+    var mkdocs_page_url = "/contribute/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -54,21 +54,8 @@
 <li>
           
             <li>
-    <li class="toctree-l1 current">
-        <a class="current" href="./">Installation</a>
-        
-            <ul>
-            
-                <li class="toctree-l3"><a href="#installation-of-needed-dependencies">Installation of needed dependencies</a></li>
-                
-            
-                <li class="toctree-l3"><a href="#installation-of-fabalicious">Installation of fabalicious</a></li>
-                
-            
-                <li class="toctree-l3"><a href="#a-simple-configuration-example">A simple configuration-example</a></li>
-                
-            
-            </ul>
+    <li class="toctree-l1 ">
+        <a class="" href="../installation/">Installation</a>
         
     </li>
 <li>
@@ -109,8 +96,19 @@
 <li>
           
             <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../contribute/">Contribute</a>
+    <li class="toctree-l1 current">
+        <a class="current" href="./">Contribute</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#contributing-to-fabalicious">Contributing to Fabalicious</a></li>
+                
+                    <li><a class="toctree-l4" href="#contributing-to-development">Contributing to development</a></li>
+                
+                    <li><a class="toctree-l4" href="#improving-documenation">Improving Documenation</a></li>
+                
+            
+            </ul>
         
     </li>
 <li>
@@ -137,10 +135,10 @@
     
       
     
-    <li>Installation</li>
+    <li>Contribute</li>
     <li class="wy-breadcrumbs-aside">
       
-        <a href="https://github.com/factorial-io/fabalicious/edit/develop/docs/docs/installation.md"
+        <a href="https://github.com/factorial-io/fabalicious/edit/develop/docs/docs/contribute.md"
           class="icon icon-github"> Edit on GitHub</a>
       
     </li>
@@ -150,66 +148,21 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="installation-of-needed-dependencies">Installation of needed dependencies</h1>
-<p>on Mac OS X:</p>
-<pre><code>brew install python
-pip install fabric
-pip install pyyaml
-</code></pre>
-<p>on Debian/Ubuntu</p>
-<pre><code>apt-get install python-pip
-pip install fabric
-pip install pyyaml
-</code></pre>
-<p>If you want to use the slack-integration, install slacker, but it's optional.</p>
-<pre><code>pip install slacker
-</code></pre>
-<p>Create a file called "fabfile.yaml" and add your hosts to this file. See this file for more information.</p>
-<h1 id="installation-of-fabalicious">Installation of fabalicious</h1>
-<p>There are 2 alternative ways to install fabalicious. Because of historic reasons we install fabalicious into the folder <code>_tools/fabalicious</code></p>
-<ol>
-<li>
-<p>Clone this repository, or add this repository as a submodule.</p>
-<p><code>shell
-mkdir _tools/fabalicious
-git submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious
-ln -s _tools/fabalicious/fabfile.py fabfile.py</code></p>
-</li>
-<li>
-<p>If you are using composer you can add fabalicious as a dependency</p>
-<p><code>shell
-composer require factorial/fabalicious 2.*
-ln -s _tools/fabalicious/fabfile.py fabfile.py</code></p>
-</li>
-<li>
-<p>Run <code>fab --list</code>, this should give you a list of available commands.</p>
-</li>
-<li>Create a configuration file called <code>fabfile.yaml</code></li>
-</ol>
-<h1 id="a-simple-configuration-example">A simple configuration-example</h1>
-<pre><code class="yaml">name: My awesome project
-
-# We'll need fabalicious &gt;= 2.0
-requires: 2.0
-
-# We need git and ssh, there are more options
-needs:
-  - ssh
-  - git
-
-# Our list of host-configurations
-hosts:
-  dev:
-    host: myhost.dev
-    user: root
-    port: 22
-    rootFolder: /var/www
-    filesFolder: /var/www
-    siteFolder: /var/www
-    backupFolder: /var/backups
-</code></pre>
-
-<p>For more infos about the file-format have a look at the file-format-section.</p>
+                <h1 id="contributing-to-fabalicious">Contributing to Fabalicious</h1>
+<p>If you get stuck at any point you can create a <a href="https://github.com/factorial-io/fabalicious/issues">ticket on GitHub</a>.</p>
+<h2 id="contributing-to-development">Contributing to development</h2>
+<p><em>@TODO</em></p>
+<h2 id="improving-documenation">Improving Documenation</h2>
+<p><em>@TODO</em></p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>To edit existing pages, use the <strong>Edit on GitHub</strong> link on the top right corner of the page.</p>
+<p>To add a new page to documentation please follow <a href="http://www.mkdocs.org/user-guide/writing-your-docs/#configure-pages-and-navigation">the guideline provided by MKdocs</a> to add new page and link them within the documentation.</p>
+</div>
+<h3 id="resources">Resources</h3>
+<ul>
+<li><a href="http://www.mkdocs.org/user-guide/writing-your-docs/">Writing your docs in MKdocs</a></li>
+</ul>
               
             </div>
           </div>
@@ -217,10 +170,8 @@ hosts:
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../usage/" class="btn btn-neutral float-right" title="Usage">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-      
-        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../local-overrides/" class="btn btn-neutral" title="Local overrides"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -250,10 +201,8 @@ hosts:
           <a href="https://github.com/factorial-io/fabalicious/" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
-        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../local-overrides/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
-      
-        <span style="margin-left: 15px"><a href="../usage/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
