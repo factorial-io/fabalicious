@@ -34,16 +34,21 @@ fab blueprint:<branch-name>,configNmae=<config-name>,output=True
 
 The task will look first in the host-config for the property `blueprint`, afterwards in the dockerHost-configuration `<config-name>` and eventually in the global namespace. If you wnat to print the generated configuration as yaml, then add `,output=true` to the command. If not, the generated configuration is used as the current configuration, that means, you can run other tasks against the generated configuration.
 
-**Available replacement-patterns** and what they do. Input is `feature/XY-123-my_Branch-name`, the project-name is `Example project`:
+**Available replacement-patterns** and what they do.
 
-- `%slug.with-hyphens.without-feature%` => `xy-123-my-branch-name`
-- `%slug.with-hyphens%` => `feature-xy-123-my-branch-name`
-- `%project-slug.with-hypens%` => `example-project`
-- `%slug%` => `featurexy123mybranchname`
-- `%project-slug%` => `exampleproject`
-- `%project-identifier%` => `Example project`
-- `%identifier%` => `feature/XY-123-my_Branch-name`
-- `%slug.without-feature%` => `xy123mybranchname`
+_Input is `feature/XY-123-my_Branch-name`, the project-name is `Example project`_
+
+|  Replacement Pattern                    | value                         |
+|-----------------------------------------|-------------------------------|
+| **%slug.with-hyphens.without-feature%** | xy-123-my-branch-name         |
+| **%slug.with-hyphens%**                 | feature-xy-123-my-branch-name |
+| **%project-slug.with-hypens%**          | example-project               |
+| **%slug%**                              | featurexy123mybranchname      |
+| **%project-slug%**                      | exampleproject                |
+| **%project-identifier%**                | Example project               |
+| **%identifier%**                        | feature/XY-123-my_Branch-name |
+| **%slug.without-feature%**              | xy123mybranchname             |
+
 
 Here's an example blueprint:
 
