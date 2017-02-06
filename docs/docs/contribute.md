@@ -16,5 +16,8 @@ _@TODO_
 
     To add a new page to documentation please follow [the guideline provided by MKdocs](http://www.mkdocs.org/user-guide/writing-your-docs/#configure-pages-and-navigation) to add new page and link them within the documentation.
 
+!!! note
+    Run `mkdocs gh-deploy` in **"/docs"** folder to rebuild and publish the documentation to gh-pages branch on GitHub.
+
 ### Resources
 * [Writing your docs in MKdocs](http://www.mkdocs.org/user-guide/writing-your-docs/)
