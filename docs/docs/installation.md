@@ -24,18 +24,18 @@ There are 2 alternative ways to install fabalicious. Because of historic reasons
 
 1. Clone this repository, or add this repository as a submodule.
 
-    ```shell
-    mkdir _tools/fabalicious
-    git submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious
-    ln -s _tools/fabalicious/fabfile.py fabfile.py
-    ```
+```shell
+mkdir _tools/fabalicious
+git submodule add https://github.com/factorial-io/fabalicious.git _tools/fabalicious
+ln -s _tools/fabalicious/fabfile.py fabfile.py
+```
 
 2. If you are using composer you can add fabalicious as a dependency
 
-    ```shell
-    composer require factorial/fabalicious 2.*
-    ln -s _tools/fabalicious/fabfile.py fabfile.py
-    ```
+```shell
+composer require factorial/fabalicious 2.*
+ln -s _tools/fabalicious/fabfile.py fabfile.py
+```
 
 3. Run `fab --list`, this should give you a list of available commands.
 4. Create a configuration file called `fabfile.yaml`
