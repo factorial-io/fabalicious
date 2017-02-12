@@ -3,6 +3,7 @@ from fabric.api import *
 from fabric.colors import green, red
 from lib.utils import validate_dict
 from lib.configuration import data_merge
+from lib import configuration
 
 class GitMethod(BaseMethod):
   @staticmethod
@@ -94,4 +95,38 @@ class GitMethod(BaseMethod):
       with self.runLocally(config):
         self.run('git checkout ' + commit)
         print(green('source restored to ' + commit))
+
+
+  def createApp(self, config, stage, dockerConfig, **kwargs):
+    targetPath = dockerConfig['rootFolder'] + '/' + config['docker']['projectFolder']
+
+    if (stage == 'installCode'):
+      repository = False
+      if 'docker' in config and 'repository' in config['docker']:
+        repository = config['docker']['repository']
+      elif 'repository' in config:
+        repository = config['repository']
+      else:
+        repository = configuration.getSettings('repository')
+
+      if not repository:
+        print red('Could not find \'repository\' in host configuration nor in settings')
+        exit(1)
+
+      if (self.exists(targetPath + '/.projectCreated')):
+        print green('Application already installed!');
+        with self.cd(targetPath):
+          self.run('git checkout %s' % config['branch'])
+          self.run('git pull -q origin %s' % config['branch'])
+      else:
+        self.run('git clone -b %s %s %s' % (config['branch'], repository, targetPath))
+
+      with self.cd(targetPath):
+        self.run('git submodule update --init')
+        self.run('touch .projectCreated')
+
+  def destroyApp(self, config, stage, dockerConfig, **kwargs):
+    if (stage == 'deleteCode'):
+      targetPath = dockerConfig['rootFolder'] + '/' + config['docker']['projectFolder']
+      sudo('rm -rf %s' % targetPath)
 

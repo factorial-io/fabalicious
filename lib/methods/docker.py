@@ -55,6 +55,10 @@ class DockerMethod(BaseMethod):
 
     return docker_config
 
+  def getHostConfig(self, config, hostConfig):
+    dockerConfig = self.getDockerConfig(config)
+    for key in ['host', 'port', 'user']:
+      hostConfig[key] = dockerConfig[key]
 
   def getIp(self, docker_name, docker_host, docker_user, docker_port):
     host_string = join_host_strings(docker_user, docker_host, docker_port)
@@ -232,3 +236,13 @@ class DockerMethod(BaseMethod):
     else:
       host_str = docker_config['user'] + '@'+docker_config['host']+':'+str(docker_config['port'])
       execute(script_fn, config, script=script, variables=variables, environment=environment, host=host_str, runLocally=runLocally, rootFolder = docker_config['rootFolder'])
+
+
+  def createApp(self, config, stage, dockerConfig, **kwargs):
+    if stage in dockerConfig['tasks']:
+      self.runCommand(config, command=stage)
+
+
+  def destroyApp(self, config, stage, dockerConfig, **kwargs):
+    if stage in dockerConfig['tasks']:
+      self.runCommand(config, command=stage)

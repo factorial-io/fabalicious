@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from fabric.api import *
-from fabric.colors import green, red
+from fabric.colors import green, red, yellow
+from fabric.network import *
+from fabric.context_managers import settings as _settings
 import os.path
 import time
 import datetime
@@ -28,6 +30,7 @@ def blueprint(branch, configName=False, output=False):
   template = blueprints.getTemplate(configName)
   if not template:
     print red('No blueprint found in configuration!')
+    print yellow('run via fab blueprint=<identifier>,configNmae=<configName>,output=<bool>')
     exit(1)
 
   c = blueprints.apply(branch, template)
@@ -339,6 +342,50 @@ def install(**kwargs):
     exit(1)
 
   methods.runTask(configuration.current(), 'install', nextTasks=['reset'], **kwargs)
+
+
+@task
+def createApp(**kwargs):
+  configuration.check(['docker'])
+
+  stages = configuration.getSettings('createAppStages', [
+    { 'stage': 'installCode','connection': 'docker' },
+    { 'stage': 'installDependencies','connection': 'docker' },
+    { 'stage': 'spinUp','connection': 'docker' },
+    { 'stage': 'install','connection': 'ssh' },
+  ])
+
+  createDestroyHelper(stages, 'createApp', **kwargs)
+
+
+@task
+def destroyApp(**kwargs):
+  configuration.check(['docker'])
+  stages = configuration.getSettings('destroyAppStages', [
+    { 'stage': 'spinDown','connection': 'docker' },
+    { 'stage': 'deleteContainer','connection': 'docker' },
+    { 'stage': 'deleteCode','connection': 'docker' },
+  ])
+
+  createDestroyHelper(stages, 'destroyApp', **kwargs)
+
+
+def createDestroyHelper(stages, command, **kwargs):
+
+  dockerConfig = configuration.getDockerConfig(configuration.current()['docker']['configuration'])
+
+  for step in stages:
+    step['dockerConfig'] = dockerConfig
+    print yellow(command + ': current stage: \'{stage}\' via \'{connection}\''.format(**step))
+
+    hostConfig = {}
+    for key in ['host', 'user', 'port']:
+      hostConfig[key] = configuration.current()[key],
+
+    methods.call(step['connection'], 'getHostConfig', configuration.current(), hostConfig=hostConfig)
+    hostString = join_host_strings(**hostConfig)
+    with _settings(host_string = hostString):
+      methods.runTask(configuration.current(), command, quiet=True, **step)
 
 
 @task

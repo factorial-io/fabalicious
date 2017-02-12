@@ -46,6 +46,9 @@ class SSHMethod(BaseMethod):
     if 'port' not in config:
       config['port'] = 22
 
+  def getHostConfig(self, config, hostConfig):
+    for key in ['host', 'port', 'user']:
+      hostConfig[key] = config[key]
 
 
 

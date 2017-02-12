@@ -24,8 +24,10 @@ class FilesMethod(BaseMethod):
 
   @staticmethod
   def applyConfig(config, settings):
-    config['filesFolder'] = config['rootFolder'] + config['filesFolder']
-    config['siteFolder'] = config['rootFolder'] + config['siteFolder']
+    if config['filesFolder'].find(config['rootFolder']) < 0:
+      config['filesFolder'] = config['rootFolder'] + config['filesFolder']
+    if config['siteFolder'].find(config['rootFolder']) < 0:
+      config['siteFolder'] = config['rootFolder'] + config['siteFolder']
 
 
   def tarFiles(self, config, filename, source_folders, type):

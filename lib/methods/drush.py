@@ -304,5 +304,9 @@ class DrushMethod(BaseMethod):
     print green("Updated drupal successfully to '%s'." % (drupal_folder))
 
 
+  def createApp(self, config, stage, dockerConfig, **kwargs):
+    if stage=='install':
+      self.install(config, ask='0')
+      self.reset(config, withPasswordReset=True)
 
 
