@@ -128,5 +128,5 @@ class GitMethod(BaseMethod):
   def destroyApp(self, config, stage, dockerConfig, **kwargs):
     if (stage == 'deleteCode'):
       targetPath = dockerConfig['rootFolder'] + '/' + config['docker']['projectFolder']
-      sudo('rm -rf %s' % targetPath)
+      sudo('rm -rf %s' % targetPath, shell=False)
 
