@@ -239,10 +239,10 @@ class DockerMethod(BaseMethod):
 
 
   def createApp(self, config, stage, dockerConfig, **kwargs):
-    if stage in dockerConfig['tasks']:
+    if stage in dockerConfig['tasks'] or stage in ['spinUp', 'spinDown', 'deleteContainer']:
       self.runCommand(config, command=stage)
 
 
   def destroyApp(self, config, stage, dockerConfig, **kwargs):
-    if stage in dockerConfig['tasks']:
+    if stage in dockerConfig['tasks'] or stage in ['spinUp', 'spinDown', 'deleteContainer']:
       self.runCommand(config, command=stage)
