@@ -30,7 +30,10 @@ class SSHMethod(BaseMethod):
 
   @staticmethod
   def applyConfig(config, settings):
-    if "sshTunnel" in config and "docker" in config:
+    if 'sshTunnel' in config and not isinstance(config['sshTunnel'], dict):
+      del(config['sshTunnel'])
+
+    if "sshTunnel" in config and  "docker" in config:
       docker_name = config["docker"]["name"]
       config["sshTunnel"]["destHostFromDockerContainer"] = docker_name
 
