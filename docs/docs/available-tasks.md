@@ -102,6 +102,7 @@ fab config:<your-config> getProperty:<name-of-property>
 This will print the property-value to the console. Suitable if you want to use fabalicious from within other scripts.
 
 **Examples**
+
 * `fab config:mbb getProperty:host` will print the hostname of configuration `mbb`.
 * `fab config:mbb getProperty:docker/tag` will print the tag of the docker-configuration of `mbb`.
 
@@ -115,9 +116,11 @@ fab config:<your-config> version
 This command will display the installed version of the code on the installation `<your-config>`.
 
 **Available methods**:
+
 * `git`. The task will get the installed version via `git describe`, so if you tag your source properly (hint git flow), you'll get a nice version-number.
 
 **Configuration:**
+
 * your host-configuration needs a `branch`-key stating the branch to deploy.
 
 ## deploy
@@ -132,10 +135,12 @@ This task will deploy the latest code to the given installation. If the installa
 After a successfull deployment the `reset`-taks will be run.
 
 **Available methods:**
+
 * `git` will deploy to the latest commit for the given branch defined in the host-configuration. Submodules will be synced, and updated.
 * `platform` will push the current branch to the `platform` remote, which will start the deployment-process on platform.sh
 
 **Configuration:**
+
 * your host-configuration needs a `branch`-key stating the branch to deploy.
 
 ## reset
@@ -147,6 +152,7 @@ fab config:<your-config> reset
 This task will reset your installation
 
 **Available methods:**
+
 * `composer` will run `composer install` to update any dependencies before doing the reset
 * `drush` will
   * set the site-uuid from fabfile.yaml (drupal 8)
@@ -158,11 +164,13 @@ This task will reset your installation
 
 
 **Configuration:**
+
 * your host-configuration needs a `branch`-key stating the branch to deploy.
 * your configuration needs a `uuid`-entry, this is the site uuid (drupal 8). You can get the site-uuid via `drush cget system.site`
 * you can customize which configuration to import with the `configurationManagement`-setting inside your host- or global-setting.
 
 **Examples:**
+
 * `fab config:mbb reset:withPasswordReset=0` will reset the installation and will not reset the password.
 
 
@@ -175,11 +183,13 @@ fab config:<your-config> backup
 This command will backup your files and database into the specified `backup`-directory. The file-names will include configuration-name, a timestamp and the git-SHA1. Every backup can be referenced by its filename (w/o extension) or, when git is abailable via the git-commit-hash.
 
 **Available methods:**
+
 * `git` will prepend the file-names with a hash of the current revision.
 * `files` will tar all files in the `filesFolder` and save it into the `backupFolder`
 * `drush` will dump the databases and save it to the `backupFolder`
 
 **Configuration:**
+
 * your host-configuration will need a `backupFolder` and a `filesFolder`
 
 
@@ -210,6 +220,7 @@ fab config:<your-config> restore:<commit-hash|file-name>
 This will restore a backup-set. A backup-set consists typically of a database-dump and a gzupped-file-archive. You can a list of candidates via `fab config:<config> listBackups`
 
 **Available methods**
+
 * `git` git will checkout the given hash encoded in the filename.
 * `files` all files will be restored. An existing files-folder will be renamed for safety reasons.
 * `drush` will import the database-dump.
@@ -224,6 +235,7 @@ fab config:<config> getBackup:<commit-hash|file-name>
 This command will copy a remote backup-set to your local computer into the current working-directory.
 
 **See also:**
+
 * restore
 * backup
 
@@ -237,6 +249,7 @@ fab config:<dest-config> copyFrom:<source-config>
 This task will copy all files via rsync from `source-config`to `dest-config` and will dump the database from `source-config` and restore it to `dest-config`. After that the `reset`-task gets executed. This is the ideal task to copy a complete installation from one host to another.
 
 **Available methods**
+
 * `ssh` will create all necessary tunnels to access the hosts.
 * `files` will rsync all new and changed files from source to dest
 * `drush` will dump the database and restore it on the dest-host.
@@ -249,6 +262,8 @@ fab config:<dest-config> copyDBFrom:<source-config>
 ```
 
 Basically the same as the `copyFrom`-task, but only the database gets copied.
+
+
 ## copyFilesFrom
 
 ```shell
@@ -267,9 +282,11 @@ fab config:<config> drush:<drush-command>
 This task will execute the `drush-command` on the remote host specified in <config>. Please note, that you'll have to quote the drush-command when it contains spaces. Signs should be excaped, so python does not interpret them.
 
 **Available methods**
+
 * Only available for the `drush`-method
 
 **Examples**
+
 * `fab config:staging drush:"cc all"`
 * `fab config:local drush:fra`
 
@@ -279,9 +296,11 @@ This task will execute the `drush-command` on the remote host specified in <conf
 This task will execute a drupal-console task on the remote host. Please note, that you'll have to quote the command when it contains spaces. There's a special command to install the drupal-console on the host: `fab config:<config> drupalconsole:install`
 
 **Available methods**
+
 * Only available for the `drupalconsole`-method
 
 **Examples**
+
 * `fab config:local drupalconsole:cache:rebuild`
 * `fab config:local drupalconsole:"generate:module --module helloworld"`
 
@@ -304,6 +323,7 @@ fab config:<config> putFile:<path-to-local-file>
 Copy a local file to the tmp-folder of a remote machine.
 
 **Configuration**
+
 * this command will use the `tmpFolder`-host-setting for the destination directory.
 
 
@@ -316,6 +336,7 @@ fab config:<config> getSQLDump
 Get a current dump of the remote database and copy it to the local machine into the current working directory.
 
 **Available methods**
+
 * currently only implemented for the `drush`-method
 
 
@@ -328,6 +349,7 @@ fab config:<config> restoreSQLFromFile:<path-to-local-sql-dump>
 This command will copy the dump-file `path-to-local-sql-dump` to the remote machine and import it into the database.
 
 **Available methods**
+
 * currently only implemented for the `drush`-method
 
 
@@ -342,6 +364,7 @@ This command will run custom scripts on a remote machine. You can declare script
 Additional arguments get passed to the script. You'll have to use the python-syntax to feed additional arguments to the script. See the examples.
 
 **Examples**
+
 * `fab config:mbb script`. List all available scripts for configuration `mbb`
 * `fab config:mbb script:behat` Run the `behat`-script
 * `fab config:mbb script:behat,--name="Login feature",--format=pretty` Run the behat-test, apply `--name` and `--format` parameters to the script
@@ -383,6 +406,7 @@ fab config:<config> docker:startRemoteAccess,port=<port>,publicPort=<public-port
 This docker-task will run a ssh-command to forward a local port to a port inside the docker-container. It starts a new ssh-session which will do the forwarding. When finished, type `exit`.
 
 **Examples**
+
 * `fab config:mbb docker:startRemoteAccess` will forward `localhost:8888` to port `80` of the docker-container
 * `fab config:mbb docker:startRemoteAccess,port=3306,publicPort=33060` will forward `localhost:33060`to port `3306` of the docker-container
 
