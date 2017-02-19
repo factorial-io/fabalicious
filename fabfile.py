@@ -347,7 +347,23 @@ def install(**kwargs):
 @task
 def createApp(**kwargs):
   configuration.check(['docker'])
+  stages = [
+    {
+      'stage': 'checkExistingInstallation',
+      'connection': 'docker',
+      'context': {
+        'installationExists': False
+        }
+    }
+  ]
+  createDestroyHelper(stages, 'createApp')
+  if stages[0]['context']['installationExists']:
+    print green('Found an existing installaion, running deploy instead!')
+    deploy()
+    return
 
+  return
+  # Install the app.
   stages = configuration.getSettings('createAppStages', [
     { 'stage': 'installCode','connection': 'docker' },
     { 'stage': 'installDependencies','connection': 'docker' },

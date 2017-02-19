@@ -100,6 +100,14 @@ class GitMethod(BaseMethod):
   def createApp(self, config, stage, dockerConfig, **kwargs):
     targetPath = dockerConfig['rootFolder'] + '/' + config['docker']['projectFolder']
 
+    if (stage == 'checkExistingInstallation'):
+      kwargs['context']['installationExists'] = True
+      if (self.exists(targetPath + '/.projectCreated')):
+        kwargs['context']['installationExists'] = True
+
+      return
+
+
     if (stage == 'installCode'):
       repository = False
       if 'docker' in config and 'repository' in config['docker']:
