@@ -48,10 +48,10 @@ def apply_helper(value, replacements):
   elif hasattr(value, "__len__") and not hasattr(value, 'strip'):
     result = []
     for list_value in value:
-      result.push(apply_helper(list_value, replacements))
+      result.append(apply_helper(list_value, replacements))
     return result
 
-  else:
+  elif isinstance(value, basestring):
     pattern = re.compile('|'.join(re.escape(key) for key in replacements.keys()))
     result = pattern.sub(lambda x: replacements[x.group()], value)
 
@@ -65,6 +65,8 @@ def apply_helper(value, replacements):
       exit(1)
 
     return result
+  else:
+    return value
 
 
 
