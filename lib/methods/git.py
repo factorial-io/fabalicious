@@ -101,7 +101,7 @@ class GitMethod(BaseMethod):
     targetPath = dockerConfig['rootFolder'] + '/' + config['docker']['projectFolder']
 
     if (stage == 'checkExistingInstallation'):
-      kwargs['context']['installationExists'] = True
+      kwargs['context']['installationExists'] = False
       if (self.exists(targetPath + '/.projectCreated')):
         kwargs['context']['installationExists'] = True
 
