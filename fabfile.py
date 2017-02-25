@@ -362,7 +362,6 @@ def createApp(**kwargs):
     deploy()
     return
 
-  return
   # Install the app.
   stages = configuration.getSettings('createAppStages', [
     { 'stage': 'installCode','connection': 'docker' },
