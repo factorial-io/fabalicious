@@ -88,6 +88,8 @@ class SSHMethod(BaseMethod):
 
     if 'destHost' not in o or not o['destHost']:
       print red('Could not get remote ip-address!')
+      self.tunnels[key]['creating'] = False
+
       return False
 
     strictHostKeyChecking = o['strictHostKeyChecking'] if 'strictHostKeyChecking' in o else True
