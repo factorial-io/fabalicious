@@ -73,7 +73,7 @@ def apply_helper(value, replacements):
 
 def apply(identifier, template):
   project_name = configuration.getSettings('name', 'unknown')
-
+  project_key = configuration.getSettings('key', project_name[:3])
   replacements = {}
   replacements['%identifier%'] = identifier
   replacements['%slug%'] = slugify(identifier)
@@ -83,6 +83,7 @@ def apply(identifier, template):
   replacements['%project-identifier%'] = project_name
   replacements['%project-slug%'] = slugify(project_name)
   replacements['%project-slug.with-hypens%'] = slugify(project_name, replacement='-')
+  replacements['%project-key%'] = slugify(project_key, replacement='')
 
   result = apply_helper(template, replacements)
   return result

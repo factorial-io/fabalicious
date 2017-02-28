@@ -372,6 +372,9 @@ def createApp(**kwargs):
 
   createDestroyHelper(stages, 'createApp', **kwargs)
 
+  if 'copyFrom' in kwargs:
+   copyFrom(kwargs['copyFrom'])
+
 
 @task
 def destroyApp(**kwargs):

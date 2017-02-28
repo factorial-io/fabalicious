@@ -306,6 +306,8 @@ class DrushMethod(BaseMethod):
 
   def createApp(self, config, stage, dockerConfig, **kwargs):
     if stage=='install':
+      print "Give the container some more time, waiting for 15 secs ..."
+      time.sleep(15)
       self.install(config, ask='0')
       self.reset(config, withPasswordReset=True)
 
