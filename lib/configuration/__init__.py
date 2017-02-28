@@ -219,7 +219,7 @@ def get_configuration(name):
   config = getAll()
 
   if name in config['hosts']:
-    host_config = config['hosts'][name]
+    host_config = copy.deepcopy(config['hosts'][name])
     host_config = resolve_inheritance(host_config, config['hosts'])
 
     if 'requires' in host_config:
