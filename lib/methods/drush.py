@@ -303,12 +303,34 @@ class DrushMethod(BaseMethod):
 
     print green("Updated drupal successfully to '%s'." % (drupal_folder))
 
+  def waitForDatabase(self, config):
+    self.setRunLocally(config)
+    available = False
+    tries = 0
+    while not available and tries < 10:
+      try:
+        with settings(hide('warnings', 'running', 'output'), warn_only=True):
+          output = self.run_quietly("mysqladmin -u{user} --password={pass} -h {host} ping".format(**config['database']))
+          if output.return_code == 0:
+            return True
+      except:
+        print "exception"
+        pass
+
+      time.sleep(5)
+      print "Wait another 5 secs for the database ..."
+
+    print red('Database not available!')
+    return False
+
 
   def createApp(self, config, stage, dockerConfig, **kwargs):
     if stage=='install':
-      print "Give the container some more time, waiting for 15 secs ..."
-      time.sleep(15)
+      self.waitForDatabase(config)
       self.install(config, ask='0')
       self.reset(config, withPasswordReset=True)
 
+  def preflight(self, task, config, **kwargs):
+    if task == 'install':
+      self.waitForDatabase(config)
 
