@@ -13,6 +13,7 @@ from slack import SlackMethod
 from files import FilesMethod
 from drupalconsole import DrupalConsoleMethod
 from platform import PlatformMethod
+from drushmake import DrushMakeMethod
 
 cache = {}
 
