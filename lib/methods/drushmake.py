@@ -40,4 +40,4 @@ class DrushMakeMethod(BaseMethod):
   def resetPrepare(self, config, **kwargs):
     self.setRunLocally(config)
     with self.cd(config['rootFolder']):
-      self.run_quietly('drush make %s --no-core --concurrency=8 --force-complete ' % self.getArgs(config) + config['rootFolder'])
+      self.run_quietly('drush make %s --no-core --concurrency=8 ' % self.getArgs(config) + config['rootFolder'])
