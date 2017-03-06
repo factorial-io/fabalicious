@@ -34,7 +34,7 @@ def getTemplate(configName):
 
 
 def slugify(str, replacement=''):
-  return re.sub('(\s|_|\-|\/)', replacement, str.lower())
+  return re.sub('(\s|\.|\,|_|\-|\/)', replacement, str.lower())
 
 
 
