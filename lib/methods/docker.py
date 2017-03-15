@@ -42,6 +42,10 @@ class DockerMethod(BaseMethod):
     if 'tag' not in config['docker']:
       config['docker']['tag'] = 'latest'
 
+  @staticmethod
+  def getInternalCommands():
+    return ['copySSHKeys', 'startRemoteAccess', 'waitForServices'];
+
   def getDockerConfig(self, config):
     if not 'docker' in config or 'configuration' not in config['docker']:
       return False
@@ -196,7 +200,7 @@ class DockerMethod(BaseMethod):
       return
 
     print "Available docker-commands:"
-    internal_commands = ['copySSHKeys', 'startRemoteAccess', 'waitForServices']
+    internal_commands = getInternalCommands()
     available_commands = internal_commands + docker_config['tasks'].keys()
     for command in sorted(available_commands):
       print "- %s" % command

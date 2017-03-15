@@ -5,10 +5,12 @@ from fabric.api import *
 from fabric.colors import green, red, yellow
 from fabric.network import *
 from fabric.context_managers import settings as _settings
+from fabric.state import output
 import os.path
 import time
 import datetime
 import sys
+from fabric.main import list_commands
 
 # Import our modules.
 root_folder = os.path.dirname(os.path.realpath(os.path.dirname(__file__) + '/fabfile.py'))
@@ -420,3 +422,35 @@ def updateApp(**kwargs):
 def doctor(**kwargs):
   configuration.check()
   methods.runTask(configuration.current(), 'doctor', **kwargs)
+
+@task
+def completions(type='fish'):
+  output.status = False
+  if type == 'fish':
+    fish_completions()
+
+def fish_completions():
+  tasks = list_commands('', 'normal')
+  tasks.pop(0)
+  for task in tasks:
+    print task.strip()
+
+  conf = configuration.getAll()
+  for key in conf['hosts'].keys():
+    print "config:" + key
+    print "copyFrom:" + key
+    print "copyDBFrom:" + key
+    print "copyFilesFrom:" + key
+
+  if 'scripts' in conf:
+    for key in conf['scripts'].keys():
+      print "script:" + key
+
+  if 'dockerHosts' in conf:
+    tasks = set()
+    for key in conf['dockerHosts'].keys():
+      docker_conf = configuration.getDockerConfig(key, False, False)
+      if docker_conf:
+        tasks.update(methods.getMethod('docker').getInternalCommands() + docker_conf['tasks'].keys())
+    for key in tasks:
+      print "docker:" + key

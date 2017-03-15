@@ -477,7 +477,7 @@ def getBaseDir():
   return fabfile_basedir
 
 
-def getDockerConfig(docker_config_name, runLocally = False):
+def getDockerConfig(docker_config_name, runLocally = False, printErrors=True):
 
   settings = getAll()
 
@@ -500,8 +500,10 @@ def getDockerConfig(docker_config_name, runLocally = False):
 
   errors = validate_dict(keys, docker_config)
   if len(errors) > 0:
-    for key in errors:
-      print red('Missing key \'%s\' in docker-configuration %s' % (key, docker_config_name))
+    if printErrors:
+      for key in errors:
+        print red('Missing key \'%s\' in docker-configuration %s' % (key, docker_config_name))
+
     return False
 
   return docker_config
