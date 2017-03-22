@@ -136,7 +136,6 @@ class SSHMethod(BaseMethod):
       source_config = kwargs['source_config']
       if source_config and 'sshTunnel' in source_config:
         self.createTunnelFromLocalToSource(config, source_config)
-        print red(config['runLocally'])
         if not config['runLocally']:
           self.createTunnelFromHostToSource(config, source_config)
 
