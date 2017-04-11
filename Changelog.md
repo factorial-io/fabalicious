@@ -1,6 +1,6 @@
 #Changelog
 
-## 2.0.x
+## 2.1.0
 
 ### new
 * new task `completions` which will help to get completions in the shell working. Currently only for the `fish`-shell.
@@ -19,7 +19,11 @@
 ### changed
 
 * fabfile.yaml.lock is not used anymore. To support offline-mode, fabalicious will store all remote files in the `~/.fabalicious` folder. If loading a remote resource fails, fabalicious will use the local cached version of that file.
+* drush8: configurationManagement is completely configurable, e.g. to run a script, add this to your fabfile.yaml
 
+        configurationManagement:
+          staging:
+            - execute(script, config-import)
 
 ## 2.0.0
 
