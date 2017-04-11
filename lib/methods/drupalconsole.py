@@ -14,26 +14,29 @@ class DrupalConsoleMethod(BaseMethod):
     return methodName == 'drupalconsole'
 
   def run_install(self, config, **kwargs):
-    with cd(config['tmpFolder']):
-      run('curl https://drupalconsole.com/installer -L -o drupal.phar')
-      run('mv drupal.phar /usr/local/bin/drupal')
-      run('chmod +x /usr/local/bin/drupal')
-      run('drupal init')
+    self.setRunLocally(config)
+    with self.cd(config['tmpFolder']):
+      self.run('curl https://drupalconsole.com/installer -L -o drupal.phar')
+      self.run('mv drupal.phar /usr/local/bin/drupal')
+      self.run('chmod +x /usr/local/bin/drupal')
+      self.run('drupal init')
 
       print green('Drupal Console installed successfully.')
 
   def run_drupalconsole(self, config, command):
-    with cd(config['rootFolder']):
-      bin_path = '%svendor/bin/drupal' % config['gitRootFolder']
-      if exists(bin_path):
-        run('%s %s' % (bin_path, command))
-      elif exists('/usr/local/bin/drupal'):
-        run('drupal %s' % command)
+    self.setRunLocally(config)
+    with self.cd(config['rootFolder']):
+      bin_path = '%s/vendor/bin/drupal' % config['gitRootFolder']
+      if self.exists(bin_path):
+        self.run('%s %s' % (bin_path, command))
+      elif self.exists('/usr/local/bin/drupal'):
+        self.run('drupal %s' % command)
       else:
         print red('Could not find drupal executable. You can install a global one with drupal:install')
 
 
   def drupalconsole(self, config, **kwargs):
+    self.setRunLocally(config)
     if kwargs['command'] == 'install':
         self.run_install(config)
         return

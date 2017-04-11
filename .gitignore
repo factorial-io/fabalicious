@@ -1,2 +1,4 @@
 fabfile.pyc
 *.pyc
+# Ignore MKdocs build
+docs/site

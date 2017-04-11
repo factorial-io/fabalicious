@@ -10,6 +10,3 @@ Fabalicious is using [fabric](http://www.fabfile.org) to run tasks on remote mac
  * copy data from one installation to another
  * optionally work with our docker-based development-stack [multibasebox](https://github.com/factorial-io/multibasebox)
 
-## Documentation
-
-You'll find extensive documentation in the docs-folder or [here](http://factorial-io.github.io/fabalicious/)

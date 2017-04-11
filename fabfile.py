@@ -2,17 +2,22 @@
 # -*- coding: utf-8 -*-
 
 from fabric.api import *
-from fabric.colors import green, red
+from fabric.colors import green, red, yellow
+from fabric.network import *
+from fabric.context_managers import settings as _settings
+from fabric.state import output
 import os.path
 import time
 import datetime
 import sys
+from fabric.main import list_commands
 
 # Import our modules.
 root_folder = os.path.dirname(os.path.realpath(os.path.dirname(__file__) + '/fabfile.py'))
 sys.path.append(root_folder)
 from lib import methods
 from lib import configuration
+from lib import blueprints
 
 configuration.fabfile_basedir = root_folder
 
@@ -21,6 +26,21 @@ configuration.fabfile_basedir = root_folder
 def config(configName='local'):
   c = configuration.get(configName)
   configuration.apply(c, configName)
+
+@task
+def blueprint(branch, configName=False, output=False):
+  template = blueprints.getTemplate(configName)
+  if not template:
+    print red('No blueprint found in configuration!')
+    print yellow('run via fab blueprint=<identifier>,configNmae=<configName>,output=<bool>')
+    exit(1)
+
+  c = blueprints.apply(branch, template)
+  if (output):
+    blueprints.output(c)
+  else:
+    configuration.add(c['configName'], c)
+    config(c['configName'])
 
 @task
 def getProperty(in_key):
@@ -38,6 +58,20 @@ def getProperty(in_key):
   print c
   exit(0)
 
+def about_helper(key, value, indent):
+  print ' '.ljust(indent) + key.ljust(30 - indent),
+  if isinstance(value, dict):
+    print ""
+    for dict_key, dict_value in value.items():
+      about_helper(dict_key, dict_value, indent + 2)
+  elif hasattr(value, "__len__") and not hasattr(value, 'strip'):
+    print ""
+    for list_value in value:
+      about_helper('', list_value, indent + 2)
+  else:
+    print(': ' + str(value))
+
+
 @task
 def about(config_name=False):
   if not config_name:
@@ -46,18 +80,15 @@ def about(config_name=False):
   else:
     config = configuration.get(config_name)
   if config:
-    print("Configuration for " + config_name)
-    for key, value in config.items():
-      if isinstance(value, dict):
-        print(key)
-        for dict_key, dict_value in value.items():
-          print('  ' + dict_key.ljust(23) + ': '+ str(dict_value))
-      elif hasattr(value, "__len__") and not hasattr(value, 'strip'):
-          print key
-          for list_value in value:
-            print(' '.ljust(25) + ': '+ str(list_value))
-      else:
-        print(key.ljust(25) + ': '+ str(value))
+
+    additional_info = {}
+    methods.runTask(config, 'about', data = additional_info)
+
+    about_helper('Host-configuration for ' + config_name, config, 2)
+    for key, val in additional_info.items():
+      print ""
+      about_helper(key + ' for ' + config_name, val, 2)
+
 
 @task
 def info():
@@ -110,11 +141,16 @@ def ssh():
 @task
 def putFile(fileName):
   configuration.check()
+  if configuration.current()['runLocally']:
+    print red("putFile not supported when 'runLocally' is set!")
+    exit(1)
+
   methods.call('files', 'put', configuration.current(), filename=fileName)
 
 @task
 def getFile(remotePath, localPath='./'):
   configuration.check()
+
   methods.call('files', 'get', configuration.current(), remotePath=remotePath, localPath=localPath)
 
 @task
@@ -130,7 +166,10 @@ def getSQLDump():
   if configuration.current('supportsZippedBackups'):
     file_name += '.gz'
   getFile(file_name)
-  run('rm ' + file_name);
+  if configuration.current()['runLocally']:
+    local('rm ' + file_name)
+  else:
+    run('rm ' + file_name);
 
 @task
 def backup(withFiles = True):
@@ -308,6 +347,68 @@ def install(**kwargs):
 
 
 @task
+def createApp(**kwargs):
+  configuration.check(['docker'])
+  stages = [
+    {
+      'stage': 'checkExistingInstallation',
+      'connection': 'docker',
+      'context': {
+        'installationExists': False
+        }
+    }
+  ]
+  createDestroyHelper(stages, 'createApp')
+  if stages[0]['context']['installationExists']:
+    print green('Found an existing installaion, running deploy instead!')
+    deploy()
+    return
+
+  # Install the app.
+  stages = configuration.getSettings('createAppStages', [
+    { 'stage': 'installCode','connection': 'docker' },
+    { 'stage': 'installDependencies','connection': 'docker' },
+    { 'stage': 'spinUp','connection': 'docker' },
+    { 'stage': 'install','connection': 'ssh' },
+  ])
+
+  createDestroyHelper(stages, 'createApp', **kwargs)
+
+  if 'copyFrom' in kwargs:
+   copyFrom(kwargs['copyFrom'])
+
+
+@task
+def destroyApp(**kwargs):
+  configuration.check(['docker'])
+  stages = configuration.getSettings('destroyAppStages', [
+    { 'stage': 'spinDown','connection': 'docker' },
+    { 'stage': 'deleteContainer','connection': 'docker' },
+    { 'stage': 'deleteCode','connection': 'docker' },
+  ])
+
+  createDestroyHelper(stages, 'destroyApp', **kwargs)
+
+
+def createDestroyHelper(stages, command, **kwargs):
+
+  dockerConfig = configuration.getDockerConfig(configuration.current()['docker']['configuration'])
+
+  for step in stages:
+    step['dockerConfig'] = dockerConfig
+    print yellow(command + ': current stage: \'{stage}\' via \'{connection}\''.format(**step))
+
+    hostConfig = {}
+    for key in ['host', 'user', 'port']:
+      hostConfig[key] = configuration.current()[key],
+
+    methods.call(step['connection'], 'getHostConfig', configuration.current(), hostConfig=hostConfig)
+    hostString = join_host_strings(**hostConfig)
+    with _settings(host_string = hostString):
+      methods.runTask(configuration.current(), command, quiet=True, **step)
+
+
+@task
 def updateApp(**kwargs):
   configuration.check()
   config = configuration.current()
@@ -317,3 +418,39 @@ def updateApp(**kwargs):
   backupDB()
   methods.runTask(configuration.current(), 'updateApp', **kwargs)
 
+@task
+def doctor(**kwargs):
+  configuration.check()
+  methods.runTask(configuration.current(), 'doctor', **kwargs)
+
+@task
+def completions(type='fish'):
+  output.status = False
+  if type == 'fish':
+    fish_completions()
+
+def fish_completions():
+  tasks = list_commands('', 'normal')
+  tasks.pop(0)
+  for task in tasks:
+    print task.strip()
+
+  conf = configuration.getAll()
+  for key in conf['hosts'].keys():
+    print "config:" + key
+    print "copyFrom:" + key
+    print "copyDBFrom:" + key
+    print "copyFilesFrom:" + key
+
+  if 'scripts' in conf:
+    for key in conf['scripts'].keys():
+      print "script:" + key
+
+  if 'dockerHosts' in conf:
+    tasks = set()
+    for key in conf['dockerHosts'].keys():
+      docker_conf = configuration.getDockerConfig(key, False, False)
+      if docker_conf:
+        tasks.update(methods.getMethod('docker').getInternalCommands() + docker_conf['tasks'].keys())
+    for key in tasks:
+      print "docker:" + key

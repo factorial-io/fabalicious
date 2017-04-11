@@ -1,5 +1,29 @@
 #Changelog
 
+## 2.1.0
+
+### new
+* new task `completions` which will help to get completions in the shell working. Currently only for the `fish`-shell.
+
+        complete -c fab -e -f
+        complete -c fab -f -a "(fab completions:type=fish)"
+
+* new tasks `createApp` and `destroyApp`. Needs docker and is not available on local. `createApp` will clone the repository, start the docker-container and install the app. `destroyApp` will destroy the app and remove any containers.
+* new task `blueprint`. This task will load a template from the fabfile.yaml, do some pattern replacement and use the resulting data as the current configuration. With this task it is easy to create dynamic configurations e.g. for CI-integration or similar scenarios.
+* `runLocally` for dockerHosts: if set to true for a given dockerHost-configuration, the commands get executed locally.
+* `runLocally` for hosts: if set to true for a given host-configuration, all commands are run locally.
+* new task `doctor`. This will try to do all necessary connections and will inform of any problems. Good for troubleshooting.
+* fabfile.local.yaml will override existing fabfile.yaml-configuration. the file may reside up to three folders above the projects fabfile. See the readme for more info
+* support for platform.sh
+
+### changed
+
+* fabfile.yaml.lock is not used anymore. To support offline-mode, fabalicious will store all remote files in the `~/.fabalicious` folder. If loading a remote resource fails, fabalicious will use the local cached version of that file.
+* drush8: configurationManagement is completely configurable, e.g. to run a script, add this to your fabfile.yaml
+
+        configurationManagement:
+          staging:
+            - execute(script, config-import)
 
 ## 2.0.0
 

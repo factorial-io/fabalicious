@@ -1,16 +1,17 @@
 from fabric.api import *
 from fabric.state import output, env
-from fabric.colors import green, red
+from fabric.colors import green, red, yellow
 import os.path
 import urllib2
 import yaml
 import copy
 import hashlib
+import sys
+from lib.utils import validate_dict
 
+fabalicious_version = '2.1.0'
 
-fabalicious_version = '2.0.2'
-
-settings = 0
+root_data = 0
 verbose_output = False
 current_config = 'unknown'
 
@@ -59,111 +60,49 @@ def load_configuration(input_file):
   if 'requires' in data:
     check_fabalicious_version(data['requires'], 'file ' + input_file)
 
-  if os.path.splitext(input_file)[1] == '.lock':
-    return data;
-
-  # create one big data-object
-
-  if 'dockerHosts' in data:
-    for config_name in data['dockerHosts']:
-      host = data['dockerHosts'][config_name]
-      host = resolve_inheritance(host, data['dockerHosts'])
-      data['dockerHosts'][config_name] = host
-      if 'requires' in host:
-        check_fabalicious_version(host['requires'], 'docker-configuration ' + config_name)
-
-  global settings
-  settings = copy.deepcopy(data)
-
-  if 'hosts' in data:
-    for config_name in data['hosts']:
-      host = data['hosts'][config_name]
-      host = resolve_inheritance(host, data['hosts'])
-      data['hosts'][config_name] = host
-
-      if 'requires' in host:
-        check_fabalicious_version(host['requires'], 'host ' + config_name)
-
-      if 'docker' in host and 'configuration' in host['docker']:
-        docker_config_name = host['docker']['configuration']
-        new_docker_config_name = hashlib.md5(docker_config_name).hexdigest()
-
-        docker_config = get_docker_configuration(docker_config_name, host)
-        if (docker_config):
-          data['dockerHosts'][new_docker_config_name] = docker_config
-          host['docker']['configuration'] = new_docker_config_name
-
-
-
-  output_file_name = os.path.dirname(input_file) + '/fabfile.yaml.lock'
-  try:
-    with open(output_file_name, 'w') as outfile:
-      outfile.write( yaml.dump(data, default_flow_style=False) )
-  except IOError as e:
-    print "Warning, could not safe fafile.yaml.lock: %s" % e
-
-  # print json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
+  override_filename = find_configfiles(['fabfile.local.yaml'], 3)
+  if override_filename:
+    print yellow('Using overrides from %s' % override_filename)
+    override_data = yaml.load(open(override_filename, 'r'))
+    data = data_merge(data, override_data)
 
   return data
-
-def internet_on():
-  try:
-    urllib2.urlopen('http://www.google.com',timeout=2)
-    return True
-  except urllib2.URLError:
-    pass
-
-  return False
 
 
 def get_all_configurations():
   global fabfile_basedir
+  # Find our configuration-file:
+  candidates = ['fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
 
+  config_file_name = find_configfiles(candidates, 3)
+  if (config_file_name):
+    fabfile_basedir = os.path.dirname(config_file_name)
+    try:
+      return load_configuration(config_file_name)
+    except IOError:
+      print "could not read from %s " % (config_file_name)
+  else:
+    print red('could not find suitable configuration file!')
+
+  exit(1)
+
+def find_configfiles(candidates, max_levels):
+  global fabfile_basedir
 
   if fabfile_basedir:
     start_folder = fabfile_basedir
   else:
     start_folder = os.path.dirname(os.path.realpath(__file__))
 
-  max_levels = 3
-  from_cache = False
-
-  # Find our configuration-file:
-  candidates = ['fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
-
-  if not internet_on():
-    print "No internet available, trying to read from lock-file ..."
-    candidates = ['fabfile.yaml.lock'] + candidates
-
   while max_levels >= 0:
     for candidate in candidates:
-      try:
-        if os.path.isfile(start_folder + '/' + candidate):
-          fabfile_basedir = start_folder
-          return load_configuration(start_folder + '/' + candidate)
-
-      except IOError:
-        print "could not read from %s " % (start_folder + '/' + candidate)
+      if os.path.isfile(start_folder + '/' + candidate):
+        return start_folder + '/' + candidate
 
     max_levels = max_levels - 1
     start_folder = os.path.dirname(start_folder)
 
-  # if we get here, we didn't find a suitable configuration file
-  print(red('could not find suitable configuration file!'))
-  exit(1)
-
-
-
-def validate_dict(keys, dict, message):
-  validated = True
-  for key in keys:
-    if key not in dict:
-      print(red(message + ' ' + key))
-      validated = False
-
-  if not validated:
-    exit(1)
-
+  return False
 
 
 def data_merge(a, b):
@@ -235,6 +174,39 @@ def check_fabalicious_version(required_version, msg):
     print red('You are currently using %s. Please update your fabalicious installation.' % current_version)
     exit(1)
 
+def validate_config_against_methods(config):
+  from lib import methods
+
+  errors = validate_dict(['rootFolder', 'type', 'needs'], config)
+  methodNames = config['needs']
+  for methodName in methodNames:
+    m = methods.getMethod(methodName)
+    e = m.validateConfig(config)
+    errors = data_merge(errors, e)
+
+  if len(errors) > 0:
+    for key, msg in errors.iteritems():
+      print red('Key \'%s\' in %s: %s' % (key, config['config_name'], msg))
+
+    exit(1)
+
+def get_default_config_from_methods(config, settings, defaults):
+  from lib import methods
+
+  methodNames = config['needs']
+  for methodName in methodNames:
+    m = methods.getMethod(methodName)
+    m.getDefaultConfig(config, settings, defaults)
+
+  return defaults
+
+def apply_config_by_methods(config, settings):
+  from lib import methods
+
+  methodNames = config['needs']
+  for methodName in methodNames:
+    m = methods.getMethod(methodName)
+    m.applyConfig(config, settings)
 
 
 def get_configuration(name):
@@ -244,139 +216,55 @@ def get_configuration(name):
     'supportsSSH': '"%s" is unsupported, please add "ssh" to your "needs"',
     'useForDevelopment': '"%s" is unsupported, please use "type" with "dev|prod|stage" as value.'
   }
+  config = getAll()
 
-  config = get_all_configurations()
   if name in config['hosts']:
-    global settings
-    settings = config
-    if not 'common' in settings:
-      settings['common'] = { }
+    host_config = copy.deepcopy(config['hosts'][name])
+    host_config = resolve_inheritance(host_config, config['hosts'])
 
-    if not "usePty" in settings:
-      settings['usePty'] = True
-
-    if not "useShell" in settings:
-      settings['useShell'] = True
-
-    if not "disableKnownHosts" in settings:
-      settings['disableKnownHosts'] = False
-
-    if not "gitOptions" in settings:
-      settings['gitOptions'] = { 'pull' : [ '--no-edit', '--rebase'] }
-
-    if not 'sqlSkipTables' in settings:
-      settings['sqlSkipTables'] = [
-        'cache',
-        'cache_block',
-        'cache_bootstrap',
-        'cache_field',
-        'cache_filter',
-        'cache_form',
-        'cache_menu',
-        'cache_page',
-        'cache_path',
-        'cache_update',
-        'cache_views',
-        'cache_views_data',
-      ]
-
-    if not 'slack' in settings:
-      settings['slack'] = {}
-    settings['slack'] = data_merge( { 'notifyOn': [], 'username': 'Fabalicious', 'icon_emoji': ':tada:'}, settings['slack'])
-
-    if 'needs' not in settings:
-      settings['needs'] = ['ssh', 'git', 'drush7', 'files']
-
-    if 'scripts' not in settings:
-      settings['scripts'] = {}
-
-    if 'configurationManagement' not in settings:
-      settings['configurationManagement'] = [ 'staging' ];
-
-
-    host_config = config['hosts'][name]
     if 'requires' in host_config:
       check_fabalicious_version(host_config['requires'], 'host-configuration ' + name)
 
-    keys = ("host", "rootFolder")
-    validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
+    if 'needs' not in host_config:
+      host_config['needs'] = config['needs']
+
+    if 'runLocally' not in host_config:
+      host_config['runLocally'] = False
+
+    config['needs'].append('script')
+
+    host_config['config_name'] = name
+
+    validate_config_against_methods(host_config)
 
     # add defaults
     defaults = {
-      'port': 22,
       'type': 'prod',
-      'ignoreSubmodules': False,
       'supportsBackups': True,
       'supportsCopyFrom': True,
       'supportsInstalls': False,
       'supportsZippedBackups': True,
       'tmpFolder': '/tmp',
-      'gitRootFolder': host_config['rootFolder'],
-      'gitOptions': settings['gitOptions'],
-      'branch': 'master',
-      'useShell': settings['useShell'],
-      'disableKnownHosts': settings['disableKnownHosts'],
-      'usePty': settings['usePty'],
-      'needs': settings['needs'],
       'scripts': {},
-      'slack': {},
-      'configurationManagement': settings['configurationManagement'],
     }
+
+    defaults = get_default_config_from_methods(host_config, config, defaults)
 
     for key in defaults:
       if key not in host_config:
         host_config[key] = defaults[key]
 
-    # check keys again
-    if 'ssh' in host_config['needs']:
-      keys = ("rootFolder", "filesFolder", "siteFolder", "backupFolder", "branch")
-      validate_dict(keys, host_config, 'Configuraton '+name+' has missing key')
-
-      host_config['siteFolder'] = host_config['rootFolder'] + host_config['siteFolder']
-      host_config['filesFolder'] = host_config['rootFolder'] + host_config['filesFolder']
-
-      host_config['gitOptions'] = data_merge(settings['gitOptions'], host_config['gitOptions'])
-
-    else:
-      # disable other settings, when ssh is not available
-      keys = ( 'ignoreSubmodules', 'supportsBackups', 'supportsCopyFrom', 'supportsInstalls')
-      for key in keys:
-        host_config[key] = False
-
-    if "docker" in host_config:
-      keys = ("name", "configuration")
-      validate_dict(keys, host_config["docker"], 'Configuraton '+name+' has missing key in docker')
-      if not 'tag' in host_config["docker"]:
-        host_config["docker"]["tag"] = "latest"
-
-    if "sshTunnel" in host_config and "docker" in host_config:
-      docker_name = host_config["docker"]["name"]
-      host_config["sshTunnel"]["destHostFromDockerContainer"] = docker_name
-
-    if "sshTunnel" in host_config:
-      if not 'localPort' in host_config['sshTunnel']:
-        host_config['sshTunnel']['localPort'] = host_config['port']
-
-    if "behatPath" in host_config:
-      host_config['behat'] = { 'presets': dict() }
-      host_config['behat']['run'] = host_config['behatPath']
-
-    if not 'behat' in host_config:
-      host_config['behat'] = { 'presets': dict() }
-
-    host_config['slack'] = data_merge(settings['slack'], host_config['slack'])
+    apply_config_by_methods(host_config, config)
 
     if 'database' in host_config:
       if 'host' not in host_config['database']:
         host_config['database']['host'] = 'localhost'
 
     if not 'backupBeforeDeploy' in host_config:
-      host_config['backupBeforeDeploy'] = host_config['type'] != 'dev'
-
-    config['needs'].append('script')
+      host_config['backupBeforeDeploy'] = host_config['type'] != 'dev' and host_config['type'] != 'test'
 
 
-    host_config['config_name'] = name
+
 
     for key in unsupported:
       if key in host_config:
@@ -417,6 +305,28 @@ def get_configuration_via_file(config_file_name):
 
   return data
 
+def remote_config_cache_get_filename(config_file_name):
+  m = hashlib.md5()
+  m.update(config_file_name);
+  filename = os.path.expanduser("~") + "/.fabalicious/" + m.hexdigest() + '.yaml'
+  if not os.path.exists(os.path.dirname(filename)):
+    os.makedirs(os.path.dirname(filename))
+
+  return filename
+
+def remote_config_cache_save(config_file_name, data):
+  filename = remote_config_cache_get_filename(config_file_name)
+  stream = open(filename, 'w')
+  yaml.dump(data, stream, default_flow_style=False)
+
+def remote_config_cache_load(config_file_name):
+  try:
+    filename = remote_config_cache_get_filename(config_file_name)
+    stream = open(filename, 'r')
+    data = yaml.load(stream)
+    return data
+  except:
+    return False
 
 
 def get_configuration_via_http(config_file_name):
@@ -424,34 +334,18 @@ def get_configuration_via_http(config_file_name):
     # print "Reading configuration from %s" % config_file_name
     response = urllib2.urlopen(config_file_name)
     html = response.read()
+    data = yaml.load(html)
+    remote_config_cache_save(config_file_name, data)
     return yaml.load(html)
-  except urllib2.HTTPError, err:
-    if err.code == 404:
-      print red('Could not read/find configuration at %s' %config_file_name)
-    else:
-      raise
+  except (urllib2.URLError, urllib2.HTTPError) as err:
+    data = remote_config_cache_load(config_file_name)
+    if data:
+      print yellow('Could not read configuration from %s, using cached data.' % config_file_name)
+      return data
+
+    print red('Could not read/find configuration from %s' % config_file_name)
 
   return False
-
-
-
-def get_docker_configuration(config_name, config):
-  if config_name[0:7] == 'http://' or config_name[0:8] == 'https://':
-    data = get_configuration_via_http(config_name)
-    return resolve_inheritance(data, {})
-  elif config_name[0:1] == '.':
-    data = get_configuration_via_file(config_name)
-    return resolve_inheritance(data, {})
-  else:
-    all_docker_hosts = copy.deepcopy(settings['dockerHosts'])
-    config_name = config['docker']['configuration']
-    if config_name in all_docker_hosts:
-      return all_docker_hosts[config_name]
-
-  return False
-
-
-
 
 
 def apply(config, name):
@@ -461,14 +355,12 @@ def apply(config, name):
   global current_config
   current_config = name
 
+  if 'ssh' not in config['needs']:
+    return;
+
   env.use_shell = config['useShell']
   env.always_use_pty = config['usePty']
   env.disable_known_hosts = config['disableKnownHosts']
-
-  # print "use_shell: %i, use_pty: %i" % (env.use_shell, env.always_use_pty)
-
-  if 'ssh' not in config['needs']:
-    return;
 
   if 'port' in config:
     env.port = config['port']
@@ -505,15 +397,75 @@ def get(name):
   return get_configuration(name)
 
 def current(key = False):
+  if not hasattr(env, 'config'):
+    return False
+
   if key:
     return env.config[key]
   else:
     return env.config
 
 def getAll():
-  return get_all_configurations()
+  global root_data
+
+  if not root_data:
+    root_data = get_all_configurations()
+
+    if not 'common' in root_data:
+      root_data['common'] = { }
+
+    if not "usePty" in root_data:
+      root_data['usePty'] = True
+
+    if not "useShell" in root_data:
+      root_data['useShell'] = True
+
+    if not "disableKnownHosts" in root_data:
+      root_data['disableKnownHosts'] = False
+
+    if not "gitOptions" in root_data:
+      root_data['gitOptions'] = { 'pull' : [ '--no-edit', '--rebase'] }
+
+    if not 'sqlSkipTables' in root_data:
+      root_data['sqlSkipTables'] = [
+        'cache',
+        'cache_block',
+        'cache_bootstrap',
+        'cache_field',
+        'cache_filter',
+        'cache_form',
+        'cache_menu',
+        'cache_page',
+        'cache_path',
+        'cache_update',
+        'cache_views',
+        'cache_views_data',
+      ]
+
+    if not 'slack' in root_data:
+      root_data['slack'] = {}
+    root_data['slack'] = data_merge( { 'notifyOn': [], 'username': 'Fabalicious', 'icon_emoji': ':tada:'}, root_data['slack'])
+
+    if 'needs' not in root_data:
+      root_data['needs'] = ['ssh', 'git', 'drush7', 'files']
+
+    if 'scripts' not in root_data:
+      root_data['scripts'] = {}
+
+    # TODO: find a way to move method-specific settings into the method-implementation
+    if 'configurationManagement' not in root_data:
+      root_data['configurationManagement'] = {
+        'staging': [
+          'drush config-import -y staging'
+        ]
+      }
+
+
+  return root_data
+
 
 def getSettings(key = False, defaultValue = False):
+  settings = getAll()
   if key:
     return settings[key] if key in settings else defaultValue
   else:
@@ -524,3 +476,39 @@ def getBaseDir():
   global fabfile_basedir
   return fabfile_basedir
 
+
+def getDockerConfig(docker_config_name, runLocally = False, printErrors=True):
+
+  settings = getAll()
+
+  if 'dockerHosts' not in settings:
+    return False
+
+  dockerHosts = settings['dockerHosts']
+
+  if not dockerHosts or docker_config_name not in dockerHosts:
+    return False
+
+  docker_config = copy.deepcopy(dockerHosts[docker_config_name])
+  docker_config = resolve_inheritance(docker_config, dockerHosts)
+
+  if 'runLocally' in docker_config and docker_config['runLocally'] or runLocally:
+    keys = ['rootFolder', 'tasks']
+  else:
+    docker_config['runLocally'] = False
+    keys = ['tasks', 'rootFolder', 'user', 'host', 'port']
+
+  errors = validate_dict(keys, docker_config)
+  if len(errors) > 0:
+    if printErrors:
+      for key in errors:
+        print red('Missing key \'%s\' in docker-configuration %s' % (key, docker_config_name))
+
+    return False
+
+  return docker_config
+
+
+def add(config_name, config):
+  settings = getAll()
+  settings['hosts'][config_name] = config

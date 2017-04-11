@@ -1,0 +1,21 @@
+site_name: Fabalicious
+theme: readthedocs
+markdown_extensions:
+  - admonition
+
+repo_url: https://github.com/factorial-io/fabalicious/
+repo_name: GitHub
+edit_uri: edit/develop/docs/docs/
+site_description: "Fabalicious Documentation"
+site_author: "Factorial GmbH, Hamburg"
+copyright: "© 2017 Factorial GmbH, Hamburg"
+
+pages:
+- index.md
+- installation.md
+- usage.md
+- available-tasks.md
+- configuration.md
+- docker-integration.md
+- local-overrides.md
+- contribute.md

@@ -3,15 +3,43 @@ from fabric.state import output, env
 from fabric.colors import green, red
 from fabric.context_managers import env
 from fabric.network import *
+from fabric.contrib.files import exists
+
+
+class LocallyContext():
+    def __init__(self, parent, config):
+      self.parent= parent
+      self.config = config
+
+    def __enter__(self):
+      self.saved = self.parent.run_locally
+      self.parent.setRunLocally(self.config)
+      return self
+
+    def __exit__(self, type, value, traceback):
+      self.parent.run_locally = self.saved
 
 
 class BaseMethod(object):
 
   verbose_output = True
+  run_locally = False
 
   @staticmethod
   def supports(methodName):
     return False
+
+  @staticmethod
+  def validateConfig(config):
+    return {}
+
+  @staticmethod
+  def getDefaultConfig(config, settings, defaults):
+    pass
+
+  @staticmethod
+  def applyConfig(config, settings):
+    pass
 
   def __init__(self, methodName, factory):
     self.methodName = methodName
@@ -80,6 +108,32 @@ class BaseMethod(object):
     return file[0]
 
 
+
+
+  def runLocally(self, config):
+    return LocallyContext(self, config)
+
+  def setRunLocally(self, config):
+    self.run_locally = config['runLocally']
+
+  def cd(self, path):
+    # print red('cd: %d %s'% (self.run_locally,  path))
+    return lcd(path) if self.run_locally else cd(path)
+
+
+  def run(self, cmd, **kwargs):
+    # print red("run: %d %s" % ( self.run_locally, cmd))
+    if self.run_locally:
+      return local(cmd, **kwargs)
+    else:
+      if 'capture' in kwargs:
+        kwargs.pop('capture')
+      return run(cmd, **kwargs)
+
+  def exists(self, fname):
+    return os.path.isfile(fname) if self.run_locally else exists(fname)
+
+
   def run_quietly(self, cmd, msg = '', hide_output = None, may_fail=False):
     if 'warn_only' in env and env['warn_only']:
       may_fail = True
@@ -96,7 +150,7 @@ class BaseMethod(object):
 
     with hide(*hide_output):
       try:
-        result = run(cmd)
+        result = self.run(cmd)
 
         if not may_fail and result.return_code != 0:
           print red('%s failed:' %s)

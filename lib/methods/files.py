@@ -6,11 +6,29 @@ import os.path
 import re
 from lib import utils
 from lib import configuration
+from lib.utils import validate_dict
+from fabric.contrib.files import exists
 
 class FilesMethod(BaseMethod):
   @staticmethod
   def supports(methodName):
     return methodName == 'files'
+
+  @staticmethod
+  def validateConfig(config):
+    return validate_dict(['rootFolder', 'siteFolder', 'filesFolder', 'backupFolder'], config)
+
+  @staticmethod
+  def getDefaultConfig(config, settings, defaults):
+    pass
+
+  @staticmethod
+  def applyConfig(config, settings):
+    if config['filesFolder'].find(config['rootFolder']) < 0:
+      config['filesFolder'] = config['rootFolder'] + config['filesFolder']
+    if config['siteFolder'].find(config['rootFolder']) < 0:
+      config['siteFolder'] = config['rootFolder'] + config['siteFolder']
+
 
   def tarFiles(self, config, filename, source_folders, type):
     excludeFiles = configuration.getSettings('excludeFiles')
@@ -24,6 +42,7 @@ class FilesMethod(BaseMethod):
     self.run_quietly(cmd)
 
   def backup(self, config, **kwargs):
+    self.setRunLocally(config)
     if 'withFiles' in kwargs and kwargs['withFiles'] != True:
       return
 
@@ -49,6 +68,7 @@ class FilesMethod(BaseMethod):
         results.append(backup_result)
 
   def restore(self, config, files=False, cleanupBeforeRestore=False, **kwargs):
+    self.setRunLocally(config)
 
     file = self.get_backup_result_for_method(files, 'files')
     if not file:
@@ -102,9 +122,17 @@ class FilesMethod(BaseMethod):
     put(filename, config['tmpFolder'])
 
   def get(self, config, remotePath, localPath):
-    get(remotePath, localPath)
+    if config['runLocally']:
+      local('cp %s %s' % (remotePath, localPath))
+      return
+
+    if (exists(remotePath)):
+      get(remotePath, localPath)
+    else:
+      print red("Could not find file '%s' on remote!" % remotePath)
 
   def copyFilesFrom(self, config, source_config=False, **kwargs):
+    self.setRunLocally(config)
     keys = ['filesFolder', 'privateFilesFolder']
     for key in keys:
       if key in source_config and key in config:

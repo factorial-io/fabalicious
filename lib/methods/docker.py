@@ -5,6 +5,8 @@ from fabric.context_managers import settings as _settings
 from fabric.context_managers import env
 from fabric.colors import green, red
 from lib import configuration
+import copy
+from lib.utils import validate_dict
 
 class DockerMethod(BaseMethod):
 
@@ -12,27 +14,55 @@ class DockerMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'docker'
 
+  @staticmethod
+  def validateConfig(config):
+    if 'docker' not in config:
+      return validate_dict(['docker'], config)
 
+    return validate_dict(['configuration', 'name'], config['docker'], 'docker')
 
+  @staticmethod
+  def getDefaultConfig(config, settings, defaults):
+    pass
+
+  @staticmethod
+  def applyConfig(config, settings):
+    config_name = config['docker']['configuration']
+    data = False
+    # Check if configuration points to an external source.
+    if config_name[0:7] == 'http://' or config_name[0:8] == 'https://':
+      data = configuration.get_configuration_via_http(config_name)
+      data = configuration.resolve_inheritance(data, {})
+    elif config_name[0:1] == '.':
+      data = configuration.get_configuration_via_file(config_name)
+      data = configuration.resolve_inheritance(data, {})
+    if data:
+      settings['dockerHosts'][config_name] = data
+
+    if 'tag' not in config['docker']:
+      config['docker']['tag'] = 'latest'
+
+  @staticmethod
+  def getInternalCommands():
+    return ['copySSHKeys', 'startRemoteAccess', 'waitForServices'];
 
   def getDockerConfig(self, config):
     if not 'docker' in config or 'configuration' not in config['docker']:
       return False
 
     docker_config_name = config['docker']['configuration']
+    docker_config = configuration.getDockerConfig(docker_config_name, config['runLocally'])
 
-    dockerHosts = configuration.getSettings('dockerHosts')
-
-    if not dockerHosts or docker_config_name not in dockerHosts:
-      return False
-
-    docker_config = dockerHosts[docker_config_name]
-    if 'password' in docker_config:
+    if docker_config and 'password' in docker_config:
       self.addPasswordToFabricCache(**docker_config)
 
 
     return docker_config
 
+  def getHostConfig(self, config, hostConfig):
+    dockerConfig = self.getDockerConfig(config)
+    for key in ['host', 'port', 'user']:
+      hostConfig[key] = dockerConfig[key]
 
   def getIp(self, docker_name, docker_host, docker_user, docker_port):
     host_string = join_host_strings(docker_user, docker_host, docker_port)
@@ -81,6 +111,11 @@ class DockerMethod(BaseMethod):
     local("ssh -L%s:%s:%s:%s -p %s %s@%s" % (public_ip, publicPort, ip, port, docker_config['port'], docker_config['user'], docker_config['host']))
     exit(0)
 
+  def about(self, config, **kwargs):
+    data = kwargs['data']
+    docker_config = self.getDockerConfig(config)
+    if docker_config:
+      data['DockerHost-configuration'] = docker_config
 
 
   def copySSHKeys(self, config, **kwargs):
@@ -165,7 +200,7 @@ class DockerMethod(BaseMethod):
       return
 
     print "Available docker-commands:"
-    internal_commands = ['copySSHKeys', 'startRemoteAccess', 'waitForServices']
+    internal_commands = getInternalCommands()
     available_commands = internal_commands + docker_config['tasks'].keys()
     for command in sorted(available_commands):
       print "- %s" % command
@@ -179,25 +214,39 @@ class DockerMethod(BaseMethod):
       exit(1)
 
 
-    if hasattr(self, command):
+    if  command not in ['exists', 'run', 'cd'] and hasattr(self, command):
       fn = getattr(self, command)
       fn(config, **kwargs)
       return
 
     docker_config = self.getDockerConfig(config)
     if not docker_config:
-      print red('Missing docker-configuration in "%s"' % config.config_name)
+      print red('Missing or incorrect docker-configuration in "%s"' % config['config_name'])
       exit(1)
 
     if command not in docker_config['tasks']:
       print red('Can\'t find  docker-command "%s"'  % ( command ))
       self.listAvailableCommands(config)
       exit(1)
-    script = docker_config['tasks'][command]
 
+    script = docker_config['tasks'][command]
     script_fn = self.factory.get('script', 'runScript')
     variables = { 'dockerHost': docker_config }
     environment = docker_config['environment'] if 'environment' in docker_config else {}
-    host_str = docker_config['user'] + '@'+docker_config['host']+':'+str(docker_config['port'])
+    runLocally = docker_config['runLocally'] if 'runLocally' in docker_config else config['runLocally']
 
-    execute(script_fn, config, script=script, variables=variables, environment=environment, host=host_str, rootFolder = docker_config['rootFolder'])
+    if runLocally:
+      execute(script_fn, config, script=script, variables=variables, environment=environment, rootFolder = docker_config['rootFolder'], runLocally=runLocally)
+    else:
+      host_str = docker_config['user'] + '@'+docker_config['host']+':'+str(docker_config['port'])
+      execute(script_fn, config, script=script, variables=variables, environment=environment, host=host_str, runLocally=runLocally, rootFolder = docker_config['rootFolder'])
+
+
+  def createApp(self, config, stage, dockerConfig, **kwargs):
+    if stage in dockerConfig['tasks'] or stage in ['spinUp', 'spinDown', 'deleteContainer']:
+      self.runCommand(config, command=stage)
+
+
+  def destroyApp(self, config, stage, dockerConfig, **kwargs):
+    if stage in dockerConfig['tasks'] or stage in ['spinUp', 'spinDown', 'deleteContainer']:
+      self.runCommand(config, command=stage)
