@@ -73,3 +73,16 @@ hosts:
 
 For more infos about the file-format have a look at the file-format-section.
 
+# General notes regarding MAMP usage
+
+Make sure that the local instances of PHP and mysql are the actual MAMP binaries:
+
+```$ sudo ln -s /Applications/MAMP/Library/bin/mysql /usr/local/bin/mysql```
+
+Add the correct php binary to your .zshrc / .bashrc
+
+```$ export DRUSH_PHP=/Applications/MAMP/bin/php/php7.0.12/bin/php``` 
+
+
+
+
