@@ -6,6 +6,7 @@ from drush import DrushMethod
 
 
 import copy
+import time
 
 
 class PlatformMethod(BaseMethod):
@@ -37,6 +38,9 @@ class PlatformMethod(BaseMethod):
 
   def deploy(self, config, **kwargs):
     local('git push platform %s' % config['branch'])
+    print 'Wait 10 secs for the installation to settle ...'
+    time.sleep(10)
+
 
   def drush(self, config, **kwargs):
     self.shadowed_drush.drush(config, **kwargs)
