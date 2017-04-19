@@ -1,8 +1,8 @@
 from fabric.api import *
 import subprocess, shlex, atexit, time
+import time
 
-
-ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q'
+ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null '
 
 class SSHTunnel:
 
@@ -22,7 +22,7 @@ class SSHTunnel:
     else:
       cmd = 'ssh'
 
-    cmd = cmd + ' -o PasswordAuthentication=no -vAN -L {local_port}:{dest_host}:{dest_port} -p {bridge_port} {bridge_user}@{bridge_host}'.format(**args)
+    cmd = cmd + ' -q -o PasswordAuthentication=no -vAN -L {local_port}:{dest_host}:{dest_port} -p {bridge_port} {bridge_user}@{bridge_host}'.format(**args)
     return cmd
 
   def __init__(self, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True, timeout=45):
@@ -63,7 +63,7 @@ class RemoteSSHTunnel:
     else:
       remote_cmd = 'ssh'
       cmd = 'ssh'
-    remote_cmd = remote_cmd + ' -o PasswordAuthentication=no -v -L {local_port}:{dest_host}:{dest_port} -p {bridge_port} {bridge_user}@{bridge_host} -A -N -M '
+    remote_cmd = remote_cmd + ' -q -o PasswordAuthentication=no -v -L {local_port}:{dest_host}:{dest_port} -p {bridge_port} {bridge_user}@{bridge_host} -A -N -M '
 
     with hide('running', 'output', 'warnings'):
       run('rm -f ~/.ssh-tunnel-from-fabric')
@@ -96,6 +96,7 @@ class RemoteSSHTunnel:
       if time.time() > start_time + timeout:
         raise Exception('SSH tunnel timed out with command "%s"' % cmd)
 
+    time.sleep(5)
 
   def entrance(self):
     return 'localhost:%d' % self.local_port
