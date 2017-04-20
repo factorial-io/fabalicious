@@ -74,6 +74,9 @@
                 <li class="toctree-l3"><a href="#a-simple-configuration-example">A simple configuration-example</a></li>
                 
             
+                <li class="toctree-l3"><a href="#general-notes-regarding-mamp-usage">General notes regarding MAMP usage</a></li>
+                
+            
             </ul>
         
     </li>
@@ -222,6 +225,11 @@ hosts:
 </code></pre>
 
 <p>For more infos about the file-format have a look at the file-format-section.</p>
+<h1 id="general-notes-regarding-mamp-usage">General notes regarding MAMP usage</h1>
+<p>Make sure that the local instances of PHP and mysql are the actual MAMP binaries:</p>
+<p><code>$ sudo ln -s /Applications/MAMP/Library/bin/mysql /usr/local/bin/mysql</code></p>
+<p>Add the correct php binary to your .zshrc / .bashrc</p>
+<p><code>$ export DRUSH_PHP=/Applications/MAMP/bin/php/php7.0.12/bin/php</code> </p>
               
             </div>
           </div>
