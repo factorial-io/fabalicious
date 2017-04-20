@@ -124,6 +124,13 @@
     </li>
 <li>
           
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../changelog/">Changelog</a>
+        
+    </li>
+<li>
+          
         </ul>
       </div>
       &nbsp;
@@ -182,16 +189,18 @@ hosts:
 <h3 id="name">name</h3>
 <p>The name of the project, it's only used for output.</p>
 <h3 id="needs">needs</h3>
-<p>List here all needed methods for that type of project. Available methods are:
-  * <code>git</code> for deployments via git
-  * <code>ssh</code>
-  * <code>drush7</code> for support of drupal-7 installations
-  * <code>drush8</code> for support fo drupal 8 installations
-  * <code>files</code>
-  * <code>slack</code> for slack-notifications
-  * <code>docker</code> for docker-support
-  * <code>composer</code> for composer support
-  * <code>drupalconsole</code> for drupal-concole support</p>
+<p>List here all needed methods for that type of project. Available methods are:</p>
+<ul>
+<li><code>git</code> for deployments via git</li>
+<li><code>ssh</code></li>
+<li><code>drush7</code> for support of drupal-7 installations</li>
+<li><code>drush8</code> for support fo drupal 8 installations</li>
+<li><code>files</code></li>
+<li><code>slack</code> for slack-notifications</li>
+<li><code>docker</code> for docker-support</li>
+<li><code>composer</code> for composer support</li>
+<li><code>drupalconsole</code> for drupal-concole support</li>
+</ul>
 <p><strong>Example for drupal 7</strong></p>
 <pre><code class="yaml">needs:
   - ssh
@@ -454,7 +463,7 @@ inheritsFrom:
 <p>Scripts are a powerful concept of fabalicious. There are a lot of places where scripts can be called. The <code>common</code>-section defines common scripts to be run for specific task/installation-type-configurations, docker-tasks are also scripts which you can execute via the docker-command. And you can even script fabalicious tasks and create meta-tasks.</p>
 <p>A script is basically a list of commands which get executed via shell on a remote machine. To stay independent of the host where the script is executed, fabalicious parsed the script before executing it and replaces given variables with their counterpart in the yams file.</p>
 <h2 id="replacement-patterns">Replacement-patterns</h2>
-<p>Replacement-Patterns are specific strings enclosed in <code>%</code>s, e.g. <code>%host.port%</code>, <code>%dockerHost.rootFolder% or</code>%arguments.name%.</p>
+<p>Replacement-Patterns are specific strings enclosed in <code>%</code>s, e.g. <code>%host.port%</code>, <code>%dockerHost.rootFolder%</code> or <code>%arguments.name%</code>.</p>
 <p>Here's a simple example;</p>
 <pre><code class="yaml">script:
   test:
@@ -512,14 +521,16 @@ inheritsFrom:
       - execute(docker, stop)
 </code></pre>
 
-<p>This script will
-<em> start the docker-container,
-</em> wait for it,
-<em> deploys the given branch,
-</em> run a script which will install behat,
-<em> run behat with some custom arguments,
-</em> gets the result-file and copy it to a location,
-* and finally stops the container.</p>
+<p>This script will</p>
+<ul>
+<li>start the docker-container,</li>
+<li>wait for it,</li>
+<li>deploys the given branch,</li>
+<li>run a script which will install behat,</li>
+<li>run behat with some custom arguments,</li>
+<li>gets the result-file and copy it to a location,</li>
+<li>and finally stops the container.</li>
+</ul>
               
             </div>
           </div>
