@@ -200,7 +200,7 @@ class DockerMethod(BaseMethod):
       return
 
     print "Available docker-commands:"
-    internal_commands = getInternalCommands()
+    internal_commands = self.getInternalCommands()
     available_commands = internal_commands + docker_config['tasks'].keys()
     for command in sorted(available_commands):
       print "- %s" % command
