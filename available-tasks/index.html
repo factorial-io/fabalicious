@@ -328,18 +328,24 @@ fab config:&lt;your-config&gt; doctor:remote=&lt;your-remote-config&gt;
 </code></pre>
 
 <p>This will print the property-value to the console. Suitable if you want to use fabalicious from within other scripts.</p>
-<p><strong>Examples</strong>
-<em> <code>fab config:mbb getProperty:host</code> will print the hostname of configuration <code>mbb</code>.
-</em> <code>fab config:mbb getProperty:docker/tag</code> will print the tag of the docker-configuration of <code>mbb</code>.</p>
+<p><strong>Examples</strong></p>
+<ul>
+<li><code>fab config:mbb getProperty:host</code> will print the hostname of configuration <code>mbb</code>.</li>
+<li><code>fab config:mbb getProperty:docker/tag</code> will print the tag of the docker-configuration of <code>mbb</code>.</li>
+</ul>
 <h2 id="version">version</h2>
 <pre><code class="shell">fab config:&lt;your-config&gt; version
 </code></pre>
 
 <p>This command will display the installed version of the code on the installation <code>&lt;your-config&gt;</code>.</p>
-<p><strong>Available methods</strong>:
-* <code>git</code>. The task will get the installed version via <code>git describe</code>, so if you tag your source properly (hint git flow), you'll get a nice version-number.</p>
-<p><strong>Configuration:</strong>
-* your host-configuration needs a <code>branch</code>-key stating the branch to deploy.</p>
+<p><strong>Available methods</strong>:</p>
+<ul>
+<li><code>git</code>. The task will get the installed version via <code>git describe</code>, so if you tag your source properly (hint git flow), you'll get a nice version-number.</li>
+</ul>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li>your host-configuration needs a <code>branch</code>-key stating the branch to deploy.</li>
+</ul>
 <h2 id="deploy">deploy</h2>
 <pre><code class="shell">fab config:&lt;your-config&gt; deploy
 fab config:&lt;your-config&gt; deploy:&lt;branch-to-deploy&gt;
@@ -347,42 +353,56 @@ fab config:&lt;your-config&gt; deploy:&lt;branch-to-deploy&gt;
 
 <p>This task will deploy the latest code to the given installation. If the installation-type is not <code>dev</code> or <code>test</code> the <code>backupDB</code>-task is run before the deployment starts. If <code>&lt;branch-to-deploy&gt;</code> is stated the specific branch gets deployed.</p>
 <p>After a successfull deployment the <code>reset</code>-taks will be run.</p>
-<p><strong>Available methods:</strong>
-<em> <code>git</code> will deploy to the latest commit for the given branch defined in the host-configuration. Submodules will be synced, and updated.
-</em> <code>platform</code> will push the current branch to the <code>platform</code> remote, which will start the deployment-process on platform.sh</p>
-<p><strong>Configuration:</strong>
-* your host-configuration needs a <code>branch</code>-key stating the branch to deploy.</p>
+<p><strong>Available methods:</strong></p>
+<ul>
+<li><code>git</code> will deploy to the latest commit for the given branch defined in the host-configuration. Submodules will be synced, and updated.</li>
+<li><code>platform</code> will push the current branch to the <code>platform</code> remote, which will start the deployment-process on platform.sh</li>
+</ul>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li>your host-configuration needs a <code>branch</code>-key stating the branch to deploy.</li>
+</ul>
 <h2 id="reset">reset</h2>
 <pre><code class="shell">fab config:&lt;your-config&gt; reset
 </code></pre>
 
 <p>This task will reset your installation</p>
-<p><strong>Available methods:</strong>
-<em> <code>composer</code> will run <code>composer install</code> to update any dependencies before doing the reset
-</em> <code>drush</code> will
-  * set the site-uuid from fabfile.yaml (drupal 8)
-  * revert features (drupal 7) / import the configuration <code>staging</code> (drupal 8),
-  * run update-hooks
-  * enable a deployment-module if any stated in the fabfile.yaml
-  * and does a cache-clear.
-  * if your host-type is <code>dev</code> and <code>withPasswordReset</code> is not false, the password gets reset to admin/admin</p>
-<p><strong>Configuration:</strong>
-<em> your host-configuration needs a <code>branch</code>-key stating the branch to deploy.
-</em> your configuration needs a <code>uuid</code>-entry, this is the site uuid (drupal 8). You can get the site-uuid via <code>drush cget system.site</code>
-* you can customize which configuration to import with the <code>configurationManagement</code>-setting inside your host- or global-setting.</p>
-<p><strong>Examples:</strong>
-* <code>fab config:mbb reset:withPasswordReset=0</code> will reset the installation and will not reset the password.</p>
+<p><strong>Available methods:</strong></p>
+<ul>
+<li><code>composer</code> will run <code>composer install</code> to update any dependencies before doing the reset</li>
+<li><code>drush</code> will</li>
+<li>set the site-uuid from fabfile.yaml (drupal 8)</li>
+<li>revert features (drupal 7) / import the configuration <code>staging</code> (drupal 8),</li>
+<li>run update-hooks</li>
+<li>enable a deployment-module if any stated in the fabfile.yaml</li>
+<li>and does a cache-clear.</li>
+<li>if your host-type is <code>dev</code> and <code>withPasswordReset</code> is not false, the password gets reset to admin/admin</li>
+</ul>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li>your host-configuration needs a <code>branch</code>-key stating the branch to deploy.</li>
+<li>your configuration needs a <code>uuid</code>-entry, this is the site uuid (drupal 8). You can get the site-uuid via <code>drush cget system.site</code></li>
+<li>you can customize which configuration to import with the <code>configurationManagement</code>-setting inside your host- or global-setting.</li>
+</ul>
+<p><strong>Examples:</strong></p>
+<ul>
+<li><code>fab config:mbb reset:withPasswordReset=0</code> will reset the installation and will not reset the password.</li>
+</ul>
 <h2 id="backup">backup</h2>
 <pre><code class="shell">fab config:&lt;your-config&gt; backup
 </code></pre>
 
 <p>This command will backup your files and database into the specified <code>backup</code>-directory. The file-names will include configuration-name, a timestamp and the git-SHA1. Every backup can be referenced by its filename (w/o extension) or, when git is abailable via the git-commit-hash.</p>
-<p><strong>Available methods:</strong>
-<em> <code>git</code> will prepend the file-names with a hash of the current revision.
-</em> <code>files</code> will tar all files in the <code>filesFolder</code> and save it into the <code>backupFolder</code>
-* <code>drush</code> will dump the databases and save it to the <code>backupFolder</code></p>
-<p><strong>Configuration:</strong>
-* your host-configuration will need a <code>backupFolder</code> and a <code>filesFolder</code></p>
+<p><strong>Available methods:</strong></p>
+<ul>
+<li><code>git</code> will prepend the file-names with a hash of the current revision.</li>
+<li><code>files</code> will tar all files in the <code>filesFolder</code> and save it into the <code>backupFolder</code></li>
+<li><code>drush</code> will dump the databases and save it to the <code>backupFolder</code></li>
+</ul>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li>your host-configuration will need a <code>backupFolder</code> and a <code>filesFolder</code></li>
+</ul>
 <h2 id="backupdb">backupDB</h2>
 <pre><code class="shell">fab config:&lt;your-config&gt; backupDB
 </code></pre>
@@ -398,27 +418,33 @@ fab config:&lt;your-config&gt; deploy:&lt;branch-to-deploy&gt;
 </code></pre>
 
 <p>This will restore a backup-set. A backup-set consists typically of a database-dump and a gzupped-file-archive. You can a list of candidates via <code>fab config:&lt;config&gt; listBackups</code></p>
-<p><strong>Available methods</strong>
-<em> <code>git</code> git will checkout the given hash encoded in the filename.
-</em> <code>files</code> all files will be restored. An existing files-folder will be renamed for safety reasons.
-* <code>drush</code> will import the database-dump.</p>
+<p><strong>Available methods</strong></p>
+<ul>
+<li><code>git</code> git will checkout the given hash encoded in the filename.</li>
+<li><code>files</code> all files will be restored. An existing files-folder will be renamed for safety reasons.</li>
+<li><code>drush</code> will import the database-dump.</li>
+</ul>
 <h2 id="getbackup">getBackup</h2>
 <pre><code class="shell">fab config:&lt;config&gt; getBackup:&lt;commit-hash|file-name&gt;
 </code></pre>
 
 <p>This command will copy a remote backup-set to your local computer into the current working-directory.</p>
-<p><strong>See also:</strong>
-<em> restore
-</em> backup</p>
+<p><strong>See also:</strong></p>
+<ul>
+<li>restore</li>
+<li>backup</li>
+</ul>
 <h2 id="copyfrom">copyFrom</h2>
 <pre><code class="shell">fab config:&lt;dest-config&gt; copyFrom:&lt;source-config&gt;
 </code></pre>
 
 <p>This task will copy all files via rsync from <code>source-config</code>to <code>dest-config</code> and will dump the database from <code>source-config</code> and restore it to <code>dest-config</code>. After that the <code>reset</code>-task gets executed. This is the ideal task to copy a complete installation from one host to another.</p>
-<p><strong>Available methods</strong>
-<em> <code>ssh</code> will create all necessary tunnels to access the hosts.
-</em> <code>files</code> will rsync all new and changed files from source to dest
-* <code>drush</code> will dump the database and restore it on the dest-host.</p>
+<p><strong>Available methods</strong></p>
+<ul>
+<li><code>ssh</code> will create all necessary tunnels to access the hosts.</li>
+<li><code>files</code> will rsync all new and changed files from source to dest</li>
+<li><code>drush</code> will dump the database and restore it on the dest-host.</li>
+</ul>
 <h2 id="copydbfrom">copyDBFrom</h2>
 <pre><code class="shell">fab config:&lt;dest-config&gt; copyDBFrom:&lt;source-config&gt;
 </code></pre>
@@ -434,18 +460,26 @@ fab config:&lt;your-config&gt; deploy:&lt;branch-to-deploy&gt;
 </code></pre>
 
 <p>This task will execute the <code>drush-command</code> on the remote host specified in <config>. Please note, that you'll have to quote the drush-command when it contains spaces. Signs should be excaped, so python does not interpret them.</p>
-<p><strong>Available methods</strong>
-* Only available for the <code>drush</code>-method</p>
-<p><strong>Examples</strong>
-<em> <code>fab config:staging drush:"cc all"</code>
-</em> <code>fab config:local drush:fra</code></p>
+<p><strong>Available methods</strong></p>
+<ul>
+<li>Only available for the <code>drush</code>-method</li>
+</ul>
+<p><strong>Examples</strong></p>
+<ul>
+<li><code>fab config:staging drush:"cc all"</code></li>
+<li><code>fab config:local drush:fra</code></li>
+</ul>
 <h2 id="drupalconsole">drupalconsole</h2>
 <p>This task will execute a drupal-console task on the remote host. Please note, that you'll have to quote the command when it contains spaces. There's a special command to install the drupal-console on the host: <code>fab config:&lt;config&gt; drupalconsole:install</code></p>
-<p><strong>Available methods</strong>
-* Only available for the <code>drupalconsole</code>-method</p>
-<p><strong>Examples</strong>
-<em> <code>fab config:local drupalconsole:cache:rebuild</code>
-</em> <code>fab config:local drupalconsole:"generate:module --module helloworld"</code></p>
+<p><strong>Available methods</strong></p>
+<ul>
+<li>Only available for the <code>drupalconsole</code>-method</li>
+</ul>
+<p><strong>Examples</strong></p>
+<ul>
+<li><code>fab config:local drupalconsole:cache:rebuild</code></li>
+<li><code>fab config:local drupalconsole:"generate:module --module helloworld"</code></li>
+</ul>
 <h2 id="getfile">getFile</h2>
 <pre><code class="shell">fab config:&lt;config&gt; getFile:&lt;path-to-remote-file&gt;
 </code></pre>
@@ -456,32 +490,40 @@ fab config:&lt;your-config&gt; deploy:&lt;branch-to-deploy&gt;
 </code></pre>
 
 <p>Copy a local file to the tmp-folder of a remote machine.</p>
-<p><strong>Configuration</strong>
-* this command will use the <code>tmpFolder</code>-host-setting for the destination directory.</p>
+<p><strong>Configuration</strong></p>
+<ul>
+<li>this command will use the <code>tmpFolder</code>-host-setting for the destination directory.</li>
+</ul>
 <h2 id="getsqldump">getSQLDump</h2>
 <pre><code class="shell">fab config:&lt;config&gt; getSQLDump
 </code></pre>
 
 <p>Get a current dump of the remote database and copy it to the local machine into the current working directory.</p>
-<p><strong>Available methods</strong>
-* currently only implemented for the <code>drush</code>-method</p>
+<p><strong>Available methods</strong></p>
+<ul>
+<li>currently only implemented for the <code>drush</code>-method</li>
+</ul>
 <h2 id="restoresqlfromfile">restoreSQLFromFile</h2>
 <pre><code class="shell">fab config:&lt;config&gt; restoreSQLFromFile:&lt;path-to-local-sql-dump&gt;
 </code></pre>
 
 <p>This command will copy the dump-file <code>path-to-local-sql-dump</code> to the remote machine and import it into the database.</p>
-<p><strong>Available methods</strong>
-* currently only implemented for the <code>drush</code>-method</p>
+<p><strong>Available methods</strong></p>
+<ul>
+<li>currently only implemented for the <code>drush</code>-method</li>
+</ul>
 <h2 id="script">script</h2>
 <pre><code class="shell">fab config:&lt;config&gt; script:&lt;script-name&gt;
 </code></pre>
 
 <p>This command will run custom scripts on a remote machine. You can declare scripts globally or per host. If the <code>script-name</code> can't be found in the fabfile.yaml you'll get a list of all available scripts.</p>
 <p>Additional arguments get passed to the script. You'll have to use the python-syntax to feed additional arguments to the script. See the examples.</p>
-<p><strong>Examples</strong>
-<em> <code>fab config:mbb script</code>. List all available scripts for configuration <code>mbb</code>
-</em> <code>fab config:mbb script:behat</code> Run the <code>behat</code>-script
-* <code>fab config:mbb script:behat,--name="Login feature",--format=pretty</code> Run the behat-test, apply <code>--name</code> and <code>--format</code> parameters to the script</p>
+<p><strong>Examples</strong></p>
+<ul>
+<li><code>fab config:mbb script</code>. List all available scripts for configuration <code>mbb</code></li>
+<li><code>fab config:mbb script:behat</code> Run the <code>behat</code>-script</li>
+<li><code>fab config:mbb script:behat,--name="Login feature",--format=pretty</code> Run the behat-test, apply <code>--name</code> and <code>--format</code> parameters to the script</li>
+</ul>
 <p>The <code>script</code>-command is rather powerful, have a read about it in the extra section.</p>
 <h2 id="docker">docker</h2>
 <pre><code class="shell">fab config:&lt;config&gt; docker:&lt;docker-task&gt;
@@ -505,9 +547,11 @@ fab config:&lt;config&gt; docker:startRemoteAccess,port=&lt;port&gt;,publicPort=
 </code></pre>
 
 <p>This docker-task will run a ssh-command to forward a local port to a port inside the docker-container. It starts a new ssh-session which will do the forwarding. When finished, type <code>exit</code>.</p>
-<p><strong>Examples</strong>
-<em> <code>fab config:mbb docker:startRemoteAccess</code> will forward <code>localhost:8888</code> to port <code>80</code> of the docker-container
-</em> <code>fab config:mbb docker:startRemoteAccess,port=3306,publicPort=33060</code> will forward <code>localhost:33060</code>to port <code>3306</code> of the docker-container</p>
+<p><strong>Examples</strong></p>
+<ul>
+<li><code>fab config:mbb docker:startRemoteAccess</code> will forward <code>localhost:8888</code> to port <code>80</code> of the docker-container</li>
+<li><code>fab config:mbb docker:startRemoteAccess,port=3306,publicPort=33060</code> will forward <code>localhost:33060</code>to port <code>3306</code> of the docker-container</li>
+</ul>
 <h3 id="waitforservices">waitForServices</h3>
 <p>This task will try to establish a ssh-connection into the docker-container and if the connection succeeds, waits for <code>supervisorctl status</code> to return success. This is useful in scripts to wait for any services that need some time to start up. Obviously this task depends on <code>supervisorctl</code>.</p>
               
