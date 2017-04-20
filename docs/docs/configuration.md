@@ -30,6 +30,7 @@ The name of the project, it's only used for output.
 ### needs
 
 List here all needed methods for that type of project. Available methods are:
+
   * `git` for deployments via git
   * `ssh`
   * `drush7` for support of drupal-7 installations
@@ -349,7 +350,7 @@ A script is basically a list of commands which get executed via shell on a remot
 
 ## Replacement-patterns
 
-Replacement-Patterns are specific strings enclosed in `%`s, e.g. `%host.port%`, `%dockerHost.rootFolder% or `%arguments.name%.
+Replacement-Patterns are specific strings enclosed in `%`s, e.g. `%host.port%`, `%dockerHost.rootFolder%` or `%arguments.name%`.
 
 Here's a simple example;
 
@@ -424,6 +425,7 @@ scripts:
 ```
 
 This script will
+
 * start the docker-container,
 * wait for it,
 * deploys the given branch,
