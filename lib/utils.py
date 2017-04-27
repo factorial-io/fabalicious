@@ -1,10 +1,46 @@
 from fabric.api import *
 import subprocess, shlex, atexit, time
 import time
+from fabric.colors import red
 
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null '
 
-class SSHTunnel:
+class TunnelBase:
+
+  def waitForInteractiveSessions(self, timeout, waitForSendingCommand):
+    start_time = time.time()
+    connectionEstablished = False
+    commandSent = not waitForSendingCommand
+    terminated = False
+    output = ''
+    while not connectionEstablished and not terminated:
+      line = self.p.stderr.readline()
+      output += line
+
+      self.p.poll()
+      if self.p.returncode != None:
+        terminated = True
+
+      if "Sending command" in line:
+        commandSent = True
+
+      if commandSent and 'Entering interactive session' in line:
+        connectionEstablished = True
+
+      if time.time() > start_time + timeout:
+        terminated = True
+
+    if not connectionEstablished:
+      print red("Could not establish tunnel with command %s" % self.cmd)
+      print output
+      exit(1)
+
+  def terminate(self):
+    if self.p.returncode == None:
+      self.p.kill()
+
+
+class SSHTunnel(TunnelBase):
 
   @staticmethod
   def getSSHCommand(bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True):
@@ -31,18 +67,15 @@ class SSHTunnel:
     self.cmd = cmd = self.getSSHCommand(bridge_user, bridge_host, dest_host, bridge_port, dest_port, local_port, strictHostKeyChecking)
 
     self.p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    start_time = time.time()
-    atexit.register(self.p.kill)
-    while not 'Entering interactive session' in self.p.stderr.readline():
-      if time.time() > start_time + timeout:
-        raise Exception("SSH tunnel timed out with command %s" % cmd)
+    atexit.register(self.terminate)
+    self.waitForInteractiveSessions(timeout, False)
 
   def entrance(self):
     return 'localhost:%d' % self.local_port
 
 
 
-class RemoteSSHTunnel:
+class RemoteSSHTunnel(TunnelBase):
 
   @staticmethod
   def getSSHCommand(config, bridge_user, bridge_host, dest_host, bridge_port=22, dest_port=22, local_port=2022, strictHostKeyChecking = True):
@@ -88,13 +121,8 @@ class RemoteSSHTunnel:
 
     self.p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    start_time = time.time()
-
-    start_time = time.time()
-    atexit.register(self.p.kill)
-    while not 'Entering interactive session' in self.p.stderr.readline():
-      if time.time() > start_time + timeout:
-        raise Exception('SSH tunnel timed out with command "%s"' % cmd)
+    atexit.register(self.terminate)
+    self.waitForInteractiveSessions(timeout, True)
 
     time.sleep(5)
 
