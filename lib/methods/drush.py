@@ -33,6 +33,7 @@ class DrushMethod(BaseMethod):
   def applyConfig(config, settings):
     if 'host' not in config['database']:
       config['database']['host'] = 'localhost'
+    BaseMethod.addExecutables(config, ['drush', 'mysql', 'mysqladmin', 'gunzip', 'rsync', 'scp'])
 
   def reset(self, config, **kwargs):
     self.setRunLocally(config)
@@ -89,7 +90,7 @@ class DrushMethod(BaseMethod):
   def run_drush(self, cmd, expand_command = True):
     env.output_prefix = False
     if expand_command:
-      cmd = 'drush ' + cmd
+      cmd = '#!drush ' + cmd
     args = ['running']
     if self.verbose_output:
       args = []
@@ -158,9 +159,9 @@ class DrushMethod(BaseMethod):
         self.run_drush('sql-drop -y')
 
       if config['supportsZippedBackups']:
-        self.run_drush('gunzip -c '+ sql_name_target + ' | $(drush sql-connect)', False)
+        self.run_drush('#!gunzip -c '+ sql_name_target + ' | $(#!drush sql-connect)', False)
       else:
-        self.run_drush('drush sql-cli < ' + sql_name_target, False)
+        self.run_drush('sql-cli < ' + sql_name_target)
 
       print(green('SQL restored from "%s"' % sql_name_target))
 
@@ -187,7 +188,7 @@ class DrushMethod(BaseMethod):
 
     args = utils.ssh_no_strict_key_host_checking_params
 
-    cmd = 'scp -P {port} {args} {user}@{host}:{sql_name_source} {sql_name_target} '.format(  args=args,
+    cmd = '#!scp -P {port} {args} {user}@{host}:{sql_name_source} {sql_name_target} '.format(  args=args,
       sql_name_source=sql_name_source,
       sql_name_target=sql_name_target,
       **source_config
@@ -237,7 +238,7 @@ class DrushMethod(BaseMethod):
       self.run_quietly('mkdir -p %s' % config['siteFolder'])
       mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
 
-      self.run_quietly('mysql -h {host} -u {user} --password={pass} -e "{mysql_command}"'.format(mysql_command=mysql_cmd, **o), 'Creating database')
+      self.run_quietly('#!mysql -h {host} -u {user} --password={pass} -e "{mysql_command}"'.format(mysql_command=mysql_cmd, **o), 'Creating database')
 
       with warn_only():
         self.run_quietly('chmod u+w {siteFolder}'.format(**config))
@@ -273,7 +274,7 @@ class DrushMethod(BaseMethod):
       self.run_quietly('chmod u+w .');
       self.run_quietly('chmod u+w settings.php');
       for configName in config['configurationManagement']:
-        cmd = 'grep -q -F \'$config_directories["{0}"] = "../config/{0}";\' settings.php || echo \'$config_directories["{0}"] = "../config/{0}";\' >> settings.php'.format(configName)
+        cmd = '#!grep -q -F \'$config_directories["{0}"] = "../config/{0}";\' settings.php || echo \'$config_directories["{0}"] = "../config/{0}";\' >> settings.php'.format(configName)
         self.run_quietly(cmd)
 
 
@@ -296,7 +297,7 @@ class DrushMethod(BaseMethod):
       drupal_folder = run('ls').stdout.strip()
       # print drupal_folder
 
-      self.run('rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, config['rootFolder']) )
+      self.run('#!rsync -rav --no-o --no-g %s/* %s' % (drupal_folder, config['rootFolder']) )
 
 
     # remove temporary files
@@ -312,7 +313,7 @@ class DrushMethod(BaseMethod):
     while not available and tries < 10:
       try:
         with settings(hide('warnings', 'running', 'output'), warn_only=True):
-          output = self.run_quietly("mysqladmin -u{user} --password={pass} -h {host} ping".format(**config['database']))
+          output = self.run_quietly("#!mysqladmin -u{user} --password={pass} -h {host} ping".format(**config['database']))
           if output.return_code == 0:
             return True
       except:

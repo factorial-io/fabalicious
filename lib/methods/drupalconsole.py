@@ -13,6 +13,11 @@ class DrupalConsoleMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'drupalconsole'
 
+
+  @staticmethod
+  def applyConfig(config, settings):
+    BaseMethod.addExecutables(config, ['drupal'])
+
   def run_install(self, config, **kwargs):
     self.setRunLocally(config)
     with self.cd(config['tmpFolder']):
@@ -29,10 +34,8 @@ class DrupalConsoleMethod(BaseMethod):
       bin_path = '%s/vendor/bin/drupal' % config['gitRootFolder']
       if self.exists(bin_path):
         self.run('%s %s' % (bin_path, command))
-      elif self.exists('/usr/local/bin/drupal'):
-        self.run('drupal %s' % command)
       else:
-        print red('Could not find drupal executable. You can install a global one with drupal:install')
+        self.run('#!drupal %s' % command)
 
 
   def drupalconsole(self, config, **kwargs):

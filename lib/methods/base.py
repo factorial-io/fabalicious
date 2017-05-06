@@ -4,6 +4,7 @@ from fabric.colors import green, red
 from fabric.context_managers import env
 from fabric.network import *
 from fabric.contrib.files import exists
+import re
 
 
 class LocallyContext():
@@ -41,6 +42,13 @@ class BaseMethod(object):
   def applyConfig(config, settings):
     pass
 
+  @staticmethod
+  def addExecutables(config, executables):
+    for e in executables:
+      if e not in config['executables']:
+        config['executables'][e] = e
+
+
   def __init__(self, methodName, factory):
     self.methodName = methodName
     self.factory = factory
@@ -64,6 +72,7 @@ class BaseMethod(object):
   def addPasswordToFabricCache(self, user, host, port, password, **kwargs):
     host_string = join_host_strings(user, host, port)
     env.passwords[host_string] = password
+
 
   def list_remote_files(self, base_folder, patterns):
     result = []
@@ -115,14 +124,23 @@ class BaseMethod(object):
 
   def setRunLocally(self, config):
     self.run_locally = config['runLocally']
+    self.executables = config['executables']
 
   def cd(self, path):
     # print red('cd: %d %s'% (self.run_locally,  path))
     return lcd(path) if self.run_locally else cd(path)
 
+  def expandCommand(self, cmd):
+    if len(self.executables) > 0:
+      pattern = re.compile('|'.join(re.escape("#!" + key) for key in self.executables.keys()))
+      cmd = pattern.sub(lambda x: self.executables[x.group()[2:]], cmd)
+
+    return cmd
 
   def run(self, cmd, **kwargs):
     # print red("run: %d %s" % ( self.run_locally, cmd))
+    cmd = self.expandCommand(cmd)
+
     if self.run_locally:
       return local(cmd, **kwargs)
     else:
