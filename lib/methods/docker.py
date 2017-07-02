@@ -126,6 +126,19 @@ class DockerMethod(BaseMethod):
     authorized_keys_file = configuration.getSettings('dockerAuthorizedKeyFile')
     known_hosts_file = configuration.getSettings('dockerKnownHostsFile')
 
+    # Check existance of source files
+
+    file_name_list = [ key_file, authorized_keys_file, known_hosts_file ]
+    preflight_succeeded = True
+    for file_name in file_name_list:
+      if file_name:
+        full_file_name = configuration.getBaseDir() + '/' + file_name
+        if not os.path.exists(full_file_name):
+          print red('Could not copy file to docker, missing file: %s' % full_file_name)
+          preflight_succeeded = False
+
+    if not preflight_succeeded:
+      exit(1)
 
     with cd(config['rootFolder']), hide('commands', 'output'), lcd(configuration.getBaseDir()):
       run('mkdir -p /root/.ssh')
