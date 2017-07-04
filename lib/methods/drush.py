@@ -21,7 +21,7 @@ class DrushMethod(BaseMethod):
     if not result:
       return result
 
-    if 'database' not in config:
+    if 'database' in config:
       return validate_dict(['user', 'pass', 'name'], config['database'], 'database')
 
   @staticmethod
