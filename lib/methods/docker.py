@@ -42,6 +42,8 @@ class DockerMethod(BaseMethod):
     if 'tag' not in config['docker']:
       config['docker']['tag'] = 'latest'
 
+    BaseMethod.addExecutables(config, ['supervisorctl'])
+
   @staticmethod
   def getInternalCommands():
     return ['copySSHKeys', 'startRemoteAccess', 'waitForServices'];
@@ -127,7 +129,8 @@ class DockerMethod(BaseMethod):
     known_hosts_file = configuration.getSettings('dockerKnownHostsFile')
 
     # Check existance of source files
-
+    if not key_file and not authorized_keys_file and not known_hosts_file:
+      return
     file_name_list = [ key_file, authorized_keys_file, known_hosts_file ]
     preflight_succeeded = True
     for file_name in file_name_list:
@@ -139,6 +142,7 @@ class DockerMethod(BaseMethod):
 
     if not preflight_succeeded:
       exit(1)
+    
 
     with cd(config['rootFolder']), hide('commands', 'output'), lcd(configuration.getBaseDir()):
       run('mkdir -p /root/.ssh')
@@ -163,7 +167,7 @@ class DockerMethod(BaseMethod):
       run('chmod 700 /root/.ssh')
 
   def waitForServices(self, config, **kwargs):
-    if 'ssh' not in config['needs']:
+    if 'ssh' not in config['needs'] or not config['executables']['supervisorctl']:
       return
 
     host_string = join_host_strings(config['user'], config['host'], config['port'])

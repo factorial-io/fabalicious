@@ -76,6 +76,7 @@ class ScriptMethod(BaseMethod):
             handled = True
 
         if not handled:
+          line = self.expandCommand(line)
           if state['warnOnly']:
             with warn_only():
               result = local(line) if runLocally else run(line)

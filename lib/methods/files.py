@@ -29,6 +29,8 @@ class FilesMethod(BaseMethod):
     if config['siteFolder'].find(config['rootFolder']) < 0:
       config['siteFolder'] = config['rootFolder'] + config['siteFolder']
 
+    BaseMethod.addExecutables(config, ['tar', 'rsync'])
+
 
   def tarFiles(self, config, filename, source_folders, type):
     excludeFiles = configuration.getSettings('excludeFiles')
@@ -87,7 +89,7 @@ class FilesMethod(BaseMethod):
     self.run_quietly('mkdir -p ' + config['filesFolder'])
     self.run_quietly('chmod -R 777 ' + config['filesFolder'])
     with cd(config['filesFolder']):
-      self.run_quietly('tar -xzPf ' + tar_file, 'Unpacking files')
+      self.run_quietly('#!tar -xzPf ' + tar_file, 'Unpacking files')
 
     print(green('files restored from ' + file['file']))
 
@@ -107,7 +109,7 @@ class FilesMethod(BaseMethod):
         rsync_args = ' --exclude "' + '" --exclude "'.join(exclude_files_setting) + '"'
 
 
-      rsync = 'rsync -rav --no-o --no-g  -e "ssh -T -o Compression=no {ssh_args} -p {port}" {rsync_args} {user}@{host}:{source_dir}/* {target_dir}'.format(
+      rsync = '#!rsync -rav --no-o --no-g  -e "ssh -T -o Compression=no {ssh_args} -p {port}" {rsync_args} {user}@{host}:{source_dir}/* {target_dir}'.format(
         ssh_args=utils.ssh_no_strict_key_host_checking_params,
         source_dir=source_config[folder],
         target_dir=target_config[folder],
@@ -116,7 +118,7 @@ class FilesMethod(BaseMethod):
       )
 
       with warn_only():
-        run(rsync)
+        self.run(rsync)
 
   def put(self, config, filename):
     put(filename, config['tmpFolder'])

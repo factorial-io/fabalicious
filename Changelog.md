@@ -1,4 +1,26 @@
-#Changelog
+# Changelog
+
+## 2.x.x
+
+### new
+
+* support for custom executable paths has been added. This will help getting specific hosting-environments to corporate nicely with fabalicious. 
+    
+    To change the standard executable-name and path, add an `executables`-section to your host or your global settings:
+
+        executables:
+          drush: /opt/bin/local/drush
+          git: /usr/local/bin/git
+
+    It will also work for your custom scripts, but only if you use the newly introduced "shebang"-syntax for executables. Instead of writing `drush` prefix the command with `#!`, e.g. `!#drush`:
+
+        script:
+          example:
+            - cd %host.siteFolder%; #!drush cc all
+            - cd %host.gitRootFolder%; #!npm install
+
+    This will also work for custom executables (in the example `npm`), but do not forget to add the executable to the `executables`-section.
+
 
 ## 2.1.0
 
