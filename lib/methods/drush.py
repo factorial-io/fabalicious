@@ -270,7 +270,7 @@ class DrushMethod(BaseMethod):
       self.setupConfigurationManagement(config)
 
   def setupConfigurationManagement(self, config):
-    with self.cd(config['siteFolder']):
+    with self.runLocally(config), self.cd(config['siteFolder']):
       self.run_quietly('chmod u+w .');
       self.run_quietly('chmod u+w settings.php');
       for configName in config['configurationManagement']:
