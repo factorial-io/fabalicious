@@ -101,6 +101,7 @@ class GitMethod(BaseMethod):
 
   def createApp(self, config, stage, dockerConfig, **kwargs):
     targetPath = dockerConfig['rootFolder'] + '/' + config['docker']['projectFolder']
+    self.setExecutables(config)
 
     if (stage == 'checkExistingInstallation'):
       kwargs['context']['installationExists'] = False

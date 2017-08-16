@@ -124,6 +124,9 @@ class BaseMethod(object):
 
   def setRunLocally(self, config):
     self.run_locally = config['runLocally']
+    self.setExecutables(config)
+
+  def setExecutables(self, config):
     self.executables = config['executables']
 
   def cd(self, path):
