@@ -35,9 +35,8 @@ class FilesMethod(BaseMethod):
   def tarFiles(self, config, filename, source_folders, type):
     excludeFiles = configuration.getSettings('excludeFiles')
     excludeFiles = excludeFiles[type] if type in excludeFiles else False
-    cmd = 'tar'
+    cmd = '#!tar'
     if excludeFiles:
-      print excludeFiles
       cmd += ' --exclude="'  + '" --exclude="'.join(excludeFiles) + '"'
     cmd += ' -czPf ' + filename
     cmd += ' ' + ' '.join(source_folders)
@@ -60,6 +59,21 @@ class FilesMethod(BaseMethod):
     if len(source_folders) > 0:
       self.tarFiles(config, filename, source_folders, 'backup')
       print green('Files dumped into "%s"' % filename)
+
+  def backupFiles(self, config, **kwargs):
+    self.setRunLocally(config)
+    filename = kwargs['backup_file_name']
+    source_folders = kwargs['sourceFolders'] if 'sourceFolders' in kwargs else []
+
+    if 'filesFolder' in config:
+      source_folders.append(config['filesFolder'])
+    if 'privateFilesFolder' in config:
+      source_folders.append(config['privateFilesFolder'])
+
+    if len(source_folders) > 0:
+      self.tarFiles(config, filename, source_folders, 'backup')
+      print green('Files dumped into "%s"' % filename)
+
 
   def listBackups(self, config, results, **kwargs):
     files = self.list_remote_files(config['backupFolder'], ['*.tgz'])

@@ -172,6 +172,21 @@ def getSQLDump():
     run('rm ' + file_name);
 
 @task
+def getFilesDump():
+  configuration.check();
+  file_name = '--'.join([configuration.current('config_name'), time.strftime("%Y%m%d-%H%M%S")]) + '.tgz'
+
+  print green('Get files dump from %s' % configuration.current('config_name'))
+
+  file_name = '/tmp/' + file_name
+  methods.runTask(configuration.current(), 'backupFiles', backup_file_name = file_name)
+  getFile(file_name)
+  if configuration.current()['runLocally']:
+    local('rm ' + file_name)
+  else:
+    run('rm ' + file_name);
+
+@task
 def backup(withFiles = True):
   configuration.check()
   print green('backing up files and database of "%s" @ "%s"' % (configuration.getSettings('name'), configuration.current('config_name')))
