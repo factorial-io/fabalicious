@@ -37,7 +37,9 @@ class ComposerMethod(BaseMethod):
 
   def createApp(self, config, stage, dockerConfig, **kwargs):
     if (stage == 'installDependencies'):
+      self.setExecutables(config)
+
       targetPath = dockerConfig['rootFolder'] + '/' + config['docker']['projectFolder']
       with self.cd(targetPath):
-        self.run_quietly('#!composer install %s' % self.getArgs(config))
+        self.run('#!composer install %s' % self.getArgs(config))
 
