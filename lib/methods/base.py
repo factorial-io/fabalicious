@@ -171,8 +171,9 @@ class BaseMethod(object):
       if cmd.find('%arguments%') >= 0:
         arr = in_cmd.split(' ')
         command = arr.pop(0)
+        arguments = ' '.join(arr)
         command = command.replace('#!', '');
-        cmd = self.executables[command].replace('%arguments%', ' '.join(arr))
+        cmd = self.executables[command].replace('%arguments%', arguments)
 
     return cmd
 
