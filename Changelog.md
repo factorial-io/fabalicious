@@ -4,8 +4,17 @@
 
 ### new
 
-* support for custom executable paths has been added. This will help getting specific hosting-environments to corporate nicely with fabalicious. 
-    
+* new option `skipCreateDatabase` in `database`, if set to `True` no database will be created
+* executables can now have variables, they will get expanded beforehand (for an example see next line)
+* executables have a new special variables called `%arguments%` which contains the arguments for an executable, here's an example:
+
+	```  
+	executables:
+	  drush: docker exec -itu drupal %host.docker.name% bash -c 'cd %host.docker.siteFolder% && drush %arguments%'
+	```
+
+* support for custom executable paths has been added. This will help getting specific hosting-environments to corporate nicely with fabalicious.
+
     To change the standard executable-name and path, add an `executables`-section to your host or your global settings:
 
         executables:

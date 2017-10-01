@@ -29,7 +29,7 @@ class DrushMethod(BaseMethod):
   @staticmethod
   def getDefaultConfig(config, settings, defaults):
     defaults['configurationManagement'] = settings['configurationManagement']
-    defaults['database'] = {}
+    defaults['database'] = { "skipCreateDatabase": False }
 
   @staticmethod
   def applyConfig(config, settings):
@@ -238,9 +238,10 @@ class DrushMethod(BaseMethod):
 
     with self.cd(config['siteFolder']):
       self.run_quietly('mkdir -p %s' % config['siteFolder'])
-      mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
+      if not o["skipCreateDatabase"]:
+        mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
 
-      self.run_quietly('#!mysql -h {host} -u {user} --password={pass} -e "{mysql_command}"'.format(mysql_command=mysql_cmd, **o), 'Creating database')
+        self.run_quietly('#!mysql -h {host} -u {user} --password={pass} -e "{mysql_command}"'.format(mysql_command=mysql_cmd, **o), 'Creating database')
 
       with warn_only():
         self.run_quietly('chmod u+w {siteFolder}'.format(**config))
@@ -315,12 +316,12 @@ class DrushMethod(BaseMethod):
     while not available and tries < 10:
       try:
         with settings(hide('warnings', 'running', 'output'), warn_only=True):
-          output = self.run_quietly("#!mysqladmin -u{user} --password={pass} -h {host} ping".format(**config['database']))
-          if output.return_code == 0:
+          result = self.run_quietly("#!mysqladmin -u{user} --password={pass} -h {host} ping".format(**config['database']))
+          if result.return_code == 0:
             return True
-      except:
-        print "exception"
-        pass
+      except BaseException as error:
+       print '{}'.format(error)
+       pass
 
       time.sleep(5)
       print "Wait another 5 secs for the database ..."
