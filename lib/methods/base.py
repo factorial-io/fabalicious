@@ -69,6 +69,30 @@ class BaseMethod(object):
     pass
 
 
+  def expandVariablesImpl(self, prefix, variables, result):
+    for key in variables:
+      if isinstance(variables[key], dict):
+        self.expandVariablesImpl(prefix + "." + key, variables[key], result)
+      elif isinstance(variables[key], list):
+        pass # lists are not supported.
+      else:
+        result["%" + prefix + "." + key + "%"] = str(variables[key])
+
+  def expandVariables(self, variables):
+    results = {}
+    for key in variables:
+      self.expandVariablesImpl(key, variables[key], results)
+
+    return results
+
+  def expandCommands(self, commands, replacements):
+    parsed_commands = []
+    pattern = re.compile('|'.join(re.escape(key) for key in replacements.keys()))
+    for line in commands:
+      result = pattern.sub(lambda x: replacements[x.group()], line)
+      parsed_commands.append(result)
+
+    return parsed_commands
   def addPasswordToFabricCache(self, user, host, port, password, **kwargs):
     host_string = join_host_strings(user, host, port)
     env.passwords[host_string] = password
