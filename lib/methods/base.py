@@ -140,9 +140,6 @@ class BaseMethod(object):
       return False
     return file[0]
 
-
-
-
   def runLocally(self, config):
     return LocallyContext(self, config)
 
@@ -151,16 +148,31 @@ class BaseMethod(object):
     self.setExecutables(config)
 
   def setExecutables(self, config):
-    self.executables = config['executables']
+
+    self.executables = {}
+    replacements = self.expandVariables({ "host": config })
+    for key, command in config['executables'].iteritems():
+      cmds = [ command ];
+      cmds = self.expandCommands(cmds, replacements)
+      self.executables[key] = cmds[0]
+
+
 
   def cd(self, path):
     # print red('cd: %d %s'% (self.run_locally,  path))
     return lcd(path) if self.run_locally else cd(path)
 
-  def expandCommand(self, cmd):
+  def expandCommand(self, in_cmd):
+    cmd = in_cmd
     if len(self.executables) > 0:
       pattern = re.compile('|'.join(re.escape("#!" + key) for key in self.executables.keys()))
       cmd = pattern.sub(lambda x: self.executables[x.group()[2:]], cmd)
+
+      if cmd.find('%arguments%') >= 0:
+        arr = in_cmd.split(' ')
+        command = arr.pop(0)
+        command = command.replace('#!', '');
+        cmd = self.executables[command].replace('%arguments%', ' '.join(arr))
 
     return cmd
 
