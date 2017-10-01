@@ -18,7 +18,7 @@ class DrushMethod(BaseMethod):
   @staticmethod
   def validateConfig(config):
     result = validate_dict(['siteFolder', 'filesFolder'], config)
-    if not result:
+    if result:
       return result
 
     if 'database' in config:
