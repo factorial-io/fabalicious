@@ -460,7 +460,7 @@ def getAll():
     if 'configurationManagement' not in root_data:
       root_data['configurationManagement'] = {
         'staging': [
-          'drush config-import -y staging'
+          '#!drush config-import -y staging'
         ]
       }
 
