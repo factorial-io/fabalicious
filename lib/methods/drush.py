@@ -35,6 +35,9 @@ class DrushMethod(BaseMethod):
   def applyConfig(config, settings):
     if 'host' not in config['database']:
       config['database']['host'] = 'localhost'
+    if 'skipCreateDatabase' not in config['database']:
+      config['database']['skipCreateDatabase'] = False
+
     BaseMethod.addExecutables(config, ['drush', 'mysql', 'mysqladmin', 'gunzip', 'rsync', 'scp', 'grep'])
 
   def reset(self, config, **kwargs):
