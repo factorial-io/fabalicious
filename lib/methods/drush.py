@@ -226,7 +226,7 @@ class DrushMethod(BaseMethod):
     with self.runLocally(config):
       self.run_quietly('rm -f %s' % targetSQLFileName)
 
-  def install(self, config, ask='True', distribution='minimal', **kwargs):
+  def install(self, config, ask='True', distribution='minimal', locale='en', **kwargs):
     self.setRunLocally(config)
 
     if 'database' not in config:
@@ -259,6 +259,7 @@ class DrushMethod(BaseMethod):
         options += ' --sites-subdir='+sites_folder
         options += ' --account-name=%s' % configuration.getSettings('adminUser', 'admin')
         options += ' --account-pass=admin'
+        options += ' --locale=%s' %  locale
         if 'prefix' in o:
           options += " --db-prefix='%s'" % o['prefix']
 
