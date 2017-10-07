@@ -4,7 +4,8 @@
 
 ### new
 
-* new option `skipCreateDatabase` in `database`, if set to `True` no database will be created
+* when running `composer install` fabalicious will create automatically a symlink to `fabfile.py`.
+* new option `skipCreateDatabase` in `database`, if set to `True` no database will be created.
 * executables can now have variables, they will get expanded beforehand (for an example see next line)
 * executables have a new special variables called `%arguments%` which contains the arguments for an executable, here's an example:
 
