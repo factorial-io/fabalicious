@@ -50,7 +50,12 @@ class InstallerPlugin implements PluginInterface, EventSubscriberInterface {
     $fabalicious_dir = dirname(__DIR__);
 
     $relative_dir = $fs->findShortestPath($working_dir, $fabalicious_dir);
-    $fs->remove('fabfile.py');
+    try {
+      $fs->unlink('fabfile.py');
+    }
+    catch (\Exception $e) {
+    }
+
     system(sprintf('ln -s %s/fabfile.py fabfile.py', $relative_dir));
 
     $this->io->write('Created symlink for fabalicious.');
