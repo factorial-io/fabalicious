@@ -38,6 +38,7 @@ If you are using composer you can add fabalicious as a dependency
 
 ```shell
 composer require factorial/fabalicious 2.*
+Composer install
 ```
 
 ## and then ...
