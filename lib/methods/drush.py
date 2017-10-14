@@ -24,7 +24,7 @@ class DrushMethod(BaseMethod):
     if 'database' in config:
       return validate_dict(['user', 'pass', 'name'], config['database'], 'database')
 
-    return true
+    return result
 
   @staticmethod
   def getDefaultConfig(config, settings, defaults):
