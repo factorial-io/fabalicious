@@ -33,7 +33,7 @@ class InstallerPlugin implements PluginInterface, EventSubscriberInterface {
   /**
    * Get the event subscriber configuration for this plugin.
    */
-  public static function getSubscribedEvents(): array {
+  public static function getSubscribedEvents(){
     return [
       ScriptEvents::POST_INSTALL_CMD => 'onPostInstallCmd',
     ];
