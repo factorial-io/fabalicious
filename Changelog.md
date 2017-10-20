@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.x.x
+## 2.2.0
 
 ### new
 
@@ -9,7 +9,7 @@
 * executables can now have variables, they will get expanded beforehand (for an example see next line)
 * executables have a new special variables called `%arguments%` which contains the arguments for an executable, here's an example:
 
-	```  
+	```
 	executables:
 	  drush: docker exec -itu drupal %host.docker.name% bash -c 'cd %host.docker.siteFolder% && drush %arguments%'
 	```
