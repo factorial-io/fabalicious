@@ -76,6 +76,7 @@ class ScriptMethod(BaseMethod):
             handled = True
 
         if not handled:
+          line = self.expandCommand(line)
           if state['warnOnly']:
             with warn_only():
               result = local(line) if runLocally else run(line)
@@ -88,30 +89,6 @@ class ScriptMethod(BaseMethod):
 
     return state['return_code']
 
-  def expandVariablesImpl(self, prefix, variables, result):
-    for key in variables:
-      if isinstance(variables[key], dict):
-        self.expandVariablesImpl(prefix + "." + key, variables[key], result)
-      elif isinstance(variables[key], list):
-        pass # lists are not supported.
-      else:
-        result["%" + prefix + "." + key + "%"] = str(variables[key])
-
-  def expandVariables(self, variables):
-    results = {}
-    for key in variables:
-      self.expandVariablesImpl(key, variables[key], results)
-
-    return results
-
-  def expandCommands(self, commands, replacements):
-    parsed_commands = []
-    pattern = re.compile('|'.join(re.escape(key) for key in replacements.keys()))
-    for line in commands:
-      result = pattern.sub(lambda x: replacements[x.group()], line)
-      parsed_commands.append(result)
-
-    return parsed_commands
 
   def expandEnvironment(self, environment, replacements):
     parsed_environment = {}

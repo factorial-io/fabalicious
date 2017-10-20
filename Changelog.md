@@ -1,4 +1,36 @@
-#Changelog
+# Changelog
+
+## 2.2.0
+
+### new
+
+* when running `composer install` fabalicious will create automatically a symlink to `fabfile.py`.
+* new option `skipCreateDatabase` in `database`, if set to `True` no database will be created.
+* executables can now have variables, they will get expanded beforehand (for an example see next line)
+* executables have a new special variables called `%arguments%` which contains the arguments for an executable, here's an example:
+
+	```
+	executables:
+	  drush: docker exec -itu drupal %host.docker.name% bash -c 'cd %host.docker.siteFolder% && drush %arguments%'
+	```
+
+* support for custom executable paths has been added. This will help getting specific hosting-environments to corporate nicely with fabalicious.
+
+    To change the standard executable-name and path, add an `executables`-section to your host or your global settings:
+
+        executables:
+          drush: /opt/bin/local/drush
+          git: /usr/local/bin/git
+
+    It will also work for your custom scripts, but only if you use the newly introduced "shebang"-syntax for executables. Instead of writing `drush` prefix the command with `#!`, e.g. `!#drush`:
+
+        script:
+          example:
+            - cd %host.siteFolder%; #!drush cc all
+            - cd %host.gitRootFolder%; #!npm install
+
+    This will also work for custom executables (in the example `npm`), but do not forget to add the executable to the `executables`-section.
+
 
 ## 2.1.0
 

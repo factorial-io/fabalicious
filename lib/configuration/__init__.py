@@ -9,7 +9,7 @@ import hashlib
 import sys
 from lib.utils import validate_dict
 
-fabalicious_version = '2.1.0'
+fabalicious_version = '2.2.0'
 
 root_data = 0
 verbose_output = False
@@ -246,6 +246,7 @@ def get_configuration(name):
       'supportsZippedBackups': True,
       'tmpFolder': '/tmp',
       'scripts': {},
+      'executables': config['executables']
     }
 
     defaults = get_default_config_from_methods(host_config, config, defaults)
@@ -452,11 +453,14 @@ def getAll():
     if 'scripts' not in root_data:
       root_data['scripts'] = {}
 
+    if 'executables' not in root_data:
+      root_data['executables'] = {}
+
     # TODO: find a way to move method-specific settings into the method-implementation
     if 'configurationManagement' not in root_data:
       root_data['configurationManagement'] = {
         'staging': [
-          'drush config-import -y staging'
+          '#!drush config-import -y staging'
         ]
       }
 

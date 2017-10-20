@@ -6,6 +6,10 @@ class ComposerMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'composer'
 
+  @staticmethod
+  def applyConfig(config, settings):
+    BaseMethod.addExecutables(config, ['composer'])
+
   def getArgs(self,config):
     args = '-n'
     if config['type'] != 'dev' and config['type'] != 'test':
@@ -18,22 +22,24 @@ class ComposerMethod(BaseMethod):
     self.setRunLocally(config)
 
     with self.cd(config['gitRootFolder']):
-      self.run_quietly('composer install %s' % self.getArgs(config))
+      self.run_quietly('#!composer install %s' % self.getArgs(config))
 
   def updateApp(self, config,**kwargs):
     self.setRunLocally(config)
     with self.cd(config['gitRootFolder']):
-      self.run_quietly('composer update %s' % self.getArgs(config))
+      self.run_quietly('#!composer update %s' % self.getArgs(config))
 
   def composer(self, config, command, **kwargs):
     self.setRunLocally(config)
     with self.cd(config['gitRootFolder']):
-      self.run_quietly('composer %s' % command)
+      self.run_quietly('#!composer %s' % command)
 
 
   def createApp(self, config, stage, dockerConfig, **kwargs):
     if (stage == 'installDependencies'):
+      self.setExecutables(config)
+
       targetPath = dockerConfig['rootFolder'] + '/' + config['docker']['projectFolder']
       with self.cd(targetPath):
-        self.run_quietly('composer install %s' % self.getArgs(config))
+        self.run('#!composer install %s' % self.getArgs(config))
 

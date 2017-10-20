@@ -1,9 +1,30 @@
 {
-    "name": "factorial-io/fabalicious",
-    "description": "deployment system based on fabric",
-    "type": "factorial-tools",
-    "license": "MIT",
-    "require": {
-        "factorial-io/factorial-tools-installer-plugin": "1.*"
+  "name": "factorial-io/fabalicious",
+  "description": "deployment system based on fabric",
+  "type": "composer-plugin",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Stephan Maximilian Huber",
+      "email": "stephan@factorial.io",
+      "homepage": "http://www.factorial.io"
+    },
+    {
+      "name": "Volkan Flörchinger",
+      "email": "volkan@factorial.io",
+      "homepage": "http://www.factorial.io"
     }
+
+  ],
+  "require": {
+    "composer-plugin-api": "^1"
+  },
+  "autoload": {
+    "psr-4": {
+        "Factorial\\Fabalicious\\": "src"
+    }
+  },
+  "extra": {
+    "class": "Factorial\\Fabalicious\\InstallerPlugin"
+  }
 }
