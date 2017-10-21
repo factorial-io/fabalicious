@@ -9,10 +9,8 @@
 * executables can now have variables, they will get expanded beforehand (for an example see next line)
 * executables have a new special variables called `%arguments%` which contains the arguments for an executable, here's an example:
 
-	```
-	executables:
-	  drush: docker exec -itu drupal %host.docker.name% bash -c 'cd %host.docker.siteFolder% && drush %arguments%'
-	```
+	    executables:
+	      drush: docker exec -itu drupal %host.docker.name% bash -c 'cd %host.docker.siteFolder% && drush %arguments%'
 
 * support for custom executable paths has been added. This will help getting specific hosting-environments to corporate nicely with fabalicious.
 
