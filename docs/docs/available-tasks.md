@@ -173,6 +173,33 @@ This task will reset your installation
 
 * `fab config:mbb reset:withPasswordReset=0` will reset the installation and will not reset the password.
 
+## install
+
+```shell
+fab config:<your-config> install
+fab config:<your-config> install,distribution=thunder
+fab config:<your-config> install,locale=de
+```
+
+This task will install a new Drupal installation with the minimal-distribution. You can install different distributions, see the examples.
+
+**Available methods:**
+
+*  `drush7` and `drush8`
+
+**Configuration:**
+
+As an alternative you can add a `installOptions`-section to your fabfile.yaml. Here's an example:
+
+```yaml
+installOptions:
+  distribution: thunder
+  locale: es
+```
+
+Options via command line will override the settings in your fabfile.yaml.
+
+
 
 ## backup
 

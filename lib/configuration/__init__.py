@@ -463,6 +463,13 @@ def getAll():
           '#!drush config-import -y staging'
         ]
       }
+    if 'installOptions' not in root_data:
+      root_data['installOptions'] = {
+        'profile': 'minimal',
+        'locale': 'en',
+        'options': ''
+      }
+
 
 
   return root_data

@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.x.x
+
+### new
+* You can specify now the locale, distribution and other options for the drush install-task. These settings may be global or a per host-setting.
+  
+        installOptions:
+          distribution: thunder
+          locale: de
+          options: "thunder_module_configure_form.install_modules_thunder_demo=NULL"
+
+
+    
+
 ## 2.2.0
 
 ### new
