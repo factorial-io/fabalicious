@@ -37,7 +37,7 @@ ln -s _tools/fabalicious/fabfile.py fabfile.py
 If you are using composer you can add fabalicious as a dependency
 
 ```shell
-composer require factorial/fabalicious 2.*
+composer require factorial-io/fabalicious 2.*
 Composer install
 ```
 
