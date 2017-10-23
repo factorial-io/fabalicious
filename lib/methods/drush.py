@@ -32,6 +32,15 @@ class DrushMethod(BaseMethod):
     defaults['database'] = { "skipCreateDatabase": False }
     defaults['installOptions'] = settings['installOptions']
 
+    if 'locale' not in defaults['installOptions']:
+      defaults['installOptions']['locale'] = 'en'
+
+    if 'distribution' not in defaults['installOptions']:
+      defaults['installOptions']['distribution'] = 'minimal'
+
+    if 'options' not in defaults['installOptions']:
+      defaults['installOptions']['options'] = ''
+
   @staticmethod
   def applyConfig(config, settings):
     if 'host' not in config['database']:
