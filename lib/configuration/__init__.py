@@ -465,7 +465,7 @@ def getAll():
       }
     if 'installOptions' not in root_data:
       root_data['installOptions'] = {
-        'profile': 'minimal',
+        'distribution': 'minimal',
         'locale': 'en',
         'options': ''
       }
