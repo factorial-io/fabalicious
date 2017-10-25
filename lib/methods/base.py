@@ -165,9 +165,8 @@ class BaseMethod(object):
   def expandCommand(self, in_cmd):
     cmd = in_cmd
     if len(self.executables) > 0:
-      pattern = re.compile('|'.join(re.escape("#!" + key) for key in self.executables.keys()))
-      cmd = pattern.sub(lambda x: self.executables[x.group()[2:]], cmd)
-
+      pattern = re.compile('|'.join(re.escape("#!" + key)+"\s" for key in self.executables.keys()))
+      cmd = pattern.sub(lambda x: self.executables[x.group()[2:-1]], cmd)
       if cmd.find('%arguments%') >= 0:
         arr = in_cmd.split(' ')
         command = arr.pop(0)
