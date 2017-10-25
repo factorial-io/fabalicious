@@ -119,6 +119,8 @@ Here are all possible keys documented:
     The main use-case is to run different scripts per type, see the `common`-section.
 * `branch` the name of the branch to use for deployments, they get ususally checked out and pulled from origin. `gitRootFolder` should be the base-folder, where the local git-repository is. (If not explicitely set, fabalicious uses the `rootFolder`)
 * `rootFolder`  the web-root-folder of the installation, typically exposed to the public.
+* `gitRootFolder`  the folder, where the git-repository lies. Defaults to `rootFolder`
+* `composerRootFolder` the folder where the composer.json for the project is stored, defaults to `gitRootFolder`.
 * `backupFolder` the folder, where fabalicious should store its backups into
 * `runLocally` if set to true, all commands are run on the local host, not on a remote host. Good for local development on linux or tools like MAMP.
 * `siteFolder` is a drupal-specific folder, where the settings.php resides for the given installation. This allows to interact with multisites etc.
