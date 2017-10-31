@@ -9,7 +9,7 @@ import hashlib
 import sys
 from lib.utils import validate_dict
 
-fabalicious_version = '2.2.0'
+fabalicious_version = '2.2.2'
 
 root_data = 0
 verbose_output = False
