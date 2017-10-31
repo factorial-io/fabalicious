@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.x.x
+
+### new
+
+* Add a new optional per-host-setting to set the composer root folder called `compserRootFolder`, if not present the `gitRootFolder` gets used
+* You can specify now the locale, distribution and other options for the drush install-task. These settings may be global or a per host-setting.
+
+        installOptions:
+          distribution: thunder
+          locale: de
+          options: "thunder_module_configure_form.install_modules_thunder_demo=NULL"
+
+
+
+
 ## 2.2.0
 
 ### new
@@ -9,10 +24,8 @@
 * executables can now have variables, they will get expanded beforehand (for an example see next line)
 * executables have a new special variables called `%arguments%` which contains the arguments for an executable, here's an example:
 
-	```
-	executables:
-	  drush: docker exec -itu drupal %host.docker.name% bash -c 'cd %host.docker.siteFolder% && drush %arguments%'
-	```
+	    executables:
+	      drush: docker exec -itu drupal %host.docker.name% bash -c 'cd %host.docker.siteFolder% && drush %arguments%'
 
 * support for custom executable paths has been added. This will help getting specific hosting-environments to corporate nicely with fabalicious.
 

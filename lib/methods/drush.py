@@ -30,6 +30,16 @@ class DrushMethod(BaseMethod):
   def getDefaultConfig(config, settings, defaults):
     defaults['configurationManagement'] = settings['configurationManagement']
     defaults['database'] = { "skipCreateDatabase": False }
+    defaults['installOptions'] = settings['installOptions']
+
+    if 'locale' not in defaults['installOptions']:
+      defaults['installOptions']['locale'] = 'en'
+
+    if 'distribution' not in defaults['installOptions']:
+      defaults['installOptions']['distribution'] = 'minimal'
+
+    if 'options' not in defaults['installOptions']:
+      defaults['installOptions']['options'] = ''
 
   @staticmethod
   def applyConfig(config, settings):
@@ -226,8 +236,17 @@ class DrushMethod(BaseMethod):
     with self.runLocally(config):
       self.run_quietly('rm -f %s' % targetSQLFileName)
 
-  def install(self, config, ask='True', distribution='minimal', locale='en', **kwargs):
+  def install(self, config, ask='True', distribution=False, locale=False, options=False, **kwargs):
     self.setRunLocally(config)
+
+
+    if not distribution:
+      distribution = config['installOptions']['distribution']
+    if not locale:
+      locale = config['installOptions']['locale']
+    if not options:
+      options = config['installOptions']['options']
+
 
     if 'database' not in config:
       print red('Missing database configuration!')
@@ -253,18 +272,21 @@ class DrushMethod(BaseMethod):
         self.run_quietly('mv {siteFolder}/settings.php {siteFolder}/settings.php.old 2>/dev/null'.format(**config))
 
         sites_folder = os.path.basename(config['siteFolder'])
-        options = ''
+        cmd_options = ''
         if ask.lower() == 'false' or ask.lower() == '0':
-          options = ' -y'
-        options += ' --sites-subdir='+sites_folder
-        options += ' --account-name=%s' % configuration.getSettings('adminUser', 'admin')
-        options += ' --account-pass=admin'
-        options += ' --locale=%s' %  locale
-        if 'prefix' in o:
-          options += " --db-prefix='%s'" % o['prefix']
+          cmd_options = ' -y'
+        cmd_options += ' --sites-subdir='+sites_folder
+        cmd_options += ' --account-name=%s' % configuration.getSettings('adminUser', 'admin')
+        cmd_options += ' --account-pass=admin'
+        cmd_options += ' --locale=%s' %  locale
 
-        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@' + o['host'] + '/' +o ['name']
-        self.run_drush('site-install ' + distribution + ' ' + options)
+        if 'prefix' in o:
+          cmd_options += " --db-prefix='%s'" % o['prefix']
+
+        cmd_options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@' + o['host'] + '/' +o ['name']
+        cmd_options += ' %s' % options
+
+        self.run_drush('site-install ' + distribution + ' ' + cmd_options)
 
         if self.methodName == 'drush7':
           self.run_drush('en features -y')
