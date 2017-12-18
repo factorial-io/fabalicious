@@ -101,8 +101,9 @@ class ScriptMethod(BaseMethod):
 
   def executeCallback(self, context, command, *args, **kwargs):
     config = context['config']
-    host_string = join_host_strings(config['user'], config['host'], config['port'])
-    kwargs['host'] = host_string
+    if not config['runsLocally']:
+      host_string = join_host_strings(config['user'], config['host'], config['port'])
+      kwargs['host'] = host_string
     execute(command, *args, **kwargs)
 
   def runTaskCallback(self, context, *args, **kwargs):
