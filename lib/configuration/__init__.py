@@ -246,7 +246,8 @@ def get_configuration(name):
       'supportsZippedBackups': True,
       'tmpFolder': '/tmp',
       'scripts': {},
-      'executables': config['executables']
+      'executables': config['executables'],
+      'runsLocally': False
     }
 
     defaults = get_default_config_from_methods(host_config, config, defaults)
