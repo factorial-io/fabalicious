@@ -1,13 +1,16 @@
 from base import BaseMethod
 from fabric.api import *
 from fabric.state import output, env
-from fabric.colors import green, red
+from fabric.colors import green, red, yellow
 from fabric.network import *
 from fabric.context_managers import settings as _settings
 from lib import configuration
 from lib import utils
 import re
 from lib.utils import validate_dict
+from fabric.api import get
+import tempfile
+
 
 class DrushMethod(BaseMethod):
 
@@ -50,6 +53,43 @@ class DrushMethod(BaseMethod):
 
     BaseMethod.addExecutables(config, ['drush', 'mysql', 'mysqladmin', 'gunzip', 'rsync', 'scp', 'grep'])
 
+
+  def handle_modules(self, config, file, enable):
+    file = config['rootFolder'] + '/' + file
+    print file
+    if not self.exists(file):
+      print "no file"
+      return
+    content = ''
+    if config['runLocally']:
+      with open(file) as fd:
+        fd.seek(0)
+        content=fd.read()
+    else:
+      with tempfile.TemporaryFile() as fd:
+        get(file, fd)
+        fd.seek(0)
+        content=fd.read()
+
+    if content:
+      content = content.splitlines()
+      map(str.strip, content)
+      ignore_key = 'modulesEnabledIgnore' if enable else 'modulesDisabledIgnore'
+      ignores = config[ignore_key] if ignore_key in config else configuration.getSettings(ignore_key, [])
+      if ignores:
+        for ignore in ignores:
+          content.remove(ignore)
+
+        print yellow('Ignoring %s while %s modules from %s' % (' '.join(ignores), 'enabling' if enable else 'disabling', file))
+
+      modules = ' '.join(content)
+
+      if enable:
+        self.run_drush('en -y ' + modules)
+      else:
+        self.run_drush('dis -y ' + modules)
+
+
   def reset(self, config, **kwargs):
     self.setRunLocally(config)
 
@@ -75,6 +115,8 @@ class DrushMethod(BaseMethod):
       with warn_only():
         if configuration.getSettings('deploymentModule'):
           self.run_drush('en -y ' + configuration.getSettings('deploymentModule'))
+        self.handle_modules(config, 'modules_enabled.txt', True)
+        self.handle_modules(config, 'modules_disabled.txt', False)
 
       if self.methodName == 'drush8':
         self.run_drush('updb --entity-updates -y')

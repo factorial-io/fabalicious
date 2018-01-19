@@ -4,6 +4,16 @@
 
 ### new
 
+* Support for `modules_enabled.txt` and `modules_disabled.txt`. Listed modules in these files get enabled or disabled when doing a reset (drush7 and drush8) You can add configuration to ignore some of the modules:
+
+        modulesEnabledIgnore:
+          - coffee
+          - some_other_module
+        modulesDisabledIgnore:
+          - devel
+
+    These settings can be part of the global configuration or of the host configuration.
+    
 * Add a new optional per-host-setting to set the composer root folder called `compserRootFolder`, if not present the `gitRootFolder` gets used
 * You can specify now the locale, distribution and other options for the drush install-task. These settings may be global or a per host-setting.
 
