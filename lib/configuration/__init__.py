@@ -190,6 +190,9 @@ def validate_config_against_methods(config):
 
     exit(1)
 
+  if config['rootFolder'][-1:] == '/':
+    config['rootFolder'] = config['rootFolder'][:-1]
+
 def get_default_config_from_methods(config, settings, defaults):
   from lib import methods
 

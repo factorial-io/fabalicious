@@ -156,6 +156,9 @@ This task will reset your installation
 * `composer` will run `composer install` to update any dependencies before doing the reset
 * `drush` will
   * set the site-uuid from fabfile.yaml (drupal 8)
+  * enable the deployment-module
+  * enable modules listed in file `modules_enabled.txt`
+  * disable modules listed in file `modules_disabled.txt`
   * revert features (drupal 7) / import the configuration `staging` (drupal 8),
   * run update-hooks
   * enable a deployment-module if any stated in the fabfile.yaml
