@@ -392,7 +392,7 @@ class DrushMethod(BaseMethod):
        pass
 
       time.sleep(5)
-      print "Wait another 5 secs for the database ..."
+      print "Wait another 5 secs for the database ({user}@{host}) ...".format(**config['database'])
 
     print red('Database not available!')
     return False

@@ -11,6 +11,7 @@ from lib.utils import validate_dict
 class SSHMethod(BaseMethod):
   tunnels = {}
   tunnelCreating = False
+  sshPorts = {}
 
 
   @staticmethod
@@ -42,7 +43,11 @@ class SSHMethod(BaseMethod):
         if 'port' in config:
           config['sshTunnel']['localPort'] = config['port']
         else:
-          port = random.randrange(1025, 65535)
+
+          if config['config_name'] not in SSHMethod.sshPorts:
+            SSHMethod.sshPorts[config['config_name']] = random.randrange(1025, 65535)
+
+          port = SSHMethod.sshPorts[config['config_name']]
           config['sshTunnel']['localPort'] = port
           config['port'] = port
 
