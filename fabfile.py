@@ -349,6 +349,11 @@ def install(**kwargs):
 @task
 def createApp(**kwargs):
   configuration.check(['docker'])
+  if not configuration.getSettings('repository'):
+    print red('Missing repository in fabfile, can\'t continue')
+    exit(1)
+
+  print green('Create app from source at %s' % configuration.getSettings('repository'))
   stages = [
     {
       'stage': 'checkExistingInstallation',
