@@ -58,7 +58,6 @@ class DrushMethod(BaseMethod):
     file = config['rootFolder'] + '/' + file
 
     if not self.exists(file):
-      print "no file"
       return
 
     content = ''
