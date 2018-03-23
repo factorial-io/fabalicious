@@ -56,10 +56,10 @@ class DrushMethod(BaseMethod):
 
   def handle_modules(self, config, file, enable):
     file = config['rootFolder'] + '/' + file
-    print file
+
     if not self.exists(file):
-      print "no file"
       return
+
     content = ''
     if config['runLocally']:
       with open(file) as fd:

@@ -9,7 +9,7 @@ import hashlib
 import sys
 from lib.utils import validate_dict
 
-fabalicious_version = '2.2.2'
+fabalicious_version = '2.2.5'
 
 root_data = 0
 verbose_output = False
@@ -19,6 +19,8 @@ env.forward_agent = True
 env.use_shell = False
 
 fabfile_basedir = False
+offline = False
+cache = {}
 
 
 def load_all_yamls_from_dir(path):
@@ -333,19 +335,31 @@ def remote_config_cache_load(config_file_name):
   except:
     return False
 
-
 def get_configuration_via_http(config_file_name):
+  if config_file_name not in cache:
+    cache[config_file_name] = get_configuration_via_http_impl(config_file_name)
+
+  return cache[config_file_name]
+
+def get_configuration_via_http_impl(config_file_name):
   try:
+    if offline:
+      raise Exception('offline')
+
     # print "Reading configuration from %s" % config_file_name
     response = urllib2.urlopen(config_file_name)
     html = response.read()
     data = yaml.load(html)
     remote_config_cache_save(config_file_name, data)
     return yaml.load(html)
-  except (urllib2.URLError, urllib2.HTTPError) as err:
+  except (Exception, urllib2.URLError, urllib2.HTTPError) as err:
     data = remote_config_cache_load(config_file_name)
     if data:
-      print yellow('Could not read configuration from %s, using cached data.' % config_file_name)
+      if offline:
+        print yellow('Using cached configuration for %s' % config_file_name)
+      else:
+        print yellow('Could not read configuration from %s, using cached data.' % config_file_name)
+
       return data
 
     print red('Could not read/find configuration from %s' % config_file_name)

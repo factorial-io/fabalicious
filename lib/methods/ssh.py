@@ -231,7 +231,7 @@ class SSHMethod(BaseMethod):
           print output.stdout
           exit(1)
         else:
-          print green('Connetion established!')
+          print green('Connection established!')
 
 
 

@@ -22,6 +22,14 @@ fab config:<your-config> about
 
 will display the configuration of host `<your-config>`.
 
+## offline
+
+```shell
+fab offline config:<your-config> <task>
+```
+
+This task will disable remote configuration files. As fabalicious keeps copies of remote configuration-files in `~/.fabalicious` it will try to load the configuration-file from there.
+
 ## blueprint
 
 ```shell

@@ -429,10 +429,15 @@ def doctor(**kwargs):
   methods.runTask(configuration.current(), 'doctor', **kwargs)
 
 @task
+def offline():
+  configuration.offline = True
+
+@task
 def completions(type='fish'):
   output.status = False
   if type == 'fish':
     fish_completions()
+
 
 def fish_completions():
   tasks = list_commands('', 'normal')
