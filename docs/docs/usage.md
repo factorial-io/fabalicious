@@ -24,6 +24,7 @@ Fabalicious provides a set of so-called methods which implement all listed funct
 * drupalconsole
 * slack
 * platform
+* rsync
 
 You declare your needs in the fabfile.yaml with the key `needs`, e.g.
 

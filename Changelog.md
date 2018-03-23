@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.x.x
+
+### new
+* new method `rsync` which will deploy all changed files from `gitRootFolder` to `rootFolder` via `rsync`. This method requires the git-method. You can add some options via the `rsyncOptions`:
+
+    ```yaml
+    rsyncOptions:
+      include:
+        - /sites/all/***
+      exclude:
+        - /sites/*
+    ```
+
+    These options will update `sites/all`, but will not delete anything in other subfolders of `sites`
+
 ## 2.2.5
 
 ### new
@@ -10,15 +25,17 @@
 
 * Support for `modules_enabled.txt` and `modules_disabled.txt`. Listed modules in these files get enabled or disabled when doing a reset (drush7 and drush8) You can add configuration to ignore some of the modules:
 
-        modulesEnabledIgnore:
-          - coffee
-          - some_other_module
-        modulesDisabledIgnore:
-          - devel
+    ```yaml
+    modulesEnabledIgnore:
+      - coffee
+      - some_other_module
+    modulesDisabledIgnore:
+      - devel
+    ```
 
     These settings can be part of the global configuration or of the host configuration.
 
-* Add a new optional per-host-setting to set the composer root folder called `compserRootFolder`, if not present the `gitRootFolder` gets used
+* Add a new optional per-host-setting to set the composer root folder called `compserRootFolder`, if not present the `gitRootFolder` is used
 * You can specify now the locale, distribution and other options for the drush install-task. These settings may be global or a per host-setting.
 
         installOptions:

@@ -40,6 +40,8 @@ List here all needed methods for that type of project. Available methods are:
   * `docker` for docker-support
   * `composer` for composer support
   * `drupalconsole` for drupal-concole support
+  * `platform` for platform.sh-support
+  * `rsync` for deployments via rsync
 
 **Example for drupal 7**
 
@@ -266,6 +268,7 @@ For more information see the main scripts section below.
 * `useShell` defaults to true, set it to false, when you can't connect to specific hosts.
 * `disableKnownHosts` defaults to false, set it too true, if you trust every host
 * `gitOptions` a keyed list of options to apply to a git command. Currently only pull is supported. If your git-version does not support `--rebase` you can disable it via an empty array: `pull: []`
+* `rsyncOptions` a keyed list of options to apply when running the `rsync`-method. You can define paths to include and to exclude.
 * `sqlSkipTables` a list of table-names drush should omit when doing a backup.
 * `configurationManagement` a list of configuration-labels to import on `reset`. This defaults to `['staging']` and may be overridden on a per-host basis. You can add command arguments to the the configuration label.
 
@@ -278,6 +281,11 @@ gitOptions:
   pull:
     - --rebase
     - --quiet
+rsyncOptions:
+  include:
+    - /sites/all/***
+  exclude:
+    - /sites/*
 sqlSkipTables:
   - cache
   - watchdog

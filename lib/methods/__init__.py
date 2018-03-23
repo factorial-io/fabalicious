@@ -10,6 +10,7 @@ from composer import ComposerMethod
 from scripts import ScriptMethod
 from docker import DockerMethod
 from slack import SlackMethod
+from rsync import RsyncMethod
 from files import FilesMethod
 from drupalconsole import DrupalConsoleMethod
 from platform import PlatformMethod

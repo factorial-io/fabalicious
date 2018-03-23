@@ -140,12 +140,13 @@ fab config:<your-config> deploy:<branch-to-deploy>
 
 This task will deploy the latest code to the given installation. If the installation-type is not `dev` or `test` the `backupDB`-task is run before the deployment starts. If `<branch-to-deploy>` is stated the specific branch gets deployed.
 
-After a successfull deployment the `reset`-taks will be run.
+After a successful deployment the `reset`-task will be run.
 
 **Available methods:**
 
 * `git` will deploy to the latest commit for the given branch defined in the host-configuration. Submodules will be synced, and updated.
 * `platform` will push the current branch to the `platform` remote, which will start the deployment-process on platform.sh
+* `rsync` will copy changed files from `gitRootFolder` to `rootFolder`
 
 **Configuration:**
 
@@ -218,7 +219,7 @@ Options via command line will override the settings in your fabfile.yaml.
 fab config:<your-config> backup
 ```
 
-This command will backup your files and database into the specified `backup`-directory. The file-names will include configuration-name, a timestamp and the git-SHA1. Every backup can be referenced by its filename (w/o extension) or, when git is abailable via the git-commit-hash.
+This command will backup your files and database into the specified `backup`-directory. The file-names will include configuration-name, a timestamp and the git-SHA1. Every backup can be referenced by its filename (w/o extension) or, when git is available via the git-commit-hash.
 
 **Available methods:**
 
@@ -255,7 +256,7 @@ This command will print all available backups to the console.
 fab config:<your-config> restore:<commit-hash|file-name>
 ```
 
-This will restore a backup-set. A backup-set consists typically of a database-dump and a gzupped-file-archive. You can a list of candidates via `fab config:<config> listBackups`
+This will restore a backup-set. A backup-set consists typically of a database-dump and a gzipped-file-archive. You can a list of candidates via `fab config:<config> listBackups`
 
 **Available methods**
 
@@ -317,7 +318,7 @@ Basically the same as the `copyFrom`-task, but only the new and updated files ge
 fab config:<config> drush:<drush-command>
 ```
 
-This task will execute the `drush-command` on the remote host specified in <config>. Please note, that you'll have to quote the drush-command when it contains spaces. Signs should be excaped, so python does not interpret them.
+This task will execute the `drush-command` on the remote host specified in <config>. Please note, that you'll have to quote the drush-command when it contains spaces. Signs should be escaped, so python does not interpret them.
 
 **Available methods**
 

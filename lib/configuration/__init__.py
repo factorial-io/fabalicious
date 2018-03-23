@@ -445,6 +445,9 @@ def getAll():
     if not "gitOptions" in root_data:
       root_data['gitOptions'] = { 'pull' : [ '--no-edit', '--rebase'] }
 
+    if not "rsyncOptions" in root_data:
+      root_data['rsyncOptions'] = {}
+
     if not 'sqlSkipTables' in root_data:
       root_data['sqlSkipTables'] = [
         'cache',
