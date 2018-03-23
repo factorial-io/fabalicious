@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.x.x
+## 2.2.5
 
 ### new
 
