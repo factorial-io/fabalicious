@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.x.x
+
+### new
+* new task `getFilesDump` which will tar all files in the `filesFolder` into a tar and download it to the local computer.
+
 ## 2.2.5
 
 ### new

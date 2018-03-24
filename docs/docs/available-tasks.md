@@ -365,6 +365,19 @@ Copy a local file to the tmp-folder of a remote machine.
 * this command will use the `tmpFolder`-host-setting for the destination directory.
 
 
+## getFilesDump
+
+```shell
+fab config:<config> getFilesDump
+```
+
+This task will tar all files in `filesFolder` and `privateFilesFolder` and download it to the local computer.
+
+**Available methods**
+
+* currently only implemented for the `files`-method
+
+
 ## getSQLDump
 
 ```shell
