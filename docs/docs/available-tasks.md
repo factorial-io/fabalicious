@@ -22,6 +22,14 @@ fab config:<your-config> about
 
 will display the configuration of host `<your-config>`.
 
+## offline
+
+```shell
+fab offline config:<your-config> <task>
+```
+
+This task will disable remote configuration files. As fabalicious keeps copies of remote configuration-files in `~/.fabalicious` it will try to load the configuration-file from there.
+
 ## blueprint
 
 ```shell
@@ -156,6 +164,9 @@ This task will reset your installation
 * `composer` will run `composer install` to update any dependencies before doing the reset
 * `drush` will
   * set the site-uuid from fabfile.yaml (drupal 8)
+  * enable the deployment-module
+  * enable modules listed in file `modules_enabled.txt`
+  * disable modules listed in file `modules_disabled.txt`
   * revert features (drupal 7) / import the configuration `staging` (drupal 8),
   * run update-hooks
   * enable a deployment-module if any stated in the fabfile.yaml
@@ -172,6 +183,33 @@ This task will reset your installation
 **Examples:**
 
 * `fab config:mbb reset:withPasswordReset=0` will reset the installation and will not reset the password.
+
+## install
+
+```shell
+fab config:<your-config> install
+fab config:<your-config> install,distribution=thunder
+fab config:<your-config> install,locale=de
+```
+
+This task will install a new Drupal installation with the minimal-distribution. You can install different distributions, see the examples.
+
+**Available methods:**
+
+*  `drush7` and `drush8`
+
+**Configuration:**
+
+As an alternative you can add a `installOptions`-section to your fabfile.yaml. Here's an example:
+
+```yaml
+installOptions:
+  distribution: thunder
+  locale: es
+```
+
+Options via command line will override the settings in your fabfile.yaml.
+
 
 
 ## backup

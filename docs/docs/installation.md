@@ -37,8 +37,8 @@ ln -s _tools/fabalicious/fabfile.py fabfile.py
 If you are using composer you can add fabalicious as a dependency
 
 ```shell
-composer require factorial/fabalicious 2.*
-ln -s _tools/fabalicious/fabfile.py fabfile.py
+composer require factorial-io/fabalicious 2.*
+Composer install
 ```
 
 ## and then ...
@@ -65,6 +65,8 @@ hosts:
     host: myhost.dev
     user: root
     port: 22
+    type: dev
+    branch: develop
     rootFolder: /var/www
     filesFolder: /var/www
     siteFolder: /var/www
@@ -81,7 +83,7 @@ Make sure that the local instances of PHP and mysql are the actual MAMP binaries
 
 Add the correct php binary to your .zshrc / .bashrc
 
-```$ export DRUSH_PHP=/Applications/MAMP/bin/php/php7.0.12/bin/php``` 
+```$ export DRUSH_PHP=/Applications/MAMP/bin/php/php7.0.12/bin/php```
 
 
 

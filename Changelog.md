@@ -1,11 +1,48 @@
 # Changelog
 
-## 2.x.x
+## 2.2.5
 
 ### new
 
-* support for custom executable paths has been added. This will help getting specific hosting-environments to corporate nicely with fabalicious. 
-    
+* new task `offline`, this task will disable remote configuration files and try using already cached versions. Use as the first task
+
+        $ fab offline config:my_config about
+
+* Support for `modules_enabled.txt` and `modules_disabled.txt`. Listed modules in these files get enabled or disabled when doing a reset (drush7 and drush8) You can add configuration to ignore some of the modules:
+
+        modulesEnabledIgnore:
+          - coffee
+          - some_other_module
+        modulesDisabledIgnore:
+          - devel
+
+    These settings can be part of the global configuration or of the host configuration.
+
+* Add a new optional per-host-setting to set the composer root folder called `compserRootFolder`, if not present the `gitRootFolder` gets used
+* You can specify now the locale, distribution and other options for the drush install-task. These settings may be global or a per host-setting.
+
+        installOptions:
+          distribution: thunder
+          locale: de
+          options: "thunder_module_configure_form.install_modules_thunder_demo=NULL"
+
+
+
+
+## 2.2.0
+
+### new
+
+* when running `composer install` fabalicious will create automatically a symlink to `fabfile.py`.
+* new option `skipCreateDatabase` in `database`, if set to `True` no database will be created.
+* executables can now have variables, they will get expanded beforehand (for an example see next line)
+* executables have a new special variables called `%arguments%` which contains the arguments for an executable, here's an example:
+
+	    executables:
+	      drush: docker exec -itu drupal %host.docker.name% bash -c 'cd %host.docker.siteFolder% && drush %arguments%'
+
+* support for custom executable paths has been added. This will help getting specific hosting-environments to corporate nicely with fabalicious.
+
     To change the standard executable-name and path, add an `executables`-section to your host or your global settings:
 
         executables:

@@ -364,6 +364,11 @@ def install(**kwargs):
 @task
 def createApp(**kwargs):
   configuration.check(['docker'])
+  if not configuration.getSettings('repository'):
+    print red('Missing repository in fabfile, can\'t continue')
+    exit(1)
+
+  print green('Create app from source at %s' % configuration.getSettings('repository'))
   stages = [
     {
       'stage': 'checkExistingInstallation',
@@ -439,10 +444,15 @@ def doctor(**kwargs):
   methods.runTask(configuration.current(), 'doctor', **kwargs)
 
 @task
+def offline():
+  configuration.offline = True
+
+@task
 def completions(type='fish'):
   output.status = False
   if type == 'fish':
     fish_completions()
+
 
 def fish_completions():
   tasks = list_commands('', 'normal')

@@ -1,13 +1,16 @@
 from base import BaseMethod
 from fabric.api import *
 from fabric.state import output, env
-from fabric.colors import green, red
+from fabric.colors import green, red, yellow
 from fabric.network import *
 from fabric.context_managers import settings as _settings
 from lib import configuration
 from lib import utils
 import re
 from lib.utils import validate_dict
+from fabric.api import get
+import tempfile
+
 
 class DrushMethod(BaseMethod):
 
@@ -18,22 +21,74 @@ class DrushMethod(BaseMethod):
   @staticmethod
   def validateConfig(config):
     result = validate_dict(['siteFolder', 'filesFolder'], config)
-    if not result:
+    if result:
       return result
 
     if 'database' in config:
       return validate_dict(['user', 'pass', 'name'], config['database'], 'database')
 
+    return result
+
   @staticmethod
   def getDefaultConfig(config, settings, defaults):
     defaults['configurationManagement'] = settings['configurationManagement']
-    defaults['database'] = {}
+    defaults['database'] = { "skipCreateDatabase": False }
+    defaults['installOptions'] = settings['installOptions']
+
+    if 'locale' not in defaults['installOptions']:
+      defaults['installOptions']['locale'] = 'en'
+
+    if 'distribution' not in defaults['installOptions']:
+      defaults['installOptions']['distribution'] = 'minimal'
+
+    if 'options' not in defaults['installOptions']:
+      defaults['installOptions']['options'] = ''
 
   @staticmethod
   def applyConfig(config, settings):
     if 'host' not in config['database']:
       config['database']['host'] = 'localhost'
+    if 'skipCreateDatabase' not in config['database']:
+      config['database']['skipCreateDatabase'] = False
+
     BaseMethod.addExecutables(config, ['drush', 'mysql', 'mysqladmin', 'gunzip', 'rsync', 'scp', 'grep'])
+
+
+  def handle_modules(self, config, file, enable):
+    file = config['rootFolder'] + '/' + file
+
+    if not self.exists(file):
+      return
+
+    content = ''
+    if config['runLocally']:
+      with open(file) as fd:
+        fd.seek(0)
+        content=fd.read()
+    else:
+      with tempfile.TemporaryFile() as fd:
+        get(file, fd)
+        fd.seek(0)
+        content=fd.read()
+
+    if content:
+      content = content.splitlines()
+      map(str.strip, content)
+      ignore_key = 'modulesEnabledIgnore' if enable else 'modulesDisabledIgnore'
+      ignores = config[ignore_key] if ignore_key in config else configuration.getSettings(ignore_key, [])
+      if ignores:
+        for ignore in ignores:
+          content.remove(ignore)
+
+        print yellow('Ignoring %s while %s modules from %s' % (' '.join(ignores), 'enabling' if enable else 'disabling', file))
+
+      modules = ' '.join(content)
+
+      if enable:
+        self.run_drush('en -y ' + modules)
+      else:
+        self.run_drush('dis -y ' + modules)
+
 
   def reset(self, config, **kwargs):
     self.setRunLocally(config)
@@ -60,6 +115,8 @@ class DrushMethod(BaseMethod):
       with warn_only():
         if configuration.getSettings('deploymentModule'):
           self.run_drush('en -y ' + configuration.getSettings('deploymentModule'))
+        self.handle_modules(config, 'modules_enabled.txt', True)
+        self.handle_modules(config, 'modules_disabled.txt', False)
 
       if self.methodName == 'drush8':
         self.run_drush('updb --entity-updates -y')
@@ -221,8 +278,17 @@ class DrushMethod(BaseMethod):
     with self.runLocally(config):
       self.run_quietly('rm -f %s' % targetSQLFileName)
 
-  def install(self, config, ask='True', distribution='minimal', **kwargs):
+  def install(self, config, ask='True', distribution=False, locale=False, options=False, **kwargs):
     self.setRunLocally(config)
+
+
+    if not distribution:
+      distribution = config['installOptions']['distribution']
+    if not locale:
+      locale = config['installOptions']['locale']
+    if not options:
+      options = config['installOptions']['options']
+
 
     if 'database' not in config:
       print red('Missing database configuration!')
@@ -236,9 +302,10 @@ class DrushMethod(BaseMethod):
 
     with self.cd(config['siteFolder']):
       self.run_quietly('mkdir -p %s' % config['siteFolder'])
-      mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
+      if not o["skipCreateDatabase"]:
+        mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
 
-      self.run_quietly('#!mysql -h {host} -u {user} --password={pass} -e "{mysql_command}"'.format(mysql_command=mysql_cmd, **o), 'Creating database')
+        self.run_quietly('#!mysql -h {host} -u {user} --password={pass} -e "{mysql_command}"'.format(mysql_command=mysql_cmd, **o), 'Creating database')
 
       with warn_only():
         self.run_quietly('chmod u+w {siteFolder}'.format(**config))
@@ -247,17 +314,21 @@ class DrushMethod(BaseMethod):
         self.run_quietly('mv {siteFolder}/settings.php {siteFolder}/settings.php.old 2>/dev/null'.format(**config))
 
         sites_folder = os.path.basename(config['siteFolder'])
-        options = ''
+        cmd_options = ''
         if ask.lower() == 'false' or ask.lower() == '0':
-          options = ' -y'
-        options += ' --sites-subdir='+sites_folder
-        options += ' --account-name=%s' % configuration.getSettings('adminUser', 'admin')
-        options += ' --account-pass=admin'
-        if 'prefix' in o:
-          options += " --db-prefix='%s'" % o['prefix']
+          cmd_options = ' -y'
+        cmd_options += ' --sites-subdir='+sites_folder
+        cmd_options += ' --account-name=%s' % configuration.getSettings('adminUser', 'admin')
+        cmd_options += ' --account-pass=admin'
+        cmd_options += ' --locale=%s' %  locale
 
-        options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@' + o['host'] + '/' +o ['name']
-        self.run_drush('site-install ' + distribution + ' ' + options)
+        if 'prefix' in o:
+          cmd_options += " --db-prefix='%s'" % o['prefix']
+
+        cmd_options += '  --db-url=mysql://' + o['user'] + ':' + o['pass'] + '@' + o['host'] + '/' +o ['name']
+        cmd_options += ' %s' % options
+
+        self.run_drush('site-install ' + distribution + ' ' + cmd_options)
 
         if self.methodName == 'drush7':
           self.run_drush('en features -y')
@@ -313,15 +384,15 @@ class DrushMethod(BaseMethod):
     while not available and tries < 10:
       try:
         with settings(hide('warnings', 'running', 'output'), warn_only=True):
-          output = self.run_quietly("#!mysqladmin -u{user} --password={pass} -h {host} ping".format(**config['database']))
-          if output.return_code == 0:
+          result = self.run_quietly("#!mysqladmin -u{user} --password={pass} -h {host} ping".format(**config['database']))
+          if result.return_code == 0:
             return True
-      except:
-        print "exception"
-        pass
+      except BaseException as error:
+       print '{}'.format(error)
+       pass
 
       time.sleep(5)
-      print "Wait another 5 secs for the database ..."
+      print "Wait another 5 secs for the database ({user}@{host}) ...".format(**config['database'])
 
     print red('Database not available!')
     return False

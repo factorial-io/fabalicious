@@ -89,30 +89,6 @@ class ScriptMethod(BaseMethod):
 
     return state['return_code']
 
-  def expandVariablesImpl(self, prefix, variables, result):
-    for key in variables:
-      if isinstance(variables[key], dict):
-        self.expandVariablesImpl(prefix + "." + key, variables[key], result)
-      elif isinstance(variables[key], list):
-        pass # lists are not supported.
-      else:
-        result["%" + prefix + "." + key + "%"] = str(variables[key])
-
-  def expandVariables(self, variables):
-    results = {}
-    for key in variables:
-      self.expandVariablesImpl(key, variables[key], results)
-
-    return results
-
-  def expandCommands(self, commands, replacements):
-    parsed_commands = []
-    pattern = re.compile('|'.join(re.escape(key) for key in replacements.keys()))
-    for line in commands:
-      result = pattern.sub(lambda x: replacements[x.group()], line)
-      parsed_commands.append(result)
-
-    return parsed_commands
 
   def expandEnvironment(self, environment, replacements):
     parsed_environment = {}
@@ -125,8 +101,9 @@ class ScriptMethod(BaseMethod):
 
   def executeCallback(self, context, command, *args, **kwargs):
     config = context['config']
-    host_string = join_host_strings(config['user'], config['host'], config['port'])
-    kwargs['host'] = host_string
+    if not config['runsLocally']:
+      host_string = join_host_strings(config['user'], config['host'], config['port'])
+      kwargs['host'] = host_string
     execute(command, *args, **kwargs)
 
   def runTaskCallback(self, context, *args, **kwargs):
@@ -158,7 +135,7 @@ class ScriptMethod(BaseMethod):
     callbacks = kwargs['callbacks'] if 'callbacks' in kwargs else {}
     variables = kwargs['variables'] if 'variables' in kwargs else {}
     environment = kwargs['environment'] if 'environment' in kwargs else {}
-    root_folder = kwargs['rootFolder'] if 'rootFolder' in kwargs else config['siteFolder']
+    root_folder = kwargs['rootFolder'] if 'rootFolder' in kwargs else config['siteFolder'] if 'siteFolder' in config else '.'
     runLocally = kwargs['runLocally'] if 'runLocally' in kwargs else self.run_locally
 
     if 'environment' in config:
