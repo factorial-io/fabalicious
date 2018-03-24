@@ -3,6 +3,7 @@
 ## 2.x.x
 
 ### new
+* new task `getFilesDump` which will tar all files in the `filesFolder` into a tar and download it to the local computer.
 * new method `rsync` which will deploy all changed files from `gitRootFolder` to `rootFolder` via `rsync`. This method requires the git-method. You can add some options via the `rsyncOptions`:
 
     ```yaml
