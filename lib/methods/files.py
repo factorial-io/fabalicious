@@ -24,10 +24,10 @@ class FilesMethod(BaseMethod):
 
   @staticmethod
   def applyConfig(config, settings):
-    if config['filesFolder'].find(config['rootFolder']) < 0:
-      config['filesFolder'] = config['rootFolder'] + config['filesFolder']
-    if config['siteFolder'].find(config['rootFolder']) < 0:
-      config['siteFolder'] = config['rootFolder'] + config['siteFolder']
+    keys = ['filesFolder', 'siteFolder']
+    for key in keys:
+      if key in config and config[key].find(config['rootFolder']) < 0:
+        config[key] = config['rootFolder'] + config[key]
 
     BaseMethod.addExecutables(config, ['tar', 'rsync'])
 
