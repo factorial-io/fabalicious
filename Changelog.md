@@ -5,6 +5,7 @@
 ### new
 * new task `getFilesDump` which will tar all files in the `filesFolder` into a tar and download it to the local computer.
 * `dockerKeyFile`, `dockerAuthorizedKeyFile` and `dockerKnownHostsFile` can now be loaded from http(s)
+* new settings `revertFeatures`, which defaults to `True` -- if set to False, features will not be reverted.
 
 ## 2.2.5
 

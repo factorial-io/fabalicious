@@ -31,6 +31,7 @@ class DrushMethod(BaseMethod):
 
   @staticmethod
   def getDefaultConfig(config, settings, defaults):
+    defaults['revertFeatures'] = settings['revertFeatures']
     defaults['configurationManagement'] = settings['configurationManagement']
     defaults['database'] = { "skipCreateDatabase": False }
     defaults['installOptions'] = settings['installOptions']
@@ -133,7 +134,8 @@ class DrushMethod(BaseMethod):
             for key, cmds in config['configurationManagement'].iteritems():
               script_fn(config, script=cmds, rootFolder=config['siteFolder'])
         else:
-          self.run_drush('fra -y')
+          if config['revertFeatures']:
+            self.run_drush('fra -y')
 
         fn = self.factory.get('script', 'runTaskSpecificScript')
         fn('reset', config, **kwargs)
@@ -330,7 +332,7 @@ class DrushMethod(BaseMethod):
 
         self.run_drush('site-install ' + distribution + ' ' + cmd_options)
 
-        if self.methodName == 'drush7':
+        if config['revertFeatures'] and self.methodName == 'drush7':
           self.run_drush('en features -y')
 
         deploymentModule = configuration.getSettings('deploymentModule')

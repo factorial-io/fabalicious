@@ -167,7 +167,7 @@ This task will reset your installation
   * enable the deployment-module
   * enable modules listed in file `modules_enabled.txt`
   * disable modules listed in file `modules_disabled.txt`
-  * revert features (drupal 7) / import the configuration `staging` (drupal 8),
+  * revert features (drupal 7) if `revertFeatures` is true / import the configuration `staging` (drupal 8),
   * run update-hooks
   * enable a deployment-module if any stated in the fabfile.yaml
   * and does a cache-clear.

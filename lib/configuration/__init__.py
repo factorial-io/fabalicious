@@ -483,6 +483,9 @@ def getAll():
     if 'executables' not in root_data:
       root_data['executables'] = {}
 
+    if 'revertFeatures' not in root_data:
+      root_data['revertFeatures'] = True
+
     # TODO: find a way to move method-specific settings into the method-implementation
     if 'configurationManagement' not in root_data:
       root_data['configurationManagement'] = {
