@@ -360,7 +360,7 @@ def get_configuration_via_http_impl(config_file_name, as_yaml = True):
     html = response.read()
     data = yaml.load(html) if as_yaml else html
     remote_config_cache_save(config_file_name, data, as_yaml)
-    return yaml.load(html)
+    return data
   except (Exception, urllib2.URLError, urllib2.HTTPError) as err:
     data = remote_config_cache_load(config_file_name, as_yaml)
     if data:
