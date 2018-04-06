@@ -358,8 +358,17 @@ def install(**kwargs):
     print red('Task install is not supported for this configuration. Please check if "type" and "supportsInstalls" is set correctly.')
     exit(1)
 
-  methods.runTask(configuration.current(), 'install', nextTasks=['reset'], **kwargs)
+  if 'nextTasks' not in kwargs:
+    kwargs['nextTasks'] = ['reset']
 
+  methods.runTask(configuration.current(), 'install', **kwargs)
+
+@task
+def installFrom(source_config_name, **kwargs):
+  configuration.check()
+  kwargs['nextTasks'] = []
+  install(**kwargs)
+  copyFrom(source_config_name)
 
 @task
 def createApp(**kwargs):
@@ -474,6 +483,7 @@ def fish_completions():
     print "copyFrom:" + key
     print "copyDBFrom:" + key
     print "copyFilesFrom:" + key
+    print "installFrom:" + key
 
   if 'scripts' in conf:
     for key in conf['scripts'].keys():

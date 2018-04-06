@@ -210,7 +210,18 @@ installOptions:
 
 Options via command line will override the settings in your fabfile.yaml.
 
+## installFrom
 
+```shell
+fab config:<your-config> installFrom:<source-config>
+```
+
+This task will install a new installation (see the `install`-task) and afterwards will do a `copyFrom`. The `reset`-task after the `install`-task will be skipped and executed after the `copyFrom`-task.
+
+**See also:**
+
+* install
+* copyFrom
 
 ## backup
 

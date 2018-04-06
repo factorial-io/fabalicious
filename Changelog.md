@@ -3,10 +3,15 @@
 ## 2.x.x
 
 ### new
+* new task `installFrom` which will do a install-task and a copyFrom afterwards. It will run the reset-task only after the copyFrom, so performance is better
 * new task `getFilesDump` which will tar all files in the `filesFolder` into a tar and download it to the local computer.
 * `dockerKeyFile`, `dockerAuthorizedKeyFile` and `dockerKnownHostsFile` can now be loaded from http(s)
 * new settings `revertFeatures`, which defaults to `True` -- if set to False, features will not be reverted.
 
+### changed
+
+* `createApp` will run the composer-task inside the docker-container and after spinning up the containers. This will prevent some versions-mismatches of php between the host and the container.
+* `createApp` will skip the `reset`-task if it was called with a `copyFrom`-argument.
 ## 2.2.5
 
 ### new
