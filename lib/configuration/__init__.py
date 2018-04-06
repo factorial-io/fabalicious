@@ -74,7 +74,7 @@ def load_configuration(input_file):
 def get_all_configurations():
   global fabfile_basedir
   # Find our configuration-file:
-  candidates = ['fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
+  candidates = ['fabfile.yaml', '.fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
 
   config_file_name = find_configfiles(candidates, 3)
   if (config_file_name):
