@@ -457,6 +457,7 @@ def offline():
 @task
 def completions(type='fish'):
   output.status = False
+  configuration.offline = True
   if type == 'fish':
     fish_completions()
 
