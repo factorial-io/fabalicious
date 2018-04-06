@@ -404,7 +404,9 @@ class DrushMethod(BaseMethod):
     if stage=='install':
       self.waitForDatabase(config)
       self.install(config, ask='0')
-      self.reset(config, withPasswordReset=True)
+
+      if 'withReset' in kwargs and kwargs['withReset']:
+        self.reset(config, withPasswordReset=True)
 
   def preflight(self, task, config, **kwargs):
     if task == 'install':

@@ -380,16 +380,23 @@ def createApp(**kwargs):
   ]
   createDestroyHelper(stages, 'createApp')
   if stages[0]['context']['installationExists']:
-    print green('Found an existing installaion, running deploy instead!')
+    print green('Found an existing installation, running deploy instead!')
+
+    # Spin up the container.
+    stages = [
+      { 'stage': 'spinUp','connection': 'docker' },
+    ]
+    createDestroyHelper(stages, 'createApp', **kwargs)
+
     deploy()
     return
 
   # Install the app.
   stages = configuration.getSettings('createAppStages', [
     { 'stage': 'installCode','connection': 'docker' },
-    { 'stage': 'installDependencies','connection': 'docker' },
     { 'stage': 'spinUp','connection': 'docker' },
-    { 'stage': 'install','connection': 'ssh' },
+    { 'stage': 'installDependencies','connection': 'ssh' },
+    { 'stage': 'install','connection': 'ssh', 'withReset': 'copyFrom' not in kwargs },
   ])
 
   createDestroyHelper(stages, 'createApp', **kwargs)
