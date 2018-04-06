@@ -31,8 +31,8 @@ def config(configName='local'):
 def blueprint(branch, configName=False, output=False):
   template = blueprints.getTemplate(configName)
   if not template:
-    print red('No blueprint found in configuration!')
-    print yellow('run via fab blueprint=<identifier>,configNmae=<configName>,output=<bool>')
+    print red('No blueprint found in configuration for key %s!' % configName)
+    print yellow('run via fab blueprint=<identifier>,configName=<configName>,output=<bool>')
     exit(1)
 
   c = blueprints.apply(branch, template)
