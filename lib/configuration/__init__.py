@@ -236,7 +236,8 @@ def get_configuration(name):
     if 'runLocally' not in host_config:
       host_config['runLocally'] = False
 
-    config['needs'].append('script')
+    if 'script' not in host_config['needs']:
+      host_config['needs'].append('script')
 
     host_config['config_name'] = name
 
