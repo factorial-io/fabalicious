@@ -130,7 +130,11 @@ class DrushMethod(BaseMethod):
         if self.methodName == 'drush8':
           if uuid:
             self.run_drush('cset system.site uuid %s -y' % uuid)
+
           if 'configurationManagement' in config:
+            # Clear the cache, so all classes get found.
+            self.run_drush('cr')
+
             for key, cmds in config['configurationManagement'].iteritems():
               script_fn(config, script=cmds, rootFolder=config['siteFolder'])
         else:
