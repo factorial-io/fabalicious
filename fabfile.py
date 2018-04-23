@@ -137,6 +137,13 @@ def ssh():
   methods.call('ssh', 'openShell', configuration.current())
 
 
+@task
+def sshCommand():
+  output.status = False
+  configuration.check(['ssh'])
+  print methods.call('ssh', 'printShell', configuration.current())
+
+
 
 @task
 def putFile(fileName):

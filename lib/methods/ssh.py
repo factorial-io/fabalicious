@@ -64,6 +64,20 @@ class SSHMethod(BaseMethod):
     with cd(config['rootFolder']):
       open_shell()
 
+  def printShell (self, config):
+    cmd = 'ssh -A -p {port} {user}@{host}'.format(**config)
+
+    if 'sshTunnel' in config:
+      cmd = 'ssh -A -J {jump_user}@{jump_host}:{jump_port} -p {port} {user}@{host}'.format(
+        jump_host = config['sshTunnel']['bridgeHost'],
+        jump_user = config['sshTunnel']['bridgeUser'],
+        jump_port = config['sshTunnel']['bridgePort'],
+        port = config['sshTunnel']['destPort'],
+        user = config['user'],
+        host = config['sshTunnel']['destHost']
+      )
+
+    return cmd
 
   def create_ssh_tunnel(self, msg, source_config, target_config, remote=False):
 
@@ -134,7 +148,7 @@ class SSHMethod(BaseMethod):
 
   def preflightImpl(self, task, config, **kwargs):
     # check if current config needs a tunnel
-    if task != 'doctor' and 'sshTunnel' in config:
+    if task != 'doctor' and task != 'printShell' and 'sshTunnel' in config:
       self.createTunnelFromLocalToHost(config)
     # copyDBFrom and copyFilesFrom may need additional tunnels
     if (task == 'copyDBFrom' or task == 'copyFilesFrom'):
