@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.x.x
+## 2.3.0
 
 ### new
 * new task `sshCommand`: it will print out a ssh command to log into a remote instance. With some shell-magic you can streamline it into a single shell-command. This command will not have the downsides of the `ssh`-command e.g. the lagging shell.
