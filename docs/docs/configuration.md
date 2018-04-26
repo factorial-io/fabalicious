@@ -131,6 +131,7 @@ Here are all possible keys documented:
 * `supportsInstalls` defaults to false, if set to true, the `install`-task will run on that host.
 * `supportsCopyFrom` defaults to false, if set to true, the host can be used as target for `copyFrom`
 * `ignoreSubmodules` defaults to true, set to false, if you don't want to update a projects' submodule on deploy.
+* `revertFeatures`, defaults to `True`, when set all features will be reverted when running a reset (drush only)
 * `configurationManagement`, an array of configuration-labels to import on `reset`, defaults to `['staging']`. You can add command arguments for drush, e.g. `['staging', 'dev --partial']`
 * `disableKnownHosts`, `useShell` and `usePty` see section `other`
 * `database` the database-credentials the `install`-tasks uses when installing a new installation.

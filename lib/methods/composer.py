@@ -45,7 +45,7 @@ class ComposerMethod(BaseMethod):
     if (stage == 'installDependencies'):
       self.setExecutables(config)
 
-      targetPath = dockerConfig['rootFolder'] + '/' + config['docker']['projectFolder']
+      targetPath = config['gitRootFolder']
       with self.cd(targetPath):
         self.run('#!composer install %s' % self.getArgs(config))
 

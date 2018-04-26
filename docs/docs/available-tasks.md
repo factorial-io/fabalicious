@@ -167,7 +167,7 @@ This task will reset your installation
   * enable the deployment-module
   * enable modules listed in file `modules_enabled.txt`
   * disable modules listed in file `modules_disabled.txt`
-  * revert features (drupal 7) / import the configuration `staging` (drupal 8),
+  * revert features (drupal 7) if `revertFeatures` is true / import the configuration `staging` (drupal 8),
   * run update-hooks
   * enable a deployment-module if any stated in the fabfile.yaml
   * and does a cache-clear.
@@ -210,7 +210,18 @@ installOptions:
 
 Options via command line will override the settings in your fabfile.yaml.
 
+## installFrom
 
+```shell
+fab config:<your-config> installFrom:<source-config>
+```
+
+This task will install a new installation (see the `install`-task) and afterwards will do a `copyFrom`. The `reset`-task after the `install`-task will be skipped and executed after the `copyFrom`-task.
+
+**See also:**
+
+* install
+* copyFrom
 
 ## backup
 
@@ -363,6 +374,19 @@ Copy a local file to the tmp-folder of a remote machine.
 **Configuration**
 
 * this command will use the `tmpFolder`-host-setting for the destination directory.
+
+
+## getFilesDump
+
+```shell
+fab config:<config> getFilesDump
+```
+
+This task will tar all files in `filesFolder` and `privateFilesFolder` and download it to the local computer.
+
+**Available methods**
+
+* currently only implemented for the `files`-method
 
 
 ## getSQLDump

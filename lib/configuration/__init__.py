@@ -9,7 +9,7 @@ import hashlib
 import sys
 from lib.utils import validate_dict
 
-fabalicious_version = '2.2.5'
+fabalicious_version = '2.3.0'
 
 root_data = 0
 verbose_output = False
@@ -74,7 +74,7 @@ def load_configuration(input_file):
 def get_all_configurations():
   global fabfile_basedir
   # Find our configuration-file:
-  candidates = ['fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
+  candidates = ['fabfile.yaml', '.fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
 
   config_file_name = find_configfiles(candidates, 3)
   if (config_file_name):
@@ -236,7 +236,8 @@ def get_configuration(name):
     if 'runLocally' not in host_config:
       host_config['runLocally'] = False
 
-    config['needs'].append('script')
+    if 'script' not in host_config['needs']:
+      host_config['needs'].append('script')
 
     host_config['config_name'] = name
 
@@ -312,36 +313,45 @@ def get_configuration_via_file(config_file_name):
 
   return data
 
-def remote_config_cache_get_filename(config_file_name):
+def remote_config_cache_get_filename(config_file_name, as_yaml):
   m = hashlib.md5()
   m.update(config_file_name);
-  filename = os.path.expanduser("~") + "/.fabalicious/" + m.hexdigest() + '.yaml'
+  filename = os.path.expanduser("~") + "/.fabalicious/" + m.hexdigest()
+  filename += '.yaml' if as_yaml else '.data'
+
   if not os.path.exists(os.path.dirname(filename)):
     os.makedirs(os.path.dirname(filename))
 
   return filename
 
-def remote_config_cache_save(config_file_name, data):
-  filename = remote_config_cache_get_filename(config_file_name)
+def remote_config_cache_save(config_file_name, data, as_yaml):
+  filename = remote_config_cache_get_filename(config_file_name, as_yaml)
   stream = open(filename, 'w')
-  yaml.dump(data, stream, default_flow_style=False)
+  if as_yaml:
+    yaml.dump(data, stream, default_flow_style=False)
+  else:
+    stream.write(data)
 
-def remote_config_cache_load(config_file_name):
+def remote_config_cache_load(config_file_name, as_yaml):
   try:
-    filename = remote_config_cache_get_filename(config_file_name)
+    filename = remote_config_cache_get_filename(config_file_name, as_yaml)
     stream = open(filename, 'r')
-    data = yaml.load(stream)
+    if as_yaml:
+      data = yaml.load(stream)
+    else:
+      data = stream.read()
+
     return data
   except:
     return False
 
-def get_configuration_via_http(config_file_name):
+def get_configuration_via_http(config_file_name, as_yaml = True):
   if config_file_name not in cache:
-    cache[config_file_name] = get_configuration_via_http_impl(config_file_name)
+    cache[config_file_name] = get_configuration_via_http_impl(config_file_name, as_yaml)
 
   return cache[config_file_name]
 
-def get_configuration_via_http_impl(config_file_name):
+def get_configuration_via_http_impl(config_file_name, as_yaml = True):
   try:
     if offline:
       raise Exception('offline')
@@ -349,11 +359,11 @@ def get_configuration_via_http_impl(config_file_name):
     # print "Reading configuration from %s" % config_file_name
     response = urllib2.urlopen(config_file_name)
     html = response.read()
-    data = yaml.load(html)
-    remote_config_cache_save(config_file_name, data)
-    return yaml.load(html)
+    data = yaml.load(html) if as_yaml else html
+    remote_config_cache_save(config_file_name, data, as_yaml)
+    return data
   except (Exception, urllib2.URLError, urllib2.HTTPError) as err:
-    data = remote_config_cache_load(config_file_name)
+    data = remote_config_cache_load(config_file_name, as_yaml)
     if data:
       if offline:
         print yellow('Using cached configuration for %s' % config_file_name)
@@ -473,6 +483,9 @@ def getAll():
 
     if 'executables' not in root_data:
       root_data['executables'] = {}
+
+    if 'revertFeatures' not in root_data:
+      root_data['revertFeatures'] = True
 
     # TODO: find a way to move method-specific settings into the method-implementation
     if 'configurationManagement' not in root_data:

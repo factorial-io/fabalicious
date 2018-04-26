@@ -31,6 +31,7 @@ class DrushMethod(BaseMethod):
 
   @staticmethod
   def getDefaultConfig(config, settings, defaults):
+    defaults['revertFeatures'] = settings['revertFeatures']
     defaults['configurationManagement'] = settings['configurationManagement']
     defaults['database'] = { "skipCreateDatabase": False }
     defaults['installOptions'] = settings['installOptions']
@@ -129,11 +130,16 @@ class DrushMethod(BaseMethod):
         if self.methodName == 'drush8':
           if uuid:
             self.run_drush('cset system.site uuid %s -y' % uuid)
+
           if 'configurationManagement' in config:
+            # Clear the cache, so all classes get found.
+            self.run_drush('cr')
+
             for key, cmds in config['configurationManagement'].iteritems():
               script_fn(config, script=cmds, rootFolder=config['siteFolder'])
         else:
-          self.run_drush('fra -y')
+          if config['revertFeatures']:
+            self.run_drush('fra -y')
 
         fn = self.factory.get('script', 'runTaskSpecificScript')
         fn('reset', config, **kwargs)
@@ -330,7 +336,7 @@ class DrushMethod(BaseMethod):
 
         self.run_drush('site-install ' + distribution + ' ' + cmd_options)
 
-        if self.methodName == 'drush7':
+        if config['revertFeatures'] and self.methodName == 'drush7':
           self.run_drush('en features -y')
 
         deploymentModule = configuration.getSettings('deploymentModule')
@@ -402,7 +408,9 @@ class DrushMethod(BaseMethod):
     if stage=='install':
       self.waitForDatabase(config)
       self.install(config, ask='0')
-      self.reset(config, withPasswordReset=True)
+
+      if 'withReset' in kwargs and kwargs['withReset']:
+        self.reset(config, withPasswordReset=True)
 
   def preflight(self, task, config, **kwargs):
     if task == 'install':

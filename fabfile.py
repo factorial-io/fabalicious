@@ -31,8 +31,8 @@ def config(configName='local'):
 def blueprint(branch, configName=False, output=False):
   template = blueprints.getTemplate(configName)
   if not template:
-    print red('No blueprint found in configuration!')
-    print yellow('run via fab blueprint=<identifier>,configNmae=<configName>,output=<bool>')
+    print red('No blueprint found in configuration for key %s!' % configName)
+    print yellow('run via fab blueprint=<identifier>,configName=<configName>,output=<bool>')
     exit(1)
 
   c = blueprints.apply(branch, template)
@@ -137,6 +137,13 @@ def ssh():
   methods.call('ssh', 'openShell', configuration.current())
 
 
+@task
+def sshCommand():
+  output.status = False
+  configuration.check(['ssh'])
+  print methods.call('ssh', 'printShell', configuration.current())
+
+
 
 @task
 def putFile(fileName):
@@ -165,6 +172,21 @@ def getSQLDump():
   methods.runTask(configuration.current(), 'backupSql', backup_file_name = file_name)
   if configuration.current('supportsZippedBackups'):
     file_name += '.gz'
+  getFile(file_name)
+  if configuration.current()['runLocally']:
+    local('rm ' + file_name)
+  else:
+    run('rm ' + file_name);
+
+@task
+def getFilesDump():
+  configuration.check();
+  file_name = '--'.join([configuration.current('config_name'), time.strftime("%Y%m%d-%H%M%S")]) + '.tgz'
+
+  print green('Get files dump from %s' % configuration.current('config_name'))
+
+  file_name = '/tmp/' + file_name
+  methods.runTask(configuration.current(), 'backupFiles', backup_file_name = file_name)
   getFile(file_name)
   if configuration.current()['runLocally']:
     local('rm ' + file_name)
@@ -343,8 +365,17 @@ def install(**kwargs):
     print red('Task install is not supported for this configuration. Please check if "type" and "supportsInstalls" is set correctly.')
     exit(1)
 
-  methods.runTask(configuration.current(), 'install', nextTasks=['reset'], **kwargs)
+  if 'nextTasks' not in kwargs:
+    kwargs['nextTasks'] = ['reset']
 
+  methods.runTask(configuration.current(), 'install', **kwargs)
+
+@task
+def installFrom(source_config_name, **kwargs):
+  configuration.check()
+  kwargs['nextTasks'] = []
+  install(**kwargs)
+  copyFrom(source_config_name)
 
 @task
 def createApp(**kwargs):
@@ -365,16 +396,23 @@ def createApp(**kwargs):
   ]
   createDestroyHelper(stages, 'createApp')
   if stages[0]['context']['installationExists']:
-    print green('Found an existing installaion, running deploy instead!')
+    print green('Found an existing installation, running deploy instead!')
+
+    # Spin up the container.
+    stages = [
+      { 'stage': 'spinUp','connection': 'docker' },
+    ]
+    createDestroyHelper(stages, 'createApp', **kwargs)
+
     deploy()
     return
 
   # Install the app.
   stages = configuration.getSettings('createAppStages', [
     { 'stage': 'installCode','connection': 'docker' },
-    { 'stage': 'installDependencies','connection': 'docker' },
     { 'stage': 'spinUp','connection': 'docker' },
-    { 'stage': 'install','connection': 'ssh' },
+    { 'stage': 'installDependencies','connection': 'ssh' },
+    { 'stage': 'install','connection': 'ssh', 'withReset': 'copyFrom' not in kwargs },
   ])
 
   createDestroyHelper(stages, 'createApp', **kwargs)
@@ -435,6 +473,7 @@ def offline():
 @task
 def completions(type='fish'):
   output.status = False
+  configuration.offline = True
   if type == 'fish':
     fish_completions()
 
@@ -451,6 +490,7 @@ def fish_completions():
     print "copyFrom:" + key
     print "copyDBFrom:" + key
     print "copyFilesFrom:" + key
+    print "installFrom:" + key
 
   if 'scripts' in conf:
     for key in conf['scripts'].keys():

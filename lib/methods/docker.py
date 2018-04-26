@@ -7,6 +7,7 @@ from fabric.colors import green, red
 from lib import configuration
 import copy
 from lib.utils import validate_dict
+import tempfile
 
 class DockerMethod(BaseMethod):
 
@@ -123,48 +124,74 @@ class DockerMethod(BaseMethod):
   def copySSHKeys(self, config, **kwargs):
     if 'ssh' not in config['needs']:
       return
-
-    key_file = configuration.getSettings('dockerKeyFile')
-    authorized_keys_file = configuration.getSettings('dockerAuthorizedKeyFile')
-    known_hosts_file = configuration.getSettings('dockerKnownHostsFile')
+    tempfiles = []
+    files = {
+      'key': configuration.getSettings('dockerKeyFile'),
+      'authorized_keys': configuration.getSettings('dockerAuthorizedKeyFile'),
+      'known_hosts': configuration.getSettings('dockerKnownHostsFile')
+    }
+    if files['key']:
+      files['public_key'] = files['key'] + '.pub'
 
     # Check existance of source files
-    if not key_file and not authorized_keys_file and not known_hosts_file:
-      return
-    file_name_list = [ key_file, authorized_keys_file, known_hosts_file ]
+    count = 0;
     preflight_succeeded = True
-    for file_name in file_name_list:
-      if file_name:
-        full_file_name = configuration.getBaseDir() + '/' + file_name
+    for key, value in files.iteritems():
+      if not value:
+        count += 1
+      else:
+        full_file_name = value
+
+        if value[0:7] == 'http://' or value[0:8] == 'https://':
+          data = configuration.get_configuration_via_http(value, as_yaml=False)
+          if not data:
+            preflight_succeeded = False
+            continue;
+          else:
+            fd, path = tempfile.mkstemp()
+            with os.fdopen(fd, 'w') as tmp:
+              tmp.write(data)
+            tempfiles.append(path)
+            full_file_name = path
+        else:
+          full_file_name = configuration.getBaseDir() + '/' + value
+
         if not os.path.exists(full_file_name):
-          print red('Could not copy file to docker, missing file: %s' % full_file_name)
+          print red('Could not copy file to container, missing file: %s' % full_file_name)
           preflight_succeeded = False
+        else:
+          files[key] = full_file_name
+
+    if count >= 3:
+      return
 
     if not preflight_succeeded:
       exit(1)
-    
 
     with cd(config['rootFolder']), hide('commands', 'output'), lcd(configuration.getBaseDir()):
       run('mkdir -p /root/.ssh')
-      if key_file:
-        put(key_file, '/root/.ssh/id_rsa')
-        put(key_file+'.pub', '/root/.ssh/id_rsa.pub')
+      if files['key']:
+        put(files['key'], '/root/.ssh/id_rsa')
+        put(files['public_key'], '/root/.ssh/id_rsa.pub')
         run('chmod 600 /root/.ssh/id_rsa')
         run('chmod 644 /root/.ssh/id_rsa.pub')
-        put(key_file+'.pub', '/tmp')
-        run('cat /tmp/'+os.path.basename(key_file)+'.pub >> /root/.ssh/authorized_keys')
-        run('rm /tmp/'+os.path.basename(key_file)+'.pub')
+        put(files['public_key'], '/tmp')
+        run('cat /tmp/'+os.path.basename(files['public_key'])+' >> /root/.ssh/authorized_keys')
+        run('rm /tmp/'+os.path.basename(files['public_key']))
         print green('Copied keyfile to docker.')
 
-      if authorized_keys_file:
-        put(authorized_keys_file, '/root/.ssh/authorized_keys')
+      if files['authorized_keys']:
+        put(files['authorized_keys'], '/root/.ssh/authorized_keys')
         print green('Copied authorized keys to docker.')
 
-      if known_hosts_file:
-        put(known_hosts_file, '/root/.ssh/known_hosts')
+      if files['known_hosts']:
+        put(files['known_hosts'], '/root/.ssh/known_hosts')
         print green('Copied known hosts to docker.')
 
       run('chmod 700 /root/.ssh')
+
+    for file in tempfiles:
+      os.remove(file)
 
   def waitForServices(self, config, **kwargs):
     if 'ssh' not in config['needs'] or not config['executables']['supervisorctl']:
