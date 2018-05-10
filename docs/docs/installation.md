@@ -1,15 +1,17 @@
 # Installation of needed dependencies
 
+fabalicious needs fabric 1.x, which dependes on python 2.x.
+
 on Mac OS X:
 
-    brew install python
-    pip install fabric
+    brew install python2 # not necessarily needed, you can try to use mac's native python
+    pip install "fabric<2.0"
     pip install pyyaml
 
 on Debian/Ubuntu
 
     apt-get install python-pip
-    pip install fabric
+    pip install "fabric<2.0"
     pip install pyyaml
 
 If you want to use the slack-integration, install slacker, but it's optional.
