@@ -45,82 +45,72 @@
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
 	<ul class="current">
+	  
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="..">Home</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="..">How does fabalicious work in two sentences</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../installation/">Installation</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../installation/">Installation of needed dependencies</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../usage/">Usage</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../usage/">Running fabalicious</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../available-tasks/">Available tasks</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../available-tasks/">Available tasks</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../configuration/">Configuration</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../configuration/">Structure of the configuration file</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../docker-integration/">Docker integration</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../docker-integration/">Docker integration</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../local-overrides/">Local overrides</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../local-overrides/">Local overrides</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../contribute/">Contribute</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../contribute/">Contributing to Fabalicious</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 current">
-        <a class="current" href="./">Changelog</a>
-        
-            <ul>
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Changelog</a>
+    <ul class="subnav">
             
-                <li class="toctree-l3"><a href="#changelog">Changelog</a></li>
-                
-                    <li><a class="toctree-l4" href="#220">2.2.0</a></li>
-                
-                    <li><a class="toctree-l4" href="#210">2.1.0</a></li>
-                
-                    <li><a class="toctree-l4" href="#200">2.0.0</a></li>
-                
-            
-            </ul>
+    <li class="toctree-l2"><a href="#changelog">Changelog</a></li>
+    
+        <ul>
         
-    </li>
-<li>
+            <li><a class="toctree-l3" href="#230">2.3.0</a></li>
+        
+            <li><a class="toctree-l3" href="#225">2.2.5</a></li>
+        
+            <li><a class="toctree-l3" href="#220">2.2.0</a></li>
+        
+            <li><a class="toctree-l3" href="#210">2.1.0</a></li>
+        
+            <li><a class="toctree-l3" href="#200">2.0.0</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
           
         </ul>
       </div>
@@ -158,16 +148,59 @@
             <div class="section">
               
                 <h1 id="changelog">Changelog</h1>
-<h2 id="220">2.2.0</h2>
+<h2 id="230">2.3.0</h2>
 <h3 id="new">new</h3>
+<ul>
+<li>new task <code>sshCommand</code>: it will print out a ssh command to log into a remote instance. With some shell-magic you can streamline it into a single shell-command. This command will not have the downsides of the <code>ssh</code>-command e.g. the lagging shell.</li>
+<li>new task <code>installFrom</code> which will do a install-task and a copyFrom afterwards. It will run the reset-task only after the copyFrom, so performance is better</li>
+<li>new task <code>getFilesDump</code> which will tar all files in the <code>filesFolder</code> into a tar and download it to the local computer.</li>
+<li><code>dockerKeyFile</code>, <code>dockerAuthorizedKeyFile</code> and <code>dockerKnownHostsFile</code> can now be loaded from http(s)</li>
+<li>new settings <code>revertFeatures</code>, which defaults to <code>True</code> -- if set to False, features will not be reverted.</li>
+</ul>
+<h3 id="changed">changed</h3>
+<ul>
+<li><code>createApp</code> will run the composer-task inside the docker-container and after spinning up the containers. This will prevent some versions-mismatches of php between the host and the container.</li>
+<li><code>createApp</code> will skip the <code>reset</code>-task if it was called with a <code>copyFrom</code>-argument.</li>
+</ul>
+<h2 id="225">2.2.5</h2>
+<h3 id="new_1">new</h3>
+<ul>
+<li>
+<p>new task <code>offline</code>, this task will disable remote configuration files and try using already cached versions. Use as the first task</p>
+<pre><code>$ fab offline config:my_config about
+</code></pre>
+</li>
+<li>
+<p>Support for <code>modules_enabled.txt</code> and <code>modules_disabled.txt</code>. Listed modules in these files get enabled or disabled when doing a reset (drush7 and drush8) You can add configuration to ignore some of the modules:</p>
+<pre><code>modulesEnabledIgnore:
+  - coffee
+  - some_other_module
+modulesDisabledIgnore:
+  - devel
+</code></pre>
+<p>These settings can be part of the global configuration or of the host configuration.</p>
+</li>
+<li>
+<p>Add a new optional per-host-setting to set the composer root folder called <code>compserRootFolder</code>, if not present the <code>gitRootFolder</code> gets used</p>
+</li>
+<li>You can specify now the locale, distribution and other options for the drush install-task. These settings may be global or a per host-setting.<pre><code>installOptions:
+  distribution: thunder
+  locale: de
+  options: "thunder_module_configure_form.install_modules_thunder_demo=NULL"
+</code></pre>
+</li>
+</ul>
+<h2 id="220">2.2.0</h2>
+<h3 id="new_2">new</h3>
 <ul>
 <li>when running <code>composer install</code> fabalicious will create automatically a symlink to <code>fabfile.py</code>.</li>
 <li>new option <code>skipCreateDatabase</code> in <code>database</code>, if set to <code>True</code> no database will be created.</li>
 <li>executables can now have variables, they will get expanded beforehand (for an example see next line)</li>
 <li>
 <p>executables have a new special variables called <code>%arguments%</code> which contains the arguments for an executable, here's an example:</p>
-<p><code>executables:
-  drush: docker exec -itu drupal %host.docker.name% bash -c 'cd %host.docker.siteFolder% &amp;&amp; drush %arguments%'</code></p>
+<pre><code>executables:
+  drush: docker exec -itu drupal %host.docker.name% bash -c 'cd %host.docker.siteFolder% &amp;&amp; drush %arguments%'
+</code></pre>
 </li>
 <li>
 <p>support for custom executable paths has been added. This will help getting specific hosting-environments to corporate nicely with fabalicious.</p>
@@ -186,7 +219,7 @@
 </li>
 </ul>
 <h2 id="210">2.1.0</h2>
-<h3 id="new_1">new</h3>
+<h3 id="new_3">new</h3>
 <ul>
 <li>
 <p>new task <code>completions</code> which will help to get completions in the shell working. Currently only for the <code>fish</code>-shell.</p>
@@ -204,7 +237,7 @@ complete -c fab -f -a "(fab completions:type=fish)"
 <li>fabfile.local.yaml will override existing fabfile.yaml-configuration. the file may reside up to three folders above the projects fabfile. See the readme for more info</li>
 <li>support for platform.sh</li>
 </ul>
-<h3 id="changed">changed</h3>
+<h3 id="changed_1">changed</h3>
 <ul>
 <li>fabfile.yaml.lock is not used anymore. To support offline-mode, fabalicious will store all remote files in the <code>~/.fabalicious</code> folder. If loading a remote resource fails, fabalicious will use the local cached version of that file.</li>
 <li>drush8: configurationManagement is completely configurable, e.g. to run a script, add this to your fabfile.yaml<pre><code>configurationManagement:
@@ -214,7 +247,7 @@ complete -c fab -f -a "(fab completions:type=fish)"
 </li>
 </ul>
 <h2 id="200">2.0.0</h2>
-<h3 id="new_2">new</h3>
+<h3 id="new_4">new</h3>
 <ul>
 <li>
 <p>you can now specify what features you need. The following features are available: <code>composer</code>, <code>docker</code>, <code>drush7</code>, <code>drush8</code>, <code>git</code>, <code>ssh</code>, <code>files</code>, <code>slack</code>, <code>drupalconsole</code>. You specify your needs in the fabfile with the <code>needs</code>-key. You can declare this globally and/or per host.</p>
@@ -279,7 +312,7 @@ deployFinished:
 <p>New task <code>drupalconsole:&lt;command&gt;</code>. Runs the Drupal Console inside your container, on your host. If <code>command</code> is <code>install</code> drupal-console gets installed on that environment. The Drupal Console does similar things like drush, but there's currently no support to "deploy" via the drupal console.</p>
 </li>
 </ul>
-<h3 id="changed_1">changed</h3>
+<h3 id="changed_2">changed</h3>
 <ul>
 <li>script-replacements are now prefixed by <code>host</code> and <code>dockerHost</code>. You’ll get a list of available replacements if fabalicious can’t resolve all replacements successfully.</li>
 <li>All declared yaml-variables are exposed to the script. You can access sub-dictionaries via the dot-syntax, e.g. <code>host.docker.name</code>.</li>
@@ -314,7 +347,7 @@ deployFinished:
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="../contribute/" class="btn btn-neutral" title="Contribute"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../contribute/" class="btn btn-neutral" title="Contributing to Fabalicious"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -330,18 +363,18 @@ deployFinished:
 
   Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-	  
+      
         </div>
       </div>
 
     </section>
-    
+
   </div>
 
   <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
-          <a href="https://github.com/factorial-io/fabalicious/" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+          <a href="https://github.com/factorial-io/fabalicious/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
         <span><a href="../contribute/" style="color: #fcfcfc;">&laquo; Previous</a></span>
@@ -349,7 +382,10 @@ deployFinished:
       
     </span>
 </div>
+    <script>var base_url = '..';</script>
     <script src="../js/theme.js"></script>
+      <script src="../search/require.js"></script>
+      <script src="../search/search.js"></script>
 
 </body>
 </html>

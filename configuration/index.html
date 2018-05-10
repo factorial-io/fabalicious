@@ -8,7 +8,7 @@
   
   <meta name="author" content="Factorial GmbH, Hamburg">
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Configuration - Fabalicious</title>
+  <title>Structure of the configuration file - Fabalicious</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,7 +17,7 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Configuration";
+    var mkdocs_page_name = "Structure of the configuration file";
     var mkdocs_page_input_path = "configuration.md";
     var mkdocs_page_url = "/configuration/";
   </script>
@@ -45,91 +45,81 @@
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
 	<ul class="current">
+	  
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="..">Home</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="..">How does fabalicious work in two sentences</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../installation/">Installation</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../installation/">Installation of needed dependencies</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../usage/">Usage</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../usage/">Running fabalicious</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../available-tasks/">Available tasks</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../available-tasks/">Available tasks</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 current">
-        <a class="current" href="./">Configuration</a>
-        
-            <ul>
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Structure of the configuration file</a>
+    <ul class="subnav">
             
-                <li class="toctree-l3"><a href="#structure-of-the-configuration-file">Structure of the configuration file</a></li>
-                
-                    <li><a class="toctree-l4" href="#overview">Overview</a></li>
-                
-                    <li><a class="toctree-l4" href="#inheritance">Inheritance</a></li>
-                
-            
-                <li class="toctree-l3"><a href="#scripts_1">Scripts</a></li>
-                
-                    <li><a class="toctree-l4" href="#replacement-patterns">Replacement-patterns</a></li>
-                
-                    <li><a class="toctree-l4" href="#internal-commands">Internal commands</a></li>
-                
-                    <li><a class="toctree-l4" href="#task-related-scripts">Task-related scripts</a></li>
-                
-                    <li><a class="toctree-l4" href="#examples">Examples</a></li>
-                
-            
-            </ul>
+    <li class="toctree-l2"><a href="#structure-of-the-configuration-file">Structure of the configuration file</a></li>
+    
+        <ul>
         
-    </li>
-<li>
+            <li><a class="toctree-l3" href="#overview">Overview</a></li>
+        
+            <li><a class="toctree-l3" href="#inheritance">Inheritance</a></li>
+        
+        </ul>
+    
+
+    <li class="toctree-l2"><a href="#scripts_1">Scripts</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#replacement-patterns">Replacement-patterns</a></li>
+        
+            <li><a class="toctree-l3" href="#internal-commands">Internal commands</a></li>
+        
+            <li><a class="toctree-l3" href="#task-related-scripts">Task-related scripts</a></li>
+        
+            <li><a class="toctree-l3" href="#examples">Examples</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../docker-integration/">Docker integration</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../docker-integration/">Docker integration</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../local-overrides/">Local overrides</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../local-overrides/">Local overrides</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../contribute/">Contribute</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../contribute/">Contribute</a>
+	    </li>
           
-            <li>
-    <li class="toctree-l1 ">
-        <a class="" href="../changelog/">Changelog</a>
-        
-    </li>
-<li>
+            <li class="toctree-l1">
+		
+    <a class="" href="../changelog/">Changelog</a>
+	    </li>
           
         </ul>
       </div>
@@ -153,7 +143,7 @@
     
       
     
-    <li>Configuration</li>
+    <li>Structure of the configuration file</li>
     <li class="wy-breadcrumbs-aside">
       
         <a href="https://github.com/factorial-io/fabalicious/edit/develop/docs/docs/configuration.md"
@@ -268,6 +258,8 @@ The main use-case is to run different scripts per type, see the <code>common</co
 </li>
 <li><code>branch</code> the name of the branch to use for deployments, they get ususally checked out and pulled from origin. <code>gitRootFolder</code> should be the base-folder, where the local git-repository is. (If not explicitely set, fabalicious uses the <code>rootFolder</code>)</li>
 <li><code>rootFolder</code>  the web-root-folder of the installation, typically exposed to the public.</li>
+<li><code>gitRootFolder</code>  the folder, where the git-repository lies. Defaults to <code>rootFolder</code></li>
+<li><code>composerRootFolder</code> the folder where the composer.json for the project is stored, defaults to <code>gitRootFolder</code>.</li>
 <li><code>backupFolder</code> the folder, where fabalicious should store its backups into</li>
 <li><code>runLocally</code> if set to true, all commands are run on the local host, not on a remote host. Good for local development on linux or tools like MAMP.</li>
 <li><code>siteFolder</code> is a drupal-specific folder, where the settings.php resides for the given installation. This allows to interact with multisites etc.</li>
@@ -278,6 +270,7 @@ The main use-case is to run different scripts per type, see the <code>common</co
 <li><code>supportsInstalls</code> defaults to false, if set to true, the <code>install</code>-task will run on that host.</li>
 <li><code>supportsCopyFrom</code> defaults to false, if set to true, the host can be used as target for <code>copyFrom</code></li>
 <li><code>ignoreSubmodules</code> defaults to true, set to false, if you don't want to update a projects' submodule on deploy.</li>
+<li><code>revertFeatures</code>, defaults to <code>True</code>, when set all features will be reverted when running a reset (drush only)</li>
 <li><code>configurationManagement</code>, an array of configuration-labels to import on <code>reset</code>, defaults to <code>['staging']</code>. You can add command arguments for drush, e.g. <code>['staging', 'dev --partial']</code></li>
 <li><code>disableKnownHosts</code>, <code>useShell</code> and <code>usePty</code> see section <code>other</code></li>
 <li><code>database</code> the database-credentials the <code>install</code>-tasks uses when installing a new installation.<ul>
@@ -557,18 +550,18 @@ inheritsFrom:
 
   Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-	  
+      
         </div>
       </div>
 
     </section>
-    
+
   </div>
 
   <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
-          <a href="https://github.com/factorial-io/fabalicious/" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+          <a href="https://github.com/factorial-io/fabalicious/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
         <span><a href="../available-tasks/" style="color: #fcfcfc;">&laquo; Previous</a></span>
@@ -578,7 +571,10 @@ inheritsFrom:
       
     </span>
 </div>
+    <script>var base_url = '..';</script>
     <script src="../js/theme.js"></script>
+      <script src="../search/require.js"></script>
+      <script src="../search/search.js"></script>
 
 </body>
 </html>
