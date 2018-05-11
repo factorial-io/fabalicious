@@ -283,7 +283,7 @@ def get_configuration(name):
 
     return host_config
 
-  print(red('Configuraton '+name+' not found \n'))
+  log.error('Configuraton '+name+' not found \n')
   list()
   exit(1)
 
@@ -421,7 +421,7 @@ def check(methods= False):
     else:
       return True
 
-  print(red('no config set! Please use fab config:<your-config> <task>'))
+  log.error('no config set! Please use fab config:<your-config> <task>')
   exit(1)
 
 
