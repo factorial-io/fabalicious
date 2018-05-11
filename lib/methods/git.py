@@ -99,7 +99,7 @@ class GitMethod(BaseMethod):
     if commit:
       with self.runLocally(config):
         self.run('#!git checkout ' + commit)
-        print(green('source restored to ' + commit))
+        log.info('source restored to ' + commit)
 
 
   def createApp(self, config, stage, dockerConfig, **kwargs):

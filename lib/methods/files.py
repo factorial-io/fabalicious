@@ -101,7 +101,7 @@ class FilesMethod(BaseMethod):
     with cd(config['filesFolder']):
       self.run_quietly('#!tar -xzPf ' + tar_file, 'Unpacking files')
 
-    print(green('files restored from ' + file['file']))
+    log.info('files restored from ' + file['file'])
 
   def rsync(self, source_config, target_config, folder = 'filesFolder'):
     if not target_config['supportsCopyFrom']:

@@ -229,7 +229,7 @@ class DrushMethod(BaseMethod):
       else:
         self.run_drush('sql-cli < ' + sql_name_target)
 
-      print(green('SQL restored from "%s"' % sql_name_target))
+      log.info('SQL restored from "%s"' % sql_name_target)
 
 
   def copyDBFrom(self, config, source_config=False, **kwargs):
