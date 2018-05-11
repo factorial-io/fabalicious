@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger('fabalicious.scripts')
+
 from base import BaseMethod
 from fabric.api import *
 from fabric.contrib.files import exists
@@ -38,12 +41,12 @@ class ScriptMethod(BaseMethod):
     ok = True
     for line in commands:
       if pattern.search(line) != None:
-        print red('Found replacement-pattern in script-line "%s", aborting ...' % line)
+        log.error('Found replacement-pattern in script-line "%s", aborting ...' % line)
         ok = False
 
     for key in environment:
       if pattern.search(environment[key]) != None:
-        print red('Found replacement-pattern in environment "%s:%s", aborting ...' % (key, environment[key]))
+        log.error('Found replacement-pattern in environment "%s:%s", aborting ...' % (key, environment[key]))
         ok = False
 
     if not ok:
@@ -107,7 +110,7 @@ class ScriptMethod(BaseMethod):
     execute(command, *args, **kwargs)
 
   def runTaskCallback(self, context, *args, **kwargs):
-    print red('run_task is not supported anymore, use "execute(docker, <your_task>)"');
+    log.error('run_task is not supported anymore, use "execute(docker, <your_task>)"');
 
   def failOnErrorCallback(self, context, flag):
     if flag == '1':
@@ -123,8 +126,8 @@ class ScriptMethod(BaseMethod):
       folder_exists = exists(directory)
 
     if not folder_exists:
-      print red(message)
-      print red('Missing: %s' % directory)
+      log.error(message)
+      log.error('Missing: %s' % directory)
       exit(1);
 
 
@@ -162,7 +165,7 @@ class ScriptMethod(BaseMethod):
 
     return_code = self.runScriptImpl(root_folder, commands, config, runLocally, callbacks, environment, replacements)
     if return_code:
-      print red('Due to earlier errors quitting now.')
+      log.error('Due to earlier errors quitting now.')
       exit(return_code)
 
   def runTaskSpecificScript(self, taskName, config, **kwargs):
@@ -170,17 +173,17 @@ class ScriptMethod(BaseMethod):
     type = config['type']
 
     if type in common_scripts and isinstance(common_scripts[type], list):
-      print red("Found old-style common-scripts. Please regroup by common > taskName > type > commands.")
+      log.error("Found old-style common-scripts. Please regroup by common > taskName > type > commands.")
 
     if taskName in common_scripts:
       if type in common_scripts[taskName]:
         script = common_scripts[taskName][type]
-        print yellow('Running common script for task %s and type %s' % (taskName, type))
+        log.warning('Running common script for task %s and type %s' % (taskName, type))
         self.runScript(config, script=script)
 
     if taskName in config:
       script = config[taskName]
-      print yellow('Running host-script for task %s and type %s' % (taskName, type))
+      log.warning('Running host-script for task %s and type %s' % (taskName, type))
       self.runScript(config, script=script)
 
   def fallback(self, taskName, configuration, **kwargs):
@@ -192,7 +195,3 @@ class ScriptMethod(BaseMethod):
 
   def postflight(self, taskName, configuration, **kwargs):
     self.runTaskSpecificScript(taskName + "Finished", configuration, **kwargs)
-
-
-
-

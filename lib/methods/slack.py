@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger('fabalicious.slack')
+
 from base import BaseMethod
 from fabric.api import *
 from fabric.colors import green, red
@@ -71,9 +74,9 @@ class SlackMethod(BaseMethod):
       attachments = json.dumps(attachments)
 
       slack.chat.post_message(slack_config['channel'], message, username=username, attachments=attachments, icon_emoji=slack_config['icon_emoji'])
-      print green('Slack-notification sent to %s.' % slack_config['channel'])
+      log.info('Slack-notification sent to %s.' % slack_config['channel'])
     except ImportError:
-      print red('Please install slacker on this machine: pip install slacker.')
+      log.error('Please install slacker on this machine: pip install slacker.')
 
 
 

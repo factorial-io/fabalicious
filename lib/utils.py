@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger('fabalicious.utils')
+
 from fabric.api import *
 import subprocess, shlex, atexit, time
 import time
@@ -31,7 +34,7 @@ class TunnelBase:
         terminated = True
 
     if not connectionEstablished:
-      print red("Could not establish tunnel with command %s" % self.cmd)
+      log.error("Could not establish tunnel with command %s" % self.cmd)
       print output
       exit(1)
 
@@ -140,4 +143,3 @@ def validate_dict(keys, dict, section=False):
         result[key] = 'Key is missing'
 
   return result
-
