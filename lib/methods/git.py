@@ -3,7 +3,6 @@ log = logging.getLogger('fabalicious.git')
 
 from base import BaseMethod
 from fabric.api import *
-from fabric.colors import green, red
 from lib.utils import validate_dict
 from lib.configuration import data_merge
 from lib import configuration

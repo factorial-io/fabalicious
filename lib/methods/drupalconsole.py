@@ -4,7 +4,6 @@ log = logging.getLogger('fabalicious.drupalconsole')
 from base import BaseMethod
 from fabric.api import *
 from lib.utils import SSHTunnel, RemoteSSHTunnel
-from fabric.colors import green, red
 from lib import configuration
 from fabric.contrib.files import exists
 

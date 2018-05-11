@@ -4,7 +4,6 @@ log = logging.getLogger('fabalicious.ssh')
 from base import BaseMethod
 from fabric.api import *
 from lib.utils import SSHTunnel, RemoteSSHTunnel
-from fabric.colors import green, red
 from fabric.network import *
 from lib import configuration
 import copy

@@ -4,7 +4,6 @@ log = logging.getLogger('fabalicious.drush')
 from base import BaseMethod
 from fabric.api import *
 from fabric.state import output, env
-from fabric.colors import green, red, yellow
 from fabric.network import *
 from fabric.context_managers import settings as _settings
 from lib import configuration

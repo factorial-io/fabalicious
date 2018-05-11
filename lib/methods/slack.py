@@ -3,7 +3,6 @@ log = logging.getLogger('fabalicious.slack')
 
 from base import BaseMethod
 from fabric.api import *
-from fabric.colors import green, red
 from lib import configuration
 import json
 import getpass

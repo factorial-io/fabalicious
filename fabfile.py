@@ -24,7 +24,6 @@ except:
   pass
 
 from fabric.api import *
-from fabric.colors import green, red, yellow
 from fabric.network import *
 from fabric.context_managers import settings as _settings
 from fabric.state import output

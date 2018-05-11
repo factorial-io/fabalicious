@@ -6,7 +6,6 @@ from fabric.api import *
 from fabric.contrib.files import exists
 from fabric.network import *
 from fabric.context_managers import settings as _settings
-from fabric.colors import green, red, yellow
 from lib import configuration
 import re, copy
 

@@ -6,7 +6,6 @@ from fabric.api import *
 from fabric.network import *
 from fabric.context_managers import settings as _settings
 from fabric.context_managers import env
-from fabric.colors import green, red
 from lib import configuration
 import copy
 from lib.utils import validate_dict

@@ -3,7 +3,6 @@ log = logging.getLogger('fabalicious.blueprints')
 
 import yaml
 import re
-from fabric.colors import green, red, yellow
 from lib import configuration
 
 def getTemplate(configName):

@@ -4,7 +4,6 @@ log = logging.getLogger('fabalicious.utils')
 from fabric.api import *
 import subprocess, shlex, atexit, time
 import time
-from fabric.colors import red
 
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null '
 

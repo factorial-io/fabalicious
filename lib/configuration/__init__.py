@@ -3,7 +3,6 @@ log = logging.getLogger('fabalicious.configuration')
 
 from fabric.api import *
 from fabric.state import output, env
-from fabric.colors import green, red, yellow
 import os.path
 import urllib2
 import yaml

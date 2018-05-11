@@ -3,7 +3,6 @@ log = logging.getLogger('fabalicious.files')
 
 from base import BaseMethod
 from fabric.api import *
-from fabric.colors import green, red
 import datetime
 import os.path
 import re

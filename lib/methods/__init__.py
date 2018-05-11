@@ -2,10 +2,6 @@ import logging
 log = logging.getLogger('fabalicious.methods')
 
 import inspect, sys
-from fabric.colors import green, yellow
-
-import logging
-log = logging.getLogger('fabalicious.methods')
 
 from types import TypeType
 from base import BaseMethod
