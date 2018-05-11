@@ -30,6 +30,11 @@ log = logging.getLogger('fabric.fabalicious')
 log.setLevel(LOG_LEVEL)
 log.addHandler(stream)
 
+# Initialize paramiko logging.
+paramikolog = logging.getLogger('paramiko')
+paramikolog.setLevel(LOG_LEVEL)
+paramikolog.addHandler(stream)
+
 
 configuration.fabfile_basedir = root_folder
 
