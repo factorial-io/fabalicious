@@ -21,7 +21,8 @@ from lib import blueprints
 
 
 import logging
-LOG_LEVEL = logging.DEBUG
+
+LOG_LEVEL = logging.INFO
 logging.root.setLevel(LOG_LEVEL)
 from lib import colorize
 stream = colorize.ColorizingStreamHandler()
