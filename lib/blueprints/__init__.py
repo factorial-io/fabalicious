@@ -1,5 +1,5 @@
 import logging
-log = logging.getLogger('fabalicious.blueprints')
+log = logging.getLogger('fabric.fabalicious.blueprints')
 
 import yaml
 import re

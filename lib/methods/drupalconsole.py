@@ -1,5 +1,5 @@
 import logging
-log = logging.getLogger('fabalicious.drupalconsole')
+log = logging.getLogger('fabric.fabalicious.drupalconsole')
 
 from base import BaseMethod
 from fabric.api import *

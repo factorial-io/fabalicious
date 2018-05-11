@@ -1,5 +1,5 @@
 import logging
-log = logging.getLogger('fabalicious.methods')
+log = logging.getLogger('fabric.fabalicious.methods')
 
 import inspect, sys
 

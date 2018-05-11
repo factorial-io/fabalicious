@@ -1,5 +1,5 @@
 import logging
-log = logging.getLogger('fabalicious.slack')
+log = logging.getLogger('fabric.fabalicious.slack')
 
 from base import BaseMethod
 from fabric.api import *

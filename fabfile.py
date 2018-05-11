@@ -11,14 +11,14 @@ try:
   stream = logging.StreamHandler()
   stream.setLevel(LOG_LEVEL)
   stream.setFormatter(formatter)
-  log = logging.getLogger('fabalicious')
+  log = logging.getLogger('fabric.fabalicious')
   log.setLevel(LOG_LEVEL)
   log.addHandler(stream)
 except:
   logging.root.setLevel(LOG_LEVEL)
   stream = logging.StreamHandler()
   stream.setLevel(LOG_LEVEL)
-  log = logging.getLogger('fabalicious')
+  log = logging.getLogger('fabric.fabalicious')
   log.setLevel(LOG_LEVEL)
   log.addHandler(stream)
   pass

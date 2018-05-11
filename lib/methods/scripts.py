@@ -1,5 +1,5 @@
 import logging
-log = logging.getLogger('fabalicious.scripts')
+log = logging.getLogger('fabric.fabalicious.scripts')
 
 from base import BaseMethod
 from fabric.api import *

@@ -1,5 +1,5 @@
 import logging
-log = logging.getLogger('fabalicious.base')
+log = logging.getLogger('fabric.fabalicious.base')
 
 from fabric.api import *
 from fabric.state import output, env
