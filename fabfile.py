@@ -1,28 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
-LOG_LEVEL = logging.DEBUG
-try:
-  LOGFORMAT = "  %(log_color)s%(levelname)-8s%(reset)s | %(log_color)s%(message)s%(reset)s"
-  from colorlog import ColoredFormatter
-  logging.root.setLevel(LOG_LEVEL)
-  formatter = ColoredFormatter(LOGFORMAT)
-  stream = logging.StreamHandler()
-  stream.setLevel(LOG_LEVEL)
-  stream.setFormatter(formatter)
-  log = logging.getLogger('fabric.fabalicious')
-  log.setLevel(LOG_LEVEL)
-  log.addHandler(stream)
-except:
-  logging.root.setLevel(LOG_LEVEL)
-  stream = logging.StreamHandler()
-  stream.setLevel(LOG_LEVEL)
-  log = logging.getLogger('fabric.fabalicious')
-  log.setLevel(LOG_LEVEL)
-  log.addHandler(stream)
-  pass
-
 from fabric.api import *
 from fabric.network import *
 from fabric.context_managers import settings as _settings
@@ -40,6 +18,18 @@ sys.path.append(root_folder)
 from lib import methods
 from lib import configuration
 from lib import blueprints
+
+
+import logging
+LOG_LEVEL = logging.DEBUG
+logging.root.setLevel(LOG_LEVEL)
+from lib import colorize
+stream = colorize.ColorizingStreamHandler()
+stream.setLevel(LOG_LEVEL)
+log = logging.getLogger('fabric.fabalicious')
+log.setLevel(LOG_LEVEL)
+log.addHandler(stream)
+
 
 configuration.fabfile_basedir = root_folder
 
