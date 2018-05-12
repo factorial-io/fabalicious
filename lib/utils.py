@@ -154,6 +154,7 @@ def log_level_lookup(x):
         'log_level:WARNING': logging.WARNING,
         'log_level:ERROR': logging.ERROR,
         'log_level:CRITICAL': logging.CRITICAL,
+        '--show=debug': logging.DEBUG,
     };
     try:
       return lookup[x]
