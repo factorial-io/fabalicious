@@ -55,10 +55,10 @@ from yapsy.PluginManager import PluginManager
 from os.path import expanduser
 
 plugin_dirs = []
-plugin_dirs.append(root_folder + '/plugins')
-plugin_dirs.append(expanduser("~") + '/.fabalicious/plugins')
 if configuration.getSettings('plugins_dir'):
   plugin_dirs.append(configuration.fabfile_basedir + '/' + configuration.getSettings('plugins_dir'))
+plugin_dirs.append(expanduser("~") + '/.fabalicious/plugins')
+plugin_dirs.append(root_folder + '/plugins')
 
 manager = PluginManager()
 manager.setPluginPlaces(plugin_dirs)
