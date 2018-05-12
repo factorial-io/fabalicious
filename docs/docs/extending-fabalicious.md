@@ -31,7 +31,7 @@ The plugin-resolver will look into the following folders to find methods:
 
 ## Structure of a plugin
 
-A plugin consists of 2 files, an info-file `<plugin>.yapsi-plugin` and the implementation at `<plugin>.py`
+A plugin consists of 2 files, an info-file `<plugin>.yapsy-plugin` and the implementation at `<plugin>.py`
 
 ## A custom task
 
@@ -115,4 +115,3 @@ needs:
   - ssh
   - bar
 ```
-

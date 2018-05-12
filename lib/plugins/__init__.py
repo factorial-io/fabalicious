@@ -45,7 +45,7 @@ def getTasks(root_folder):
     return init(root_folder, 'customTasksFolder', 'tasks', 'task', { "Task": ITaskPlugin })
 
   except ImportError:
-    log.warning('Custom plugins disabled, as yapsi is not installed!')
+    log.warning('Custom plugins disabled, as yapsy is not installed!')
     return {}
 
 
@@ -57,7 +57,5 @@ def getMethods(root_folder):
     return init(root_folder, 'customMethodsFolder', 'methods', 'method', { "Method": IMethodPlugin })
 
   except ImportError:
-    log.warning('Custom plugins disabled, as yapsi is not installed!')
+    log.warning('Custom plugins disabled, as yapsy is not installed!')
     return {}
-
-
