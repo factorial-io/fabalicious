@@ -171,9 +171,6 @@ def setup_logging(root_folder, log_level=None, env_key="LOG_CFG"):
         level = log_level_lookup(arg)
         if level:
           log_level = level
-    for arg in sys.argv:
-      if arg == "--show=debug":
-        log_level = logging.DEBUG
     path = default_path
     value = os.getenv(env_key, None)
     if value:
