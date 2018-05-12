@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
+log = logging.getLogger('fabric.fabalicious')
+
 from fabric.api import *
-from fabric.colors import green, red, yellow
 from fabric.network import *
 from fabric.context_managers import settings as _settings
 from fabric.state import output
+
 import os.path
 import time
 import datetime
@@ -18,9 +21,15 @@ sys.path.append(root_folder)
 from lib import methods
 from lib import configuration
 from lib import blueprints
+from lib import utils
+
+utils.setup_global_logging(root_folder)
 
 configuration.fabfile_basedir = root_folder
 
+@task
+def logLevel(level=None):
+    utils.setup_logging(root_folder, log_level = level)
 
 @task
 def config(configName='local'):
@@ -31,8 +40,8 @@ def config(configName='local'):
 def blueprint(branch, configName=False, output=False):
   template = blueprints.getTemplate(configName)
   if not template:
-    print red('No blueprint found in configuration for key %s!' % configName)
-    print yellow('run via fab blueprint=<identifier>,configName=<configName>,output=<bool>')
+    log.error('No blueprint found in configuration for key %s!' % configName)
+    log.info('run via fab blueprint=<identifier>,configName=<configName>,output=<bool>')
     exit(1)
 
   c = blueprints.apply(branch, template)
@@ -52,7 +61,7 @@ def getProperty(in_key):
       if key in c:
         c = c[key]
       else:
-        print red('property "%s" not found!' % in_key)
+        log.error('property "%s" not found!' % in_key)
         exit(1)
 
   print c
@@ -92,13 +101,13 @@ def about(config_name=False):
 
 @task
 def info():
-  print green('Fabalicious %s by Factorial.io. MIT Licensed.\n\n' % configuration.fabalicious_version)
+  log.info('Fabalicious %s by Factorial.io. MIT Licensed.\n\n' % configuration.fabalicious_version)
 
 @task
 def version():
   configuration.check('git')
   version = methods.call('git', 'getVersion', configuration.current())
-  print green('%s @ %s tagged with: %s' % (configuration.getSettings('name'), configuration.current('config_name'), version))
+  log.info('%s @ %s tagged with: %s' % (configuration.getSettings('name'), configuration.current('config_name'), version))
 
 @task
 def drush(drush_command):
@@ -119,7 +128,7 @@ def composer(composer_command):
 @task
 def list():
   config = configuration.getAll()
-  print('Found configurations for "%s":' % config['name']+"\n")
+  log.info('Found configurations for "%s":' % config['name']+"\n")
   keys = config['hosts']
   keys = sorted(keys)
   for key in keys:
@@ -149,7 +158,7 @@ def sshCommand():
 def putFile(fileName):
   configuration.check()
   if configuration.current()['runLocally']:
-    print red("putFile not supported when 'runLocally' is set!")
+    log.error("putFile not supported when 'runLocally' is set!")
     exit(1)
 
   methods.call('files', 'put', configuration.current(), filename=fileName)
@@ -166,7 +175,7 @@ def getSQLDump():
 
   file_name = '--'.join([configuration.current('config_name'), time.strftime("%Y%m%d-%H%M%S")]) + '.sql'
 
-  print green('Get SQL dump from %s' % configuration.current('config_name'))
+  log.info('Get SQL dump from %s' % configuration.current('config_name'))
 
   file_name = '/tmp/' + file_name
   methods.runTask(configuration.current(), 'backupSql', backup_file_name = file_name)
@@ -183,7 +192,7 @@ def getFilesDump():
   configuration.check();
   file_name = '--'.join([configuration.current('config_name'), time.strftime("%Y%m%d-%H%M%S")]) + '.tgz'
 
-  print green('Get files dump from %s' % configuration.current('config_name'))
+  log.info('Get files dump from %s' % configuration.current('config_name'))
 
   file_name = '/tmp/' + file_name
   methods.runTask(configuration.current(), 'backupFiles', backup_file_name = file_name)
@@ -196,7 +205,7 @@ def getFilesDump():
 @task
 def backup(withFiles = True):
   configuration.check()
-  print green('backing up files and database of "%s" @ "%s"' % (configuration.getSettings('name'), configuration.current('config_name')))
+  log.info('backing up files and database of "%s" @ "%s"' % (configuration.getSettings('name'), configuration.current('config_name')))
   i = datetime.datetime.now()
   basename = [
     configuration.current('config_name'),
@@ -247,7 +256,7 @@ def get_backup_files(commit):
         hash = result['hash']
 
   if not hash:
-    print red('Coud not find requested backup: %s' % commit)
+    log.error('Coud not find requested backup: %s' % commit)
     listBackups()
     exit()
   else:
@@ -282,7 +291,7 @@ def script(scriptKey = False, *args, **kwargs):
     scriptData = scripts[scriptKey] if scriptKey in scripts else False
 
   if not scriptData:
-    print red('Could not find any script named "%s" in fabfile.yaml' % scriptKey)
+    log.error('Could not find any script named "%s" in fabfile.yaml' % scriptKey)
     if configuration.current('scripts'):
       print 'Available scripts in %s:\n  - ' % configuration.current('config_name') + '\n  - '.join(configuration.current('scripts').keys())
 
@@ -362,7 +371,7 @@ def install(**kwargs):
   configuration.check()
   config = configuration.current()
   if config['type'] == 'prod' or not config['supportsInstalls']:
-    print red('Task install is not supported for this configuration. Please check if "type" and "supportsInstalls" is set correctly.')
+    log.error('Task install is not supported for this configuration. Please check if "type" and "supportsInstalls" is set correctly.')
     exit(1)
 
   if 'nextTasks' not in kwargs:
@@ -381,10 +390,10 @@ def installFrom(source_config_name, **kwargs):
 def createApp(**kwargs):
   configuration.check(['docker'])
   if not configuration.getSettings('repository'):
-    print red('Missing repository in fabfile, can\'t continue')
+    log.error('Missing repository in fabfile, can\'t continue')
     exit(1)
 
-  print green('Create app from source at %s' % configuration.getSettings('repository'))
+  log.info('Create app from source at %s' % configuration.getSettings('repository'))
   stages = [
     {
       'stage': 'checkExistingInstallation',
@@ -396,7 +405,7 @@ def createApp(**kwargs):
   ]
   createDestroyHelper(stages, 'createApp')
   if stages[0]['context']['installationExists']:
-    print green('Found an existing installation, running deploy instead!')
+    log.info('Found an existing installation, running deploy instead!')
 
     # Spin up the container.
     stages = [
@@ -439,7 +448,7 @@ def createDestroyHelper(stages, command, **kwargs):
 
   for step in stages:
     step['dockerConfig'] = dockerConfig
-    print yellow(command + ': current stage: \'{stage}\' via \'{connection}\''.format(**step))
+    log.info(command + ': current stage: \'{stage}\' via \'{connection}\''.format(**step))
 
     hostConfig = {}
     for key in ['host', 'user', 'port']:
@@ -456,7 +465,7 @@ def updateApp(**kwargs):
   configuration.check()
   config = configuration.current()
   if config['type'] != 'dev':
-    print red('Task updateApp is not supported for this configuration. Please check if "type" is set correctly.')
+    log.error('Task updateApp is not supported for this configuration. Please check if "type" is set correctly.')
     exit(1)
   backupDB()
   methods.runTask(configuration.current(), 'updateApp', **kwargs)

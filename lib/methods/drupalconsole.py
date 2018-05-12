@@ -1,7 +1,9 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.drupalconsole')
+
 from base import BaseMethod
 from fabric.api import *
 from lib.utils import SSHTunnel, RemoteSSHTunnel
-from fabric.colors import green, red
 from lib import configuration
 from fabric.contrib.files import exists
 
@@ -26,7 +28,7 @@ class DrupalConsoleMethod(BaseMethod):
       self.run('chmod +x /usr/local/bin/drupal')
       self.run('drupal init')
 
-      print green('Drupal Console installed successfully.')
+      log.info('Drupal Console installed successfully.')
 
   def run_drupalconsole(self, config, command):
     self.setRunLocally(config)
@@ -44,4 +46,3 @@ class DrupalConsoleMethod(BaseMethod):
         self.run_install(config)
         return
     self.run_drupalconsole(config, kwargs['command'])
-

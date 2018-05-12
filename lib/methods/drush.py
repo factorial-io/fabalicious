@@ -1,7 +1,9 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.drush')
+
 from base import BaseMethod
 from fabric.api import *
 from fabric.state import output, env
-from fabric.colors import green, red, yellow
 from fabric.network import *
 from fabric.context_managers import settings as _settings
 from lib import configuration
@@ -81,7 +83,7 @@ class DrushMethod(BaseMethod):
         for ignore in ignores:
           content.remove(ignore)
 
-        print yellow('Ignoring %s while %s modules from %s' % (' '.join(ignores), 'enabling' if enable else 'disabling', file))
+        log.warning('Ignoring %s while %s modules from %s' % (' '.join(ignores), 'enabling' if enable else 'disabling', file))
 
       modules = ' '.join(content)
 
@@ -103,7 +105,7 @@ class DrushMethod(BaseMethod):
         uuid = configuration.getSettings('uuid')
 
       if not uuid:
-        print red('No uuid found in fabfile.yaml. config-import may fail!')
+        log.error('No uuid found in fabfile.yaml. config-import may fail!')
 
     with self.cd(config['siteFolder']):
       if config['type'] == 'dev':
@@ -195,7 +197,7 @@ class DrushMethod(BaseMethod):
     self.backupSql(config, filename)
     if config['supportsZippedBackups']:
       filename += '.gz'
-    print green('Database dump at "%s"' % filename)
+    log.info('Database dump at "%s"' % filename)
 
   def listBackups(self, config, results, **kwargs):
     files = self.list_remote_files(config['backupFolder'], ['*.sql', '*.sql.gz'])
@@ -226,7 +228,7 @@ class DrushMethod(BaseMethod):
       else:
         self.run_drush('sql-cli < ' + sql_name_target)
 
-      print(green('SQL restored from "%s"' % sql_name_target))
+      log.info('SQL restored from "%s"' % sql_name_target)
 
 
   def copyDBFrom(self, config, source_config=False, **kwargs):
@@ -297,12 +299,12 @@ class DrushMethod(BaseMethod):
 
 
     if 'database' not in config:
-      print red('Missing database configuration!')
+      log.error('Missing database configuration!')
       exit(1)
 
     configuration.validate_dict(['user', 'pass', 'name', 'host'], config['database'], 'Missing database configuration: ')
 
-    print green('Installing fresh database for "%s"' % config['config_name'])
+    log.info('Installing fresh database for "%s"' % config['config_name'])
 
     o = config['database']
 
@@ -381,7 +383,7 @@ class DrushMethod(BaseMethod):
     with self.cd(config['rootFolder']):
       self.run_quietly('rm -rf /tmp/drupal-update')
 
-    print green("Updated drupal successfully to '%s'." % (drupal_folder))
+    log.info("Updated drupal successfully to '%s'." % (drupal_folder))
 
   def waitForDatabase(self, config):
     self.setRunLocally(config)
@@ -400,7 +402,7 @@ class DrushMethod(BaseMethod):
       time.sleep(5)
       print "Wait another 5 secs for the database ({user}@{host}) ...".format(**config['database'])
 
-    print red('Database not available!')
+    log.error('Database not available!')
     return False
 
 
@@ -415,4 +417,3 @@ class DrushMethod(BaseMethod):
   def preflight(self, task, config, **kwargs):
     if task == 'install':
       self.waitForDatabase(config)
-

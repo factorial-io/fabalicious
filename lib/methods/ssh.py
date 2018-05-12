@@ -1,7 +1,9 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.ssh')
+
 from base import BaseMethod
 from fabric.api import *
 from lib.utils import SSHTunnel, RemoteSSHTunnel
-from fabric.colors import green, red
 from fabric.network import *
 from lib import configuration
 import copy
@@ -106,7 +108,7 @@ class SSHMethod(BaseMethod):
         o['destHost'] = result['ip']
 
     if 'destHost' not in o or not o['destHost']:
-      print red('Could not get remote ip-address!')
+      log.error('Could not get remote ip-address!')
       self.tunnels[key]['creating'] = False
 
       return False
@@ -123,9 +125,9 @@ class SSHMethod(BaseMethod):
     self.tunnels[key]['creating'] = False
 
     if self.tunnels[key]['created']:
-      print green('Tunnel established')
+      log.info('Tunnel established')
     else:
-      print red('Tunnel creation failed')
+      log.error('Tunnel creation failed')
 
     return tunnel
 
@@ -170,13 +172,13 @@ class SSHMethod(BaseMethod):
   def doctor_ssh_connection(self, config):
     output = local('ssh -A -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o BatchMode=yes -o ConnectTimeout=5 -p {port} {user}@{host} echo ok'.format(**config), capture=True)
     if output.return_code != 0:
-      print red('Cannot connect to host! Please check if the host is running and reachable, and check if your public key is added to authorized_keys on the remote host.')
-      print red('Try: ssh -p {port} {user}@{host}'.format(**config))
-      print red('Try: ssh-copy-id -p {port} {user}@{host}'.format(**config))
-      print red('Try: ssh-keyscan -t rsa,dsa -p {port} -H {host} and add the lines to known_hosts if not already in place.'.format(**config))
+      log.error('Cannot connect to host! Please check if the host is running and reachable, and check if your public key is added to authorized_keys on the remote host.')
+      log.error('Try: ssh -p {port} {user}@{host}'.format(**config))
+      log.error('Try: ssh-copy-id -p {port} {user}@{host}'.format(**config))
+      log.error('Try: ssh-keyscan -t rsa,dsa -p {port} -H {host} and add the lines to known_hosts if not already in place.'.format(**config))
       return False
     else:
-      print green("Can connect to host {host} at port {port}!".format(**config))
+      log.info("Can connect to host {host} at port {port}!".format(**config))
       return True
 
 
@@ -185,18 +187,18 @@ class SSHMethod(BaseMethod):
       print "Check SSH keyforwading: ",
       output = local(' echo xx${SSH_AUTH_SOCK}xx', capture=True)
       if output.stdout.strip() == 'xxxx':
-        print red('SSH Keyforwarding is not working correctly, SSH_AUTH_SOCK is not available!')
+        log.error('SSH Keyforwarding is not working correctly, SSH_AUTH_SOCK is not available!')
         exit(1)
       else:
-        print green('SSH Keyforwarding seems to work.')
+        log.info('SSH Keyforwarding seems to work.')
 
       print "Check SSH key-agent: ",
       output = local('ssh-add -l', capture=True)
       if output.return_code != 0:
-        print red('SSH key-agent has no private keys, please add it via "ssh-add".')
+        log.error('SSH key-agent has no private keys, please add it via "ssh-add".')
         exit(1)
       else:
-        print green('SSH key-agent has one or more private keys.')
+        log.info('SSH key-agent has one or more private keys.')
 
       if 'sshTunnel' in config:
         print "Check SSH tunnel: ",
@@ -240,17 +242,9 @@ class SSHMethod(BaseMethod):
         print "Check SSH-connection from %s to %s: " % (config['config_name'], remote_config['config_name']),
         output = local(cmd, capture=True)
         if output.return_code != 0:
-          print red('Connection failed!')
-          print red('Try: %s' % cmd)
+          log.error('Connection failed!')
+          log.error('Try: %s' % cmd)
           print output.stdout
           exit(1)
         else:
-          print green('Connection established!')
-
-
-
-
-
-
-
-
+          log.info('Connection established!')

@@ -1,5 +1,7 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.methods')
+
 import inspect, sys
-from fabric.colors import green, yellow
 
 from types import TypeType
 from base import BaseMethod
@@ -103,7 +105,7 @@ def runTaskImpl(methodNames, taskName, configuration, fallback_allowed, **kwargs
   fn_called = False
   for methodName in methodNames:
     if not 'quiet' in kwargs and not msg_printed:
-      print yellow('Running task %s on configuration %s' % (taskName, configuration['config_name']))
+      log.info('Running task %s on configuration %s' % (taskName, configuration['config_name']))
       msg_printed = True
     fn = get(methodName, taskName)
     if fn:
