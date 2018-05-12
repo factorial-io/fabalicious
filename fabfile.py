@@ -23,13 +23,13 @@ from lib import configuration
 from lib import blueprints
 from lib import utils
 
-utils.setup_logging(root_folder)
+utils.setup_global_logging(root_folder)
 
 configuration.fabfile_basedir = root_folder
 
 @task
 def logLevel(level=None):
-    return level
+    utils.setup_logging(root_folder, log_level = level)
 
 @task
 def config(configName='local'):
