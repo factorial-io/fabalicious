@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.3.1
+
+### new
+* new task `logLevel`: used to change the default logging level of the program.
+
+### changed
+
+* Refactored output logging to use python logging library.
+
 ## 2.3.0
 
 ### new
@@ -214,5 +223,3 @@
 * `needsComposer` is unsupported, set your `needs` accordingly.
 * the custom script-command `run_task` is not supported anymore. Use `execute(<task-name>)` instead.
 * the task `updateDrupalCore` is not ported over, not sure if it comes back.
-
-
