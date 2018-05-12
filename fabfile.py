@@ -49,6 +49,7 @@ paramikolog = logging.getLogger('paramiko')
 paramikolog.setLevel(LOG_LEVEL)
 paramikolog.addHandler(stream)
 
+configuration.fabfile_basedir = root_folder
 
 from yapsy.PluginManager import PluginManager
 from os.path import expanduser
@@ -56,6 +57,8 @@ from os.path import expanduser
 plugin_dirs = []
 plugin_dirs.append(root_folder + '/plugins')
 plugin_dirs.append(expanduser("~") + '/.fabalicious/plugins')
+if configuration.getSettings('plugins_dir'):
+  plugin_dirs.append(configuration.fabfile_basedir + '/' + configuration.getSettings('plugins_dir'))
 
 manager = PluginManager()
 manager.setPluginPlaces(plugin_dirs)
@@ -71,9 +74,6 @@ for plugin in manager.getAllPlugins():
       exec("%s=plugin.plugin_object" % (alias))
   else:
     exec("%s=plugin.plugin_object" % (plugin.name))
-
-configuration.fabfile_basedir = root_folder
-
 
 @task
 def config(configName='local'):
