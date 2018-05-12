@@ -22,16 +22,29 @@ from lib import blueprints
 
 import logging
 
+# Try to use same logging level as fabric does.
 LOG_LEVEL = logging.INFO
+for arg in sys.argv:
+  if arg == "--show=debug":
+    LOG_LEVEL = logging.DEBUG
+
 logging.root.setLevel(LOG_LEVEL)
+
 from lib import colorize
 stream = colorize.ColorizingStreamHandler()
 stream.setLevel(LOG_LEVEL)
+
+# Default logger.
 log = logging.getLogger('fabric.fabalicious')
 log.setLevel(LOG_LEVEL)
 log.addHandler(stream)
 
-# Initialize paramiko logging.
+# Configure yapsy logger.
+yapsylog = logging.getLogger('yapsy')
+yapsylog.setLevel(LOG_LEVEL)
+yapsylog.addHandler(stream)
+
+# Configure paramiko logger.
 paramikolog = logging.getLogger('paramiko')
 paramikolog.setLevel(LOG_LEVEL)
 paramikolog.addHandler(stream)
