@@ -51,9 +51,14 @@ paramikolog.addHandler(stream)
 
 
 from yapsy.PluginManager import PluginManager
+from os.path import expanduser
+
+plugin_dirs = []
+plugin_dirs.append(root_folder + '/plugins')
+plugin_dirs.append(expanduser("~") + '/.fabalicious/plugins')
 
 manager = PluginManager()
-manager.setPluginPlaces([root_folder + '/plugins'])
+manager.setPluginPlaces(plugin_dirs)
 manager.collectPlugins()
 
 # Activate all loaded plugins
