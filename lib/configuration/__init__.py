@@ -24,6 +24,7 @@ fabfile_basedir = False
 offline = False
 cache = {}
 
+globalMethodSettings = {}
 
 def load_all_yamls_from_dir(path):
   result = {}
@@ -438,70 +439,19 @@ def current(key = False):
 
 def getAll():
   global root_data
+  global globalMethodSettings
 
   if not root_data:
+
     root_data = get_all_configurations()
+    root_data = data_merge(globalMethodSettings, root_data)
 
     if not 'common' in root_data:
       root_data['common'] = { }
 
-    if not "usePty" in root_data:
-      root_data['usePty'] = True
-
-    if not "useShell" in root_data:
-      root_data['useShell'] = True
-
-    if not "disableKnownHosts" in root_data:
-      root_data['disableKnownHosts'] = False
-
-    if not "gitOptions" in root_data:
-      root_data['gitOptions'] = { 'pull' : [ '--no-edit', '--rebase'] }
-
-    if not 'sqlSkipTables' in root_data:
-      root_data['sqlSkipTables'] = [
-        'cache',
-        'cache_block',
-        'cache_bootstrap',
-        'cache_field',
-        'cache_filter',
-        'cache_form',
-        'cache_menu',
-        'cache_page',
-        'cache_path',
-        'cache_update',
-        'cache_views',
-        'cache_views_data',
-      ]
-
-    if not 'slack' in root_data:
-      root_data['slack'] = {}
-    root_data['slack'] = data_merge( { 'notifyOn': [], 'username': 'Fabalicious', 'icon_emoji': ':tada:'}, root_data['slack'])
-
     if 'needs' not in root_data:
       root_data['needs'] = ['ssh', 'git', 'drush7', 'files']
 
-    if 'scripts' not in root_data:
-      root_data['scripts'] = {}
-
-    if 'executables' not in root_data:
-      root_data['executables'] = {}
-
-    if 'revertFeatures' not in root_data:
-      root_data['revertFeatures'] = True
-
-    # TODO: find a way to move method-specific settings into the method-implementation
-    if 'configurationManagement' not in root_data:
-      root_data['configurationManagement'] = {
-        'staging': [
-          '#!drush config-import -y staging'
-        ]
-      }
-    if 'installOptions' not in root_data:
-      root_data['installOptions'] = {
-        'distribution': 'minimal',
-        'locale': 'en',
-        'options': ''
-      }
 
 
 
@@ -556,3 +506,13 @@ def getDockerConfig(docker_config_name, runLocally = False, printErrors=True):
 def add(config_name, config):
   settings = getAll()
   settings['hosts'][config_name] = config
+
+
+def addGlobalSettings(data):
+  global globalMethodSettings
+  global root_data
+
+  if root_data:
+    root_data = data_merge(data, root_data)
+  else:
+    globalMethodSettings = data_merge(globalMethodSettings, data)

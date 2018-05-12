@@ -14,6 +14,13 @@ class ScriptMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'script'
 
+  @staticmethod
+  def getGlobalSettings():
+    return {
+      'scripts': {},
+      'executables': {}
+    }
+
   def printReplacements(self, replacements):
 
     for key in sorted(replacements.keys()):

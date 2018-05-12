@@ -15,6 +15,16 @@ class SlackMethod(BaseMethod):
     return methodName == 'slack'
 
   @staticmethod
+  def getGlobalSettings():
+    return {
+      'slack': {
+        'notifyOn': [],
+        'username': 'Fabalicious',
+        'icon_emoji': ':tada:'
+      }
+    }
+
+  @staticmethod
   def validateConfig(config):
     return validate_dict([], config)
 

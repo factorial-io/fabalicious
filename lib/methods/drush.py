@@ -21,6 +21,37 @@ class DrushMethod(BaseMethod):
     return methodName == 'drush7' or methodName == 'drush8' or methodName == 'drush'
 
   @staticmethod
+  def getGlobalSettings():
+    return {
+      'sqlSkipTables': [
+        'cache',
+        'cache_block',
+        'cache_bootstrap',
+        'cache_field',
+        'cache_filter',
+        'cache_form',
+        'cache_menu',
+        'cache_page',
+        'cache_path',
+        'cache_update',
+        'cache_views',
+        'cache_views_data',
+      ],
+      'revertFeatures': True,
+      'configurationManagement': {
+        'staging': [
+          '#!drush config-import -y staging'
+        ]
+      },
+      'installOptions': {
+        'distribution': 'minimal',
+        'locale': 'en',
+        'options': ''
+      }
+    }
+
+
+  @staticmethod
   def validateConfig(config):
     result = validate_dict(['siteFolder', 'filesFolder'], config)
     if result:

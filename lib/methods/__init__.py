@@ -16,20 +16,35 @@ from files import FilesMethod
 from drupalconsole import DrupalConsoleMethod
 from platform import PlatformMethod
 
+from lib import configuration
 cache = {}
+methodClasses = [
+  GitMethod,
+  DrushMethod,
+  SSHMethod,
+  ComposerMethod,
+  ScriptMethod,
+  DockerMethod,
+  SlackMethod,
+  FilesMethod,
+  DrupalConsoleMethod,
+  PlatformMethod
+]
+
+# Set global settings
+for method in methodClasses:
+  configuration.addGlobalSettings(method.getGlobalSettings())
 
 class Factory(object):
 
-
   @staticmethod
   def get(name):
-    methodClasses = [j for (i,j) in globals().iteritems() if isinstance(j, TypeType) and issubclass(j, BaseMethod)]
     for methodClass in methodClasses:
       if methodClass.supports(name):
         return methodClass(name, sys.modules[__name__])
-    #if research was unsuccessful, raise an error
-    raise ValueError('No method supporting "%s" found.' % name)
 
+    log.error('Method supporting "%s" found' % name)
+    exit(1)
 
 
 def getMethod(methodName):

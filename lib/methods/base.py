@@ -45,6 +45,10 @@ class BaseMethod(object):
     pass
 
   @staticmethod
+  def getGlobalSettings():
+    return {}
+
+  @staticmethod
   def addExecutables(config, executables):
     for e in executables:
       if e not in config['executables']:
