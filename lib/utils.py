@@ -149,11 +149,11 @@ def validate_dict(keys, dict, section=False):
 
 def log_level_lookup(x):
     lookup = {
-        'log_level:DEBUG': logging.DEBUG,
-        'log_level:INFO': logging.INFO,
-        'log_level:WARNING': logging.WARNING,
-        'log_level:ERROR': logging.ERROR,
-        'log_level:CRITICAL': logging.CRITICAL,
+        'logLevel:DEBUG': logging.DEBUG,
+        'logLevel:INFO': logging.INFO,
+        'logLevel:WARNING': logging.WARNING,
+        'logLevel:ERROR': logging.ERROR,
+        'logLevel:CRITICAL': logging.CRITICAL,
         '--show=debug': logging.DEBUG,
     };
     try:

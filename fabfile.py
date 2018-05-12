@@ -28,7 +28,7 @@ utils.setup_logging(root_folder)
 configuration.fabfile_basedir = root_folder
 
 @task
-def log_level(level=None):
+def logLevel(level=None):
     return level
 
 @task
