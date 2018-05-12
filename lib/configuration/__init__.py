@@ -368,7 +368,7 @@ def get_configuration_via_http_impl(config_file_name, as_yaml = True):
     data = remote_config_cache_load(config_file_name, as_yaml)
     if data:
       if offline:
-        log.warning('Using cached configuration for %s' % config_file_name)
+        log.info('Using cached configuration for %s' % config_file_name)
       else:
         log.warning('Could not read configuration from %s, using cached data.' % config_file_name)
 

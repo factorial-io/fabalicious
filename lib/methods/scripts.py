@@ -71,6 +71,7 @@ class ScriptMethod(BaseMethod):
               arguments = func_args.split(',')
               arguments = map(lambda x: x.strip(), arguments)
 
+            log.debug('Executing "%s"' % func_name)
             if arguments:
               callbacks[func_name](state, *arguments)
             else:
@@ -79,6 +80,7 @@ class ScriptMethod(BaseMethod):
 
         if not handled:
           line = self.expandCommand(line)
+          log.debug('Running "%s"' % line)
           if state['warnOnly']:
             with warn_only():
               result = local(line) if runLocally else run(line)
@@ -177,12 +179,12 @@ class ScriptMethod(BaseMethod):
     if taskName in common_scripts:
       if type in common_scripts[taskName]:
         script = common_scripts[taskName][type]
-        log.warning('Running common script for task %s and type %s' % (taskName, type))
+        log.info('Running common script for task %s and type %s' % (taskName, type))
         self.runScript(config, script=script)
 
     if taskName in config:
       script = config[taskName]
-      log.warning('Running host-script for task %s and type %s' % (taskName, type))
+      log.info('Running host-script for task %s and type %s' % (taskName, type))
       self.runScript(config, script=script)
 
   def fallback(self, taskName, configuration, **kwargs):
