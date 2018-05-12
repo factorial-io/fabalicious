@@ -1,5 +1,33 @@
 # Changelog
 
+## 2.x.x
+
+### new
+
+* new plugin-discovery via `yapsy`, it allows you to add custom tasks and methods to your project, or to your user-folder.
+
+    The plugin-resolver will look into the following folders to find tasks:
+
+      ```
+      <project_folder>/.fabalicious/tasks
+      <project_folder>/plugins/tasks
+      <user-folder>/.fabalicious/tasks
+      <fabalicious-folder>/plugins/tasks
+      ```
+
+    The plugin-resolver will look into the following folders to find methods:
+
+      ```
+      <project_folder>/.fabalicious/methods
+      <project_folder>/plugins/methods
+      <user-folder>/.fabalicious/methods
+      <fabalicious-folder>/plugins/methods
+      ```
+
+### changed
+
+* methods are now responsible to provide their default global settings via the static `getGlobalSettings`-method.
+
 ## 2.3.0
 
 ### new
