@@ -31,6 +31,23 @@ log.setLevel(LOG_LEVEL)
 log.addHandler(stream)
 
 
+from yapsy.PluginManager import PluginManager
+
+manager = PluginManager()
+manager.setPluginPlaces([root_folder + '/plugins'])
+manager.collectPlugins()
+
+# Activate all loaded plugins
+for pluginInfo in manager.getAllPlugins():
+  manager.activatePluginByName(pluginInfo.name)
+
+for plugin in manager.getAllPlugins():
+  if plugin.plugin_object.aliases:
+    for alias in plugin.plugin_object.aliases:
+      exec("%s=plugin.plugin_object" % (alias))
+  else:
+    exec("%s=plugin.plugin_object" % (plugin.name))
+
 configuration.fabfile_basedir = root_folder
 
 
