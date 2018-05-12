@@ -18,7 +18,7 @@ sys.path.append(root_folder)
 from lib import methods
 from lib import configuration
 from lib import blueprints
-
+from lib import plugins
 
 import logging
 
@@ -51,33 +51,7 @@ paramikolog.addHandler(stream)
 
 configuration.fabfile_basedir = root_folder
 
-from yapsy.PluginManager import PluginManager
-from os.path import expanduser
-from lib import ITaskPlugin
-
-plugin_dirs = []
-if configuration.getSettings('plugins_dir'):
-  plugin_dirs.append(configuration.fabfile_basedir + '/' + configuration.getSettings('plugins_dir'))
-plugin_dirs.append(expanduser("~") + '/.fabalicious/plugins')
-plugin_dirs.append(root_folder + '/plugins')
-
-manager = PluginManager()
-manager.setPluginPlaces(plugin_dirs)
-manager.setCategoriesFilter({
-   "Task" : ITaskPlugin,
-   })
-manager.collectPlugins()
-
-# Activate all loaded plugins
-for pluginInfo in manager.getAllPlugins():
-  manager.activatePluginByName(pluginInfo.name)
-
-for plugin in manager.getAllPlugins():
-  if plugin.plugin_object.aliases:
-    for alias in plugin.plugin_object.aliases:
-      exec("%s=plugin.plugin_object" % (alias))
-  else:
-    exec("%s=plugin.plugin_object" % (plugin.name))
+plugins.init(root_folder)
 
 @task
 def config(configName='local'):
