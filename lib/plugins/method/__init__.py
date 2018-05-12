@@ -9,3 +9,7 @@ class IMethodPlugin(BaseMethod, IPlugin):
   def setNameAndFactory(self, name, factory):
     self.methodName = name
     self.factory = factory
+
+  @staticmethod
+  def supports(methodName):
+    raise NotImplementedError
