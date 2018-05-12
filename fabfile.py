@@ -51,7 +51,8 @@ paramikolog.addHandler(stream)
 
 configuration.fabfile_basedir = root_folder
 
-plugins.init(root_folder)
+for taskName, obj in plugins.init(root_folder).iteritems():
+  exec("%s=obj" % (taskName))
 
 @task
 def config(configName='local'):
