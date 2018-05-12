@@ -14,7 +14,7 @@ def init(root_folder):
       plugin_dirs.append(configuration.fabfile_basedir + '/' + configuration.getSettings('customTasksFolder'))
     plugin_dirs.append(expanduser("~") + '/.fabalicious/plugins/tasks')
     plugin_dirs.append(root_folder + '/plugins/tasks')
-    print plugin_dirs
+    log.debug("Looking for task-plugins in %s" % ", ".join(plugin_dirs))
 
     manager = PluginManager()
     manager.setPluginPlaces(plugin_dirs)
@@ -27,15 +27,15 @@ def init(root_folder):
     for pluginInfo in manager.getAllPlugins():
       manager.activatePluginByName(pluginInfo.name)
 
+    result = {}
     for plugin in manager.getAllPlugins():
-      print plugin.plugin_object
-      print plugin.name
 
       if plugin.plugin_object.aliases:
         for alias in plugin.plugin_object.aliases:
-          exec("%s=plugin.plugin_object" % (alias))
+          result[alias] = plugin.plugin_object
       else:
-        print plugin
-        exec("%s=plugin.plugin_object" % (plugin.name))
+        result[plugin.name] = plugin.plugin_object
+    return result
   except ImportError:
     log.warning('Custom plugins disabled, as yapsi is not installed!')
+    return {}
