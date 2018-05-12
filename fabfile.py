@@ -64,7 +64,7 @@ def blueprint(branch, configName=False, output=False):
   template = blueprints.getTemplate(configName)
   if not template:
     log.error('No blueprint found in configuration for key %s!' % configName)
-    log.warning('run via fab blueprint=<identifier>,configName=<configName>,output=<bool>')
+    log.info('run via fab blueprint=<identifier>,configName=<configName>,output=<bool>')
     exit(1)
 
   c = blueprints.apply(branch, template)
@@ -471,7 +471,7 @@ def createDestroyHelper(stages, command, **kwargs):
 
   for step in stages:
     step['dockerConfig'] = dockerConfig
-    log.warning(command + ': current stage: \'{stage}\' via \'{connection}\''.format(**step))
+    log.info(command + ': current stage: \'{stage}\' via \'{connection}\''.format(**step))
 
     hostConfig = {}
     for key in ['host', 'user', 'port']:

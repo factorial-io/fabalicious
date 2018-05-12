@@ -44,8 +44,8 @@ class ColorizingStreamHandler(logging.StreamHandler):
         "Maps levels to colour/intensity settings."
         level_map = {
             logging.DEBUG: (None, 'blue', False),
-            logging.INFO: (None, 'green', False),
-            logging.WARNING: (None, 'yellow', False),
+            logging.INFO: (None, 'yellow', False),
+            logging.WARNING: ('yellow', 'black', False),
             logging.ERROR: (None, 'red', False),
             logging.CRITICAL: ('red', 'white', True),
         }

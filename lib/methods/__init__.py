@@ -105,7 +105,7 @@ def runTaskImpl(methodNames, taskName, configuration, fallback_allowed, **kwargs
   fn_called = False
   for methodName in methodNames:
     if not 'quiet' in kwargs and not msg_printed:
-      log.warning('Running task %s on configuration %s' % (taskName, configuration['config_name']))
+      log.info('Running task %s on configuration %s' % (taskName, configuration['config_name']))
       msg_printed = True
     fn = get(methodName, taskName)
     if fn:
