@@ -4,6 +4,10 @@ log = logging.getLogger('fabalicious.utils')
 from fabric.api import *
 import subprocess, shlex, atexit, time
 import time
+import os
+import sys
+import yaml
+import logging.config
 
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null '
 
@@ -142,3 +146,43 @@ def validate_dict(keys, dict, section=False):
         result[key] = 'Key is missing'
 
   return result
+
+def log_level_lookup(x):
+    lookup = {
+        'log_level:DEBUG': logging.DEBUG,
+        'log_level:INFO': logging.INFO,
+        'log_level:WARNING': logging.WARNING,
+        'log_level:ERROR': logging.ERROR,
+        'log_level:CRITICAL': logging.CRITICAL,
+    };
+    try:
+      return lookup[x]
+    except Exception as e:
+      return None
+
+def setup_logging(root_folder, log_level=None, env_key="LOG_CFG"):
+    """Setup logging configuration
+
+    """
+    default_path = root_folder + '/logging.yaml'
+    if log_level is None:
+      for arg in sys.argv:
+        level = log_level_lookup(arg)
+        if level:
+          log_level = level
+    for arg in sys.argv:
+      if arg == "--show=debug":
+        log_level = logging.DEBUG
+    path = default_path
+    value = os.getenv(env_key, None)
+    if value:
+        path = value
+    if os.path.exists(path):
+      with open(path, 'rt') as f:
+        config = yaml.safe_load(f.read())
+      if log_level:
+        for logger in config['loggers']:
+          config['loggers'][logger]['level'] = log_level
+      logging.config.dictConfig(config)
+    else:
+        logging.basicConfig(level=default_level)

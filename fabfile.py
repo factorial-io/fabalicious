@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
+log = logging.getLogger('fabric.fabalicious')
+
 from fabric.api import *
 from fabric.network import *
 from fabric.context_managers import settings as _settings
@@ -18,40 +21,15 @@ sys.path.append(root_folder)
 from lib import methods
 from lib import configuration
 from lib import blueprints
+from lib import utils
 
-
-import logging
-
-# Try to use same logging level as fabric does.
-LOG_LEVEL = logging.INFO
-for arg in sys.argv:
-  if arg == "--show=debug":
-    LOG_LEVEL = logging.DEBUG
-
-logging.root.setLevel(LOG_LEVEL)
-
-from lib import colorize
-stream = colorize.ColorizingStreamHandler()
-stream.setLevel(LOG_LEVEL)
-
-# Default logger.
-log = logging.getLogger('fabric.fabalicious')
-log.setLevel(LOG_LEVEL)
-log.addHandler(stream)
-
-# Configure yapsy logger.
-yapsylog = logging.getLogger('yapsy')
-yapsylog.setLevel(LOG_LEVEL)
-yapsylog.addHandler(stream)
-
-# Configure paramiko logger.
-paramikolog = logging.getLogger('paramiko')
-paramikolog.setLevel(LOG_LEVEL)
-paramikolog.addHandler(stream)
-
+utils.setup_logging(root_folder)
 
 configuration.fabfile_basedir = root_folder
 
+@task
+def log_level(level=None):
+    return level
 
 @task
 def config(configName='local'):
