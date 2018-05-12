@@ -161,16 +161,18 @@ def log_level_lookup(x):
     except Exception as e:
       return None
 
+def setup_global_logging(root_folder, env_key_level="LOG_LVL"):
+    """Setup logging configuration globally
+
+    """
+    log_level = os.getenv(env_key_level, None)
+    setup_logging(root_folder, log_level)
+
 def setup_logging(root_folder, log_level=None, env_key="LOG_CFG"):
     """Setup logging configuration
 
     """
     default_path = root_folder + '/logging.yaml'
-    if log_level is None:
-      for arg in sys.argv:
-        level = log_level_lookup(arg)
-        if level:
-          log_level = level
     path = default_path
     value = os.getenv(env_key, None)
     if value:
