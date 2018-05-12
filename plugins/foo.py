@@ -9,5 +9,4 @@ from fabric.tasks import Task
 class Foo(Task, IPlugin):
   aliases = ['foo','foobar']
   def run(self):
-    print "Foo bar"
-    log.debug('?')
+    log.info('Foobar runs...')
