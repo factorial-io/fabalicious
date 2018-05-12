@@ -15,7 +15,6 @@ from fabric.main import list_commands
 # Import our modules.
 root_folder = os.path.dirname(os.path.realpath(os.path.dirname(__file__) + '/fabfile.py'))
 sys.path.append(root_folder)
-from lib import methods
 from lib import configuration
 from lib import blueprints
 from lib import plugins
@@ -50,6 +49,8 @@ paramikolog.setLevel(LOG_LEVEL)
 paramikolog.addHandler(stream)
 
 configuration.fabfile_basedir = root_folder
+
+from lib import methods
 
 for taskName, obj in plugins.getTasks(root_folder).iteritems():
   exec("%s=obj" % (taskName))

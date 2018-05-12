@@ -16,7 +16,9 @@ from files import FilesMethod
 from drupalconsole import DrupalConsoleMethod
 from platform import PlatformMethod
 
+from lib import plugins
 from lib import configuration
+
 cache = {}
 methodClasses = [
   GitMethod,
@@ -35,6 +37,15 @@ methodClasses = [
 for method in methodClasses:
   configuration.addGlobalSettings(method.getGlobalSettings())
 
+# get custom methods
+customMethods = plugins.getMethods(configuration.fabfile_basedir)
+for methodName, obj in customMethods.iteritems():
+  obj.setNameAndFactory(methodName, sys.modules[__name__])
+  configuration.addGlobalSettings(obj.getGlobalSettings())
+
+customMethods = customMethods.values()
+
+
 class Factory(object):
 
   @staticmethod
@@ -43,8 +54,20 @@ class Factory(object):
       if methodClass.supports(name):
         return methodClass(name, sys.modules[__name__])
 
+    for customMethod in customMethods:
+      if customMethod.supports(name):
+        return customMethod
+
     log.error('Method supporting "%s" found' % name)
     exit(1)
+
+def getAllMethods():
+  result = []
+
+  result.append(methodClasses)
+  result.append(customMethods)
+
+  return result
 
 
 def getMethod(methodName):

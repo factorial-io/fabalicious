@@ -7,6 +7,7 @@ import os.path
 import urllib2
 import yaml
 import copy
+import glob
 import hashlib
 import sys
 from lib.utils import validate_dict
@@ -58,8 +59,12 @@ def load_configuration(input_file):
 
   if (os.path.basename(input_file) == 'index.yaml'):
     path = os.path.dirname(input_file)
-    data['hosts'] = load_all_yamls_from_dir(path + "/hosts")
-    data['dockerHosts'] = load_all_yamls_from_dir(path + "/dockerHosts")
+    hosts = load_all_yamls_from_dir(path + "/hosts")
+    dockerHosts = load_all_yamls_from_dir(path + "/dockerHosts")
+    if hosts:
+      data['hosts'] = hosts
+    if dockerHosts:
+      data['dockerHosts'] = dockerHosts
 
   data = resolve_inheritance(data, {})
   if 'requires' in data:
@@ -77,7 +82,7 @@ def load_configuration(input_file):
 def get_all_configurations():
   global fabfile_basedir
   # Find our configuration-file:
-  candidates = ['fabfile.yaml', '.fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
+  candidates = ['fabfile.yaml', '.fabfile.yaml', 'fabalicious/index.yaml', '.fabalicious/index.yaml', 'fabfile.yaml.inc']
 
   config_file_name = find_configfiles(candidates, 3)
   if (config_file_name):
