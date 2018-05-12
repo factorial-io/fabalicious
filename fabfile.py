@@ -53,6 +53,7 @@ configuration.fabfile_basedir = root_folder
 
 from yapsy.PluginManager import PluginManager
 from os.path import expanduser
+from lib import ITaskPlugin
 
 plugin_dirs = []
 if configuration.getSettings('plugins_dir'):
@@ -62,6 +63,9 @@ plugin_dirs.append(root_folder + '/plugins')
 
 manager = PluginManager()
 manager.setPluginPlaces(plugin_dirs)
+manager.setCategoriesFilter({
+   "Task" : ITaskPlugin,
+   })
 manager.collectPlugins()
 
 # Activate all loaded plugins

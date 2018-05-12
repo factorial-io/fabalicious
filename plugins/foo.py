@@ -1,12 +1,8 @@
 import logging
 log = logging.getLogger('fabric.fabalicious.foo')
-from yapsy.IPlugin import IPlugin
+from lib import ITaskPlugin
 
-
-from fabric.api import *
-from fabric.tasks import Task
-
-class Foo(Task, IPlugin):
+class Foo(ITaskPlugin):
   aliases = ['foo','foobar']
   def run(self):
     log.info('Foobar runs...')
