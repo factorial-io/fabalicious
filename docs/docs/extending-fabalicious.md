@@ -6,7 +6,7 @@ You can write custom tasks and methods in python and use it from inside fabalici
 
 You need the python library `yapsy`, install it via
 ```
-Pip install yapsy
+pip install yapsy
 ```
 
 ## Discovery of plugins
@@ -107,7 +107,7 @@ class BarMethod(IMethodPlugin):
 
 The custom method needs to inherit from `IMethodPlugin` and must implement the static method `supports`. Have a look into the `BaseMethod`-class or any other method to get an idea how to implement your custom method.
 
-To use your custom method, just add its name as a `need`, e.g.
+To use your custom method, just add its name as a `needs` in fabfile.yaml, e.g.
 
 ```
 needs:

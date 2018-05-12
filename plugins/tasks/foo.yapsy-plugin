@@ -5,5 +5,5 @@ Module = foo
 [Documentation]
 Author = Shibin Das
 Version = 0.1
-Website = http://www.d34dman.com
+Website = http://www.factorial.io
 Description = Foo Plugin
