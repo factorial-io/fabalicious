@@ -7,8 +7,8 @@ def loadPlugins(root_folder, categories_filter):
   from yapsy.PluginManager import PluginManager
   localPluginsPath = configuration.getSetting("customPlugins.path", '.tools/fabalicious/plugins')
   plugin_dirs = [
-    configuration.fabfile_basedir + '/' + localPluginsPath,
-    configuration.fabfile_basedir + '/.fabalicious',
+    configuration.getBaseDir() + '/' + localPluginsPath,
+    configuration.getBaseDir() + '/.fabalicious',
     expanduser("~") + '/.fabalicious/plugins',
     root_folder + '/plugins',
   ]
@@ -28,7 +28,7 @@ def loadPlugins(root_folder, categories_filter):
       for alias in plugin.plugin_object.aliases:
         result[alias] = plugin.plugin_object
     elif hasattr(plugin.plugin_object, 'alias'):
-      result[plugin.plugin_object.alias] = plugin.plugin_object  
+      result[plugin.plugin_object.alias] = plugin.plugin_object
     else:
       result[plugin.name] = plugin.plugin_object
   return result
