@@ -485,22 +485,23 @@ def getSettings(key = False, defaultValue = False):
   else:
     return settings
 
-
 def getBaseDir():
+  """Retrieves the directory where fabfile.yaml is located.
+  """
   global fabfile_basedir
   return fabfile_basedir
-
-def getRootDir():
-  """Retrieves the root directory of fabalicious, where fabfile.py is located.
-  """
-  global fabalicious_rootdir
-  return fabalicious_rootdir
 
 def setRootDir(root_dir):
   """Set the root directory of fabalicious, where fabfile.py is located.
   """
   global fabalicious_rootdir
   fabalicious_rootdir = root_dir
+
+def getRootDir():
+  """Retrieves the root directory of fabalicious, where fabfile.py is located.
+  """
+  global fabalicious_rootdir
+  return fabalicious_rootdir
 
 def getDockerConfig(docker_config_name, runLocally = False, printErrors=True):
 
