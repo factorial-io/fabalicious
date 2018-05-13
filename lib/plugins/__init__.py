@@ -3,7 +3,7 @@ from lib import configuration
 import logging
 log = logging.getLogger('fabric.fabalicious.plugins')
 
-def init(root_folder, settings_name, folder_name, plugin_name, categories_filter):
+def loadPlugins(root_folder, settings_name, folder_name, plugin_name, categories_filter):
   from yapsy.PluginManager import PluginManager
 
   plugin_dirs = []
@@ -42,7 +42,7 @@ def getTasks(root_folder):
     __import__('imp').find_module('yapsy')
     from task import ITaskPlugin
 
-    return init(root_folder, 'customTasksFolder', 'tasks', 'task', { "Task": ITaskPlugin })
+    return loadPlugins(root_folder, 'customTasksFolder', 'tasks', 'task', { "Task": ITaskPlugin })
 
   except ImportError:
     log.warning('Custom plugins disabled, as yapsy is not installed!')
@@ -54,7 +54,7 @@ def getMethods(root_folder):
     __import__('imp').find_module('yapsy')
     from method import IMethodPlugin
 
-    return init(root_folder, 'customMethodsFolder', 'methods', 'method', { "Method": IMethodPlugin })
+    return loadPlugins(root_folder, 'customMethodsFolder', 'methods', 'method', { "Method": IMethodPlugin })
 
   except ImportError:
     log.warning('Custom plugins disabled, as yapsy is not installed!')
