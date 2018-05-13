@@ -32,6 +32,8 @@ def loadPlugins(root_folder, settings_name, folder_name, plugin_name, categories
     if hasattr(plugin.plugin_object, 'aliases') and isinstance(plugin.plugin_object.aliases, list):
       for alias in plugin.plugin_object.aliases:
         result[alias] = plugin.plugin_object
+    elif hasattr(plugin.plugin_object, 'alias'):
+      result[plugin.plugin_object.alias] = plugin.plugin_object  
     else:
       result[plugin.name] = plugin.plugin_object
   return result
