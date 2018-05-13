@@ -29,10 +29,6 @@ utils.setup_global_logging(root_folder)
 
 from lib import methods
 
-for taskName, obj in plugins.getTasks(root_folder).iteritems():
-  exec("%s=obj" % (taskName))
-
-
 @task
 def logLevel(level=None):
     utils.setup_logging(root_folder, log_level = level)
@@ -519,3 +515,7 @@ def fish_completions():
         tasks.update(methods.getMethod('docker').getInternalCommands() + docker_conf['tasks'].keys())
     for key in tasks:
       print "docker:" + key
+
+# Load Plugins towards the end to avoid variable name space corruption.
+for taskName, obj in plugins.getTasks(root_folder).iteritems():
+  exec("%s=obj" % (taskName))
