@@ -3,20 +3,15 @@ from lib import configuration
 import logging
 log = logging.getLogger('fabric.fabalicious.plugins')
 
-def loadPlugins(root_folder, settings_name, folder_name, plugin_name, categories_filter):
+def loadPlugins(root_folder, categories_filter):
   from yapsy.PluginManager import PluginManager
-
-  plugin_dirs = []
-  if configuration.getSettings(settings_name):
-    plugin_dirs.append(configuration.fabfile_basedir + '/' + configuration.getSettings(settings_name))
-
-  plugin_dirs.append(configuration.fabfile_basedir + '/.fabalicious/' + folder_name)
-  plugin_dirs.append(configuration.fabfile_basedir + '/plugins/' + folder_name)
-
-  plugin_dirs.append(expanduser("~") + '/.fabalicious/plugins/' + folder_name)
-  plugin_dirs.append(root_folder + '/plugins/' + folder_name)
-  log.debug("Looking for %s-plugins in %s" % (plugin_name, ", ".join(plugin_dirs)))
-
+  localPluginsPath = configuration.getSetting("customPlugins.path", '.tools/fabalicious/plugins')
+  plugin_dirs = [
+    configuration.fabfile_basedir + '/' + localPluginsPath,
+    configuration.fabfile_basedir + '/.fabalicious',
+    expanduser("~") + '/.fabalicious/plugins',
+    root_folder + '/plugins',
+  ]
   manager = PluginManager()
   manager.setPluginPlaces(plugin_dirs)
   manager.setCategoriesFilter(categories_filter)
@@ -43,8 +38,8 @@ def getTasks(root_folder):
   try:
     __import__('imp').find_module('yapsy')
     from task import ITaskPlugin
-
-    return loadPlugins(root_folder, 'customTasksFolder', 'tasks', 'task', { "Task": ITaskPlugin })
+    log.debug('Load Tasks plugins')
+    return loadPlugins(root_folder, { "Task": ITaskPlugin })
 
   except ImportError:
     log.warning('Custom plugins disabled, as yapsy is not installed!')
@@ -55,8 +50,8 @@ def getMethods(root_folder):
   try:
     __import__('imp').find_module('yapsy')
     from method import IMethodPlugin
-
-    return loadPlugins(root_folder, 'customMethodsFolder', 'methods', 'method', { "Method": IMethodPlugin })
+    log.debug('Load Method plugins')
+    return loadPlugins(root_folder, { "Method": IMethodPlugin })
 
   except ImportError:
     log.warning('Custom plugins disabled, as yapsy is not installed!')
