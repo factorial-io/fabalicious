@@ -12,6 +12,18 @@ class GitMethod(BaseMethod):
   def supports(methodName):
     return methodName == 'git'
 
+
+  @staticmethod
+  def getGlobalSettings():
+    return {
+      'gitOptions': {
+        'pull': [
+          '--no-edit',
+          '--rebase'
+        ]
+      }
+    }
+
   @staticmethod
   def validateConfig(config):
     return validate_dict(['branch'], config)

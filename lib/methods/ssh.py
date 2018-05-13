@@ -21,6 +21,14 @@ class SSHMethod(BaseMethod):
     return methodName == 'ssh'
 
   @staticmethod
+  def getGlobalSettings():
+    return {
+      'usePty': True,
+      'useShell': True,
+      'disableKnownHosts': False
+    }
+
+  @staticmethod
   def validateConfig(config):
     keys = ['host', 'user'];
     return validate_dict(keys, config)

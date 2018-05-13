@@ -16,20 +16,58 @@ from files import FilesMethod
 from drupalconsole import DrupalConsoleMethod
 from platform import PlatformMethod
 
+from lib import plugins
+from lib import configuration
+
 cache = {}
+methodClasses = [
+  GitMethod,
+  DrushMethod,
+  SSHMethod,
+  ComposerMethod,
+  ScriptMethod,
+  DockerMethod,
+  SlackMethod,
+  FilesMethod,
+  DrupalConsoleMethod,
+  PlatformMethod
+]
+
+# Set global settings
+for method in methodClasses:
+  configuration.addGlobalSettings(method.getGlobalSettings())
+
+# get custom methods
+customMethods = plugins.getMethods(configuration.fabfile_basedir)
+for methodName, obj in customMethods.iteritems():
+  obj.setNameAndFactory(methodName, sys.modules[__name__])
+  configuration.addGlobalSettings(obj.getGlobalSettings())
+
+customMethods = customMethods.values()
+
 
 class Factory(object):
 
-
   @staticmethod
   def get(name):
-    methodClasses = [j for (i,j) in globals().iteritems() if isinstance(j, TypeType) and issubclass(j, BaseMethod)]
     for methodClass in methodClasses:
       if methodClass.supports(name):
         return methodClass(name, sys.modules[__name__])
-    #if research was unsuccessful, raise an error
-    raise ValueError('No method supporting "%s" found.' % name)
 
+    for customMethod in customMethods:
+      if customMethod.supports(name):
+        return customMethod
+
+    log.error('Method supporting "%s" found' % name)
+    exit(1)
+
+def getAllMethods():
+  result = []
+
+  result.append(methodClasses)
+  result.append(customMethods)
+
+  return result
 
 
 def getMethod(methodName):
