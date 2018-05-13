@@ -14,15 +14,15 @@ import time
 import datetime
 import sys
 from fabric.main import list_commands
+from lib import configuration
+from lib import blueprints
+from lib import utils
+from lib import plugins
 
 # Import our modules.
 root_folder = os.path.dirname(os.path.realpath(os.path.dirname(__file__) + '/fabfile.py'))
 configuration.setRootDir(root_folder)
 sys.path.append(configuration.getRootDir())
-from lib import configuration
-from lib import blueprints
-from lib import utils
-from lib import plugins
 
 # @TODO check with @huber if this assignment is necessary.
 configuration.fabfile_basedir = root_folder

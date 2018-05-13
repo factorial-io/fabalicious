@@ -38,7 +38,7 @@ for method in methodClasses:
   configuration.addGlobalSettings(method.getGlobalSettings())
 
 # get custom methods
-customMethods = plugins.getMethods(configuration.fabfile_basedir)
+customMethods = plugins.getMethods()
 for methodName, obj in customMethods.iteritems():
   obj.setNameAndFactory(methodName, sys.modules[__name__])
   configuration.addGlobalSettings(obj.getGlobalSettings())

@@ -10,7 +10,7 @@ def loadPlugins(categories_filter):
     configuration.getBaseDir() + '/' + localPluginsPath,
     configuration.getBaseDir() + '/.fabalicious',
     expanduser("~") + '/.fabalicious/plugins',
-    configuration.getRooDir() + '/plugins',
+    configuration.getRootDir() + '/plugins',
   ]
 
   manager = PluginManager()

@@ -8,6 +8,7 @@ import os
 import sys
 import yaml
 import logging.config
+import configuration
 
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null '
 
