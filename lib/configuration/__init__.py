@@ -22,6 +22,7 @@ env.forward_agent = True
 env.use_shell = False
 
 fabfile_basedir = False
+fabalicious_rootdir = None
 offline = False
 cache = {}
 
@@ -489,6 +490,17 @@ def getBaseDir():
   global fabfile_basedir
   return fabfile_basedir
 
+def getRootDir():
+  """Retrieves the root directory of fabalicious, where fabfile.py is located.
+  """
+  global fabalicious_rootdir
+  return fabalicious_rootdir
+
+def setRootDir(root_dir):
+  """Set the root directory of fabalicious, where fabfile.py is located.
+  """
+  global fabalicious_rootdir
+  fabalicious_rootdir = root_dir
 
 def getDockerConfig(docker_config_name, runLocally = False, printErrors=True):
 
