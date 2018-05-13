@@ -24,6 +24,7 @@ from lib import blueprints
 from lib import utils
 from lib import plugins
 
+# @TODO check with @huber if this assignment is necessary.
 configuration.fabfile_basedir = root_folder
 
 utils.setup_global_logging()
