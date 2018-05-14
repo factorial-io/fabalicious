@@ -5,7 +5,7 @@ log = logging.getLogger('fabric.fabalicious.plugins')
 
 def loadPlugins(categories_filter):
   from yapsy.PluginManager import PluginManager
-  localPluginsPath = configuration.getSetting("customPlugins.path", '.tools/fabalicious/plugins')
+  localPluginsPath = configuration.getSettings("customPlugins.path", '.tools/fabalicious/plugins')
   plugin_dirs = [
     configuration.getBaseDir() + '/' + localPluginsPath,
     configuration.getBaseDir() + '/.fabalicious',
