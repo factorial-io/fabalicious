@@ -463,10 +463,13 @@ def getAll():
 
   return root_data
 
-def getSettings(key, defaultValue = False):
+def getSettings(key = False, defaultValue = False):
   """Helper function to read configuration from fabfiles.
   Allow use of dot operator (".") to get nested value.
   """
+  if key is False:
+    return getAll()
+
   settings = defaultValue
   keys = key.split('.')
   firstRunFlag = True
