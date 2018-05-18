@@ -120,6 +120,7 @@ class DrushMethod(BaseMethod):
         self.handle_modules(config, 'modules_disabled.txt', False)
 
       if self.methodName == 'drush8':
+        self.run_drush('cr -y')
         self.run_drush('updb --entity-updates -y')
       else:
         self.run_drush('updb -y')
