@@ -1,6 +1,8 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.git')
+
 from base import BaseMethod
 from fabric.api import *
-from fabric.colors import green, red
 from lib.utils import validate_dict
 from lib.configuration import data_merge
 from lib import configuration
@@ -9,6 +11,18 @@ class GitMethod(BaseMethod):
   @staticmethod
   def supports(methodName):
     return methodName == 'git'
+
+
+  @staticmethod
+  def getGlobalSettings():
+    return {
+      'gitOptions': {
+        'pull': [
+          '--no-edit',
+          '--rebase'
+        ]
+      }
+    }
 
   @staticmethod
   def validateConfig(config):
@@ -63,7 +77,7 @@ class GitMethod(BaseMethod):
     with self.runLocally(config), self.cd(config['gitRootFolder']):
 
       if not self.cleanWorkingCopy():
-        print red("Working copy is not clean, aborting.\n")
+        log.error("Working copy is not clean, aborting.\n")
         self.run('#!git status')
         exit(1)
 
@@ -96,7 +110,7 @@ class GitMethod(BaseMethod):
     if commit:
       with self.runLocally(config):
         self.run('#!git checkout ' + commit)
-        print(green('source restored to ' + commit))
+        log.info('source restored to ' + commit)
 
 
   def createApp(self, config, stage, dockerConfig, **kwargs):
@@ -121,11 +135,11 @@ class GitMethod(BaseMethod):
         repository = configuration.getSettings('repository')
 
       if not repository:
-        print red('Could not find \'repository\' in host configuration nor in settings')
+        log.error('Could not find \'repository\' in host configuration nor in settings')
         exit(1)
 
       if (self.exists(targetPath + '/.projectCreated')):
-        print green('Application already installed!');
+        log.info('Application already installed!');
         with self.cd(targetPath):
           self.run('#!git checkout %s' % config['branch'])
           self.run('#!git pull -q origin %s' % config['branch'])
@@ -141,4 +155,3 @@ class GitMethod(BaseMethod):
     if (stage == 'deleteCode'):
       targetPath = dockerConfig['rootFolder'] + '/' + config['docker']['projectFolder']
       sudo('rm -rf %s' % targetPath, shell=False)
-

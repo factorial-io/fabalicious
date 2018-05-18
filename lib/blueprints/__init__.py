@@ -1,8 +1,9 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.blueprints')
+
 import yaml
 import re
-from fabric.colors import green, red, yellow
 from lib import configuration
-
 
 def getTemplate(configName):
   settings = configuration.get_all_configurations()
@@ -57,7 +58,7 @@ def apply_helper(value, replacements):
 
     p2 = re.compile('\%(\S*)\%')
     if p2.search(result):
-      print red('Found replacement pattern in "%s"' % result)
+      log.error('Found replacement pattern in "%s"' % result)
       print "Available replacement patterns:"
       for key, val in replacements.items():
         print '- ' + key
@@ -92,4 +93,3 @@ def apply(identifier, template):
 def output(config):
   data = { 'hosts': { config['configName']: config } }
   print yaml.dump(data, default_flow_style=False, default_style='')
-

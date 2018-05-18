@@ -3,6 +3,44 @@
 ## 2.x.x
 
 ### new
+
+* new plugin-discovery via `yapsy`, it allows you to add custom tasks and methods to your project, or to your user-folder.
+
+    The plugin-resolver will look into the following folders to find tasks:
+
+      ```
+      <project_folder>/.fabalicious/tasks
+      <project_folder>/plugins/tasks
+      <user-folder>/.fabalicious/tasks
+      <fabalicious-folder>/plugins/tasks
+      ```
+
+    The plugin-resolver will look into the following folders to find methods:
+
+      ```
+      <project_folder>/.fabalicious/methods
+      <project_folder>/plugins/methods
+      <user-folder>/.fabalicious/methods
+      <fabalicious-folder>/plugins/methods
+      ```
+
+### changed
+
+* methods are now responsible to provide their default global settings via the static `getGlobalSettings`-method.
+
+## 2.3.1
+
+### new
+* new task `logLevel`: used to change the default logging level of the program.
+
+### changed
+
+* Refactored output logging to use python logging library.
+
+## 2.3.0
+
+### new
+* new task `sshCommand`: it will print out a ssh command to log into a remote instance. With some shell-magic you can streamline it into a single shell-command. This command will not have the downsides of the `ssh`-command e.g. the lagging shell.
 * new task `installFrom` which will do a install-task and a copyFrom afterwards. It will run the reset-task only after the copyFrom, so performance is better
 * new task `getFilesDump` which will tar all files in the `filesFolder` into a tar and download it to the local computer.
 * `dockerKeyFile`, `dockerAuthorizedKeyFile` and `dockerKnownHostsFile` can now be loaded from http(s)
@@ -213,5 +251,3 @@
 * `needsComposer` is unsupported, set your `needs` accordingly.
 * the custom script-command `run_task` is not supported anymore. Use `execute(<task-name>)` instead.
 * the task `updateDrupalCore` is not ported over, not sure if it comes back.
-
-

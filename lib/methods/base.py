@@ -1,6 +1,8 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.base')
+
 from fabric.api import *
 from fabric.state import output, env
-from fabric.colors import green, red
 from fabric.context_managers import env
 from fabric.network import *
 from fabric.contrib.files import exists
@@ -41,6 +43,10 @@ class BaseMethod(object):
   @staticmethod
   def applyConfig(config, settings):
     pass
+
+  @staticmethod
+  def getGlobalSettings():
+    return {}
 
   @staticmethod
   def addExecutables(config, executables):
@@ -159,7 +165,7 @@ class BaseMethod(object):
 
 
   def cd(self, path):
-    # print red('cd: %d %s'% (self.run_locally,  path))
+    # log.error('cd: %d %s'% (self.run_locally,  path))
     return lcd(path) if self.run_locally else cd(path)
 
   def expandCommand(self, in_cmd):
@@ -177,7 +183,7 @@ class BaseMethod(object):
     return cmd
 
   def run(self, cmd, **kwargs):
-    # print red("run: %d %s" % ( self.run_locally, cmd))
+    # log.error("run: %d %s" % ( self.run_locally, cmd))
     cmd = self.expandCommand(cmd)
 
     if self.run_locally:
@@ -210,12 +216,12 @@ class BaseMethod(object):
         result = self.run(cmd)
 
         if not may_fail and result.return_code != 0:
-          print red('%s failed:' %s)
+          log.error('%s failed:' %s)
           print result
 
         return result
       except:
-        print red('%s failed' % cmd)
+        log.error('%s failed' % cmd)
 
         if output['aborts']:
           raise SystemExit('%s failed' % cmd);

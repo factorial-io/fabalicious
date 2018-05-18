@@ -1,7 +1,13 @@
+import logging
+log = logging.getLogger('fabalicious.utils')
+
 from fabric.api import *
 import subprocess, shlex, atexit, time
 import time
-from fabric.colors import red
+import os
+import sys
+import yaml
+import logging.config
 
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null '
 
@@ -31,7 +37,7 @@ class TunnelBase:
         terminated = True
 
     if not connectionEstablished:
-      print red("Could not establish tunnel with command %s" % self.cmd)
+      log.error("Could not establish tunnel with command %s" % self.cmd)
       print output
       exit(1)
 
@@ -141,3 +147,42 @@ def validate_dict(keys, dict, section=False):
 
   return result
 
+def log_level_lookup(x):
+    lookup = {
+        'logLevel:DEBUG': logging.DEBUG,
+        'logLevel:INFO': logging.INFO,
+        'logLevel:WARNING': logging.WARNING,
+        'logLevel:ERROR': logging.ERROR,
+        'logLevel:CRITICAL': logging.CRITICAL,
+        '--show=debug': logging.DEBUG,
+    };
+    try:
+      return lookup[x]
+    except Exception as e:
+      return None
+
+def setup_global_logging(root_folder, env_key_level="LOG_LVL"):
+    """Setup logging configuration globally
+
+    """
+    log_level = os.getenv(env_key_level, None)
+    setup_logging(root_folder, log_level)
+
+def setup_logging(root_folder, log_level=None, env_key="LOG_CFG"):
+    """Setup logging configuration
+
+    """
+    default_path = root_folder + '/logging.yaml'
+    path = default_path
+    value = os.getenv(env_key, None)
+    if value:
+        path = value
+    if os.path.exists(path):
+      with open(path, 'rt') as f:
+        config = yaml.safe_load(f.read())
+      if log_level:
+        for logger in config['loggers']:
+          config['loggers'][logger]['level'] = log_level
+      logging.config.dictConfig(config)
+    else:
+        logging.basicConfig(level=default_level)
