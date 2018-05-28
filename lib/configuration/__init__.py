@@ -22,6 +22,7 @@ env.forward_agent = True
 env.use_shell = False
 
 fabfile_basedir = False
+fabalicious_rootdir = None
 offline = False
 cache = {}
 
@@ -462,33 +463,48 @@ def getAll():
 
   return root_data
 
-def getSetting(key, defaultValue = False):
+def getSettings(key = False, defaultValue = False):
   """Helper function to read configuration from fabfiles.
   Allow use of dot operator (".") to get nested value.
   """
+  if key is False:
+    return getAll()
+
   settings = defaultValue
   keys = key.split('.')
   firstRunFlag = True
   for key in keys:
     if firstRunFlag:
       firstRunFlag = False
-      settings = getSettings(key, defaultValue)
+      settings = _getSetting(key, defaultValue)
     else:
       settings = settings[key] if key in settings else defaultValue
   return settings
 
-def getSettings(key = False, defaultValue = False):
+def _getSetting(key = False, defaultValue = False):
   settings = getAll()
   if key:
     return settings[key] if key in settings else defaultValue
   else:
     return settings
 
-
 def getBaseDir():
+  """Retrieves the directory where fabfile.yaml is located.
+  """
   global fabfile_basedir
   return fabfile_basedir
 
+def setRootDir(root_dir):
+  """Set the root directory of fabalicious, where fabfile.py is located.
+  """
+  global fabalicious_rootdir
+  fabalicious_rootdir = root_dir
+
+def getRootDir():
+  """Retrieves the root directory of fabalicious, where fabfile.py is located.
+  """
+  global fabalicious_rootdir
+  return fabalicious_rootdir
 
 def getDockerConfig(docker_config_name, runLocally = False, printErrors=True):
 

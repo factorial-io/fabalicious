@@ -18,20 +18,23 @@ from fabric.main import list_commands
 # Import our modules.
 root_folder = os.path.dirname(os.path.realpath(os.path.dirname(__file__) + '/fabfile.py'))
 sys.path.append(root_folder)
+
 from lib import configuration
 from lib import blueprints
 from lib import utils
 from lib import plugins
 
+configuration.setRootDir(root_folder)
+# @TODO check with @huber if this assignment is necessary.
 configuration.fabfile_basedir = root_folder
 
-utils.setup_global_logging(root_folder)
+utils.setup_global_logging()
 
 from lib import methods
 
 @task
 def logLevel(level=None):
-    utils.setup_logging(root_folder, log_level = level)
+    utils.setup_logging(log_level = level)
 
 @task
 def config(configName='local'):
@@ -517,5 +520,5 @@ def fish_completions():
       print "docker:" + key
 
 # Load Plugins towards the end to avoid variable name space corruption.
-for taskName, obj in plugins.getTasks(root_folder).iteritems():
+for taskName, obj in plugins.getTasks().iteritems():
   exec("%s=obj" % (taskName))

@@ -8,6 +8,7 @@ import os
 import sys
 import yaml
 import logging.config
+import configuration
 
 ssh_no_strict_key_host_checking_params = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null '
 
@@ -161,18 +162,18 @@ def log_level_lookup(x):
     except Exception as e:
       return None
 
-def setup_global_logging(root_folder, env_key_level="LOG_LVL"):
+def setup_global_logging(env_key_level="LOG_LVL"):
     """Setup logging configuration globally
 
     """
     log_level = os.getenv(env_key_level, None)
-    setup_logging(root_folder, log_level)
+    setup_logging(log_level)
 
-def setup_logging(root_folder, log_level=None, env_key="LOG_CFG"):
+def setup_logging(log_level=None, env_key="LOG_CFG"):
     """Setup logging configuration
 
     """
-    default_path = root_folder + '/logging.yaml'
+    default_path = configuration.getRootDir() + '/logging.yaml'
     path = default_path
     value = os.getenv(env_key, None)
     if value:
