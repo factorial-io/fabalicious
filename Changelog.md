@@ -4,24 +4,28 @@
 
 ### new
 
+* new section in fabfile.yaml called `blueprints`. THis section allows the usage of a given sets of blueprints as normal config. That means, they will get listed and work wirh autocomplete
+
+      ```
+      blueprints:
+        - configName: <name of blueprint-config>
+          variants:
+            - variantA
+            - variantB
+            - variantC
+      ```
+
+      The list of configs will include the three variants applied with the blueprint `<name of blueprint-config>` This will allow a config inherited from a blueprint with a given variant.
+
+
 * new plugin-discovery via `yapsy`, it allows you to add custom tasks and methods to your project, or to your user-folder.
 
-    The plugin-resolver will look into the following folders to find tasks:
+    The plugin-resolver will look into the following folders to find tasks and methods:
 
       ```
-      <project_folder>/.fabalicious/tasks
-      <project_folder>/plugins/tasks
-      <user-folder>/.fabalicious/tasks
-      <fabalicious-folder>/plugins/tasks
-      ```
-
-    The plugin-resolver will look into the following folders to find methods:
-
-      ```
-      <project_folder>/.fabalicious/methods
-      <project_folder>/plugins/methods
-      <user-folder>/.fabalicious/methods
-      <fabalicious-folder>/plugins/methods
+      <project_folder>/.fabalicious/plugins
+      <user-folder>/.fabalicious/plugins
+      <fabalicious-folder>/tasks
       ```
 
 ### changed
