@@ -48,7 +48,6 @@ def getTasks(root_folder):
 
 
 def getMethods(root_folder):
-  print "getMethods"
   try:
     __import__('imp').find_module('yapsy')
     from method import IMethodPlugin
