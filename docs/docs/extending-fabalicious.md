@@ -11,22 +11,12 @@ pip install yapsy
 
 ## Discovery of plugins
 
-The plugin-resolver will look into the following folders to find tasks:
+The plugin-resolver will look into the following folders to find tasks and methods:
 
 ```
-<project_folder>/.fabalicious/tasks
-<project_folder>/plugins/tasks
-<user-folder>/.fabalicious/tasks
-<fabalicious-folder>/plugins/tasks
-```
-
-The plugin-resolver will look into the following folders to find methods:
-
-```
-<project_folder>/.fabalicious/methods
-<project_folder>/plugins/methods
-<user-folder>/.fabalicious/methods
-<fabalicious-folder>/plugins/methods
+<project_folder>/.fabalicious/plugins
+<user-folder>/.fabalicious/plugins
+<fabalicious-folder>/plugins
 ```
 
 ## Structure of a plugin

@@ -89,6 +89,22 @@ hosts:
     inheritsFrom: http://some.host/data.yaml
 ```
 
+**Note**
+
+You can create new configurations via the global `blueprints`-settings:
+
+```
+blueprints:
+  - configName: mbb
+    variants:
+      - de
+      - en
+      - it
+      - fr
+```
+
+will create 4 new configurations using the blueprint-config `mbb`.
+
 
 ## doctor
 
