@@ -47,7 +47,7 @@ def load_all_yamls_from_dir(path):
 
 
 def load_configuration(input_file):
-  # print "Reading configuration from %s" % input_file
+  log.debug("Reading configuration from %s" % input_file)
 
   stream = open(input_file, 'r')
   data = yaml.load(stream)
@@ -279,12 +279,10 @@ def get_configuration(name):
     if not 'backupBeforeDeploy' in host_config:
       host_config['backupBeforeDeploy'] = host_config['type'] != 'dev' and host_config['type'] != 'test'
 
-
-
-
     for key in unsupported:
       if key in host_config:
         log.error(unsupported[key] % key)
+
 
     return host_config
 
@@ -457,8 +455,8 @@ def getAll():
     if 'needs' not in root_data:
       root_data['needs'] = ['ssh', 'git', 'drush7', 'files']
 
-
-
+    if 'blueprints' in root_data:
+      expandBlueprints(root_data)
 
   return root_data
 
@@ -476,6 +474,27 @@ def getSetting(key, defaultValue = False):
     else:
       settings = settings[key] if key in settings else defaultValue
   return settings
+
+def expandBlueprints(data):
+  """
+  Expand a list of blueprint configurations with a list of variants.
+  Helps documenting the available hosts better
+  """
+  from lib import blueprints
+  for blueprint in data['blueprints']:
+    errors = validate_dict(['configName', 'variants'], blueprint)
+    if len(errors) > 0:
+      for key, error in errors.iteritems():
+        log.error('can not expand blueprints, %s: %s!' % (error, key))
+      exit(1)
+    template = blueprints.getTemplate(blueprint['configName'])
+    if not template:
+      log.error('Missing blueprint config %s' % blueprint['configName'])
+
+    for variant in blueprint['variants']:
+      c = blueprints.apply(variant, template)
+      data['hosts'][c['configName']] = c
+
 
 def getSettings(key = False, defaultValue = False):
   settings = getAll()
