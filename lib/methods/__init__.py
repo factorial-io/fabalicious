@@ -58,7 +58,7 @@ class Factory(object):
       if customMethod.supports(name):
         return customMethod
 
-    log.error('Method supporting "%s" found' % name)
+    log.error('Method supporting "%s" not found' % name)
     exit(1)
 
 def getAllMethods():
