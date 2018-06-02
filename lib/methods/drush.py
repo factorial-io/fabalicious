@@ -112,7 +112,8 @@ class DrushMethod(BaseMethod):
       ignores = config[ignore_key] if ignore_key in config else configuration.getSettings(ignore_key, [])
       if ignores:
         for ignore in ignores:
-          content.remove(ignore)
+          if ignore in content:
+            content.remove(ignore)
 
         log.warning('Ignoring %s while %s modules from %s' % (' '.join(ignores), 'enabling' if enable else 'disabling', file))
 
