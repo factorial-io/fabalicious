@@ -341,8 +341,10 @@ class DrushMethod(BaseMethod):
 
     o = config['database']
 
-    with self.cd(config['siteFolder']):
+    with self.cd(config['rootFolder']):
       self.run_quietly('mkdir -p %s' % config['siteFolder'])
+
+    with self.cd(config['siteFolder']):
       if not o["skipCreateDatabase"]:
         mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
 
