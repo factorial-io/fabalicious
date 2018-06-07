@@ -69,11 +69,16 @@ class DockerMethod(BaseMethod):
     for key in ['host', 'port', 'user']:
       hostConfig[key] = dockerConfig[key]
 
-  def getIp(self, docker_name, docker_host, docker_user, docker_port):
+  def getIp(self, docker_name, docker_host, docker_user, docker_port, runLocally = False):
     host_string = join_host_strings(docker_user, docker_host, docker_port)
     try:
-      with hide('running', 'output', 'warnings'), _settings( host_string=host_string, warn_only=True ):
-        output = run('docker inspect --format "{{ .NetworkSettings.IPAddress }}" %s ' % (docker_name))
+      if runLocally:
+        with hide('running', 'output', 'warnings'):
+          output = local('docker inspect --format "{{ .NetworkSettings.IPAddress }}" %s ' % (docker_name), capture = True)
+          print output
+      else:
+        with hide('running', 'output', 'warnings'), _settings( host_string=host_string, warn_only=True ):
+          output = run('docker inspect --format "{{ .NetworkSettings.IPAddress }}" %s ' % (docker_name))
 
     except SystemExit:
       log.error('Docker not running, can\'t get ip')
@@ -89,7 +94,7 @@ class DockerMethod(BaseMethod):
   def getIpAddress(self, config, **kwargs):
     docker_config = self.getDockerConfig(config)
     if docker_config:
-      ip = self.getIp(config['docker']['name'], docker_config['host'], docker_config['user'], docker_config['port'])
+      ip = self.getIp(config['docker']['name'], docker_config['host'], docker_config['user'], docker_config['port'], docker_config['runLocally'])
       if 'result' in kwargs:
         kwargs['result']['ip'] = ip
       return ip if ip else False
@@ -113,7 +118,13 @@ class DockerMethod(BaseMethod):
     if 'ip' in kwargs:
       public_ip = kwargs['ip']
     log.info("I am about to start the port forwarding via SSH. If you are finished, just type exit after the prompt.")
-    local("ssh -L%s:%s:%s:%s -p %s %s@%s" % (public_ip, publicPort, ip, port, docker_config['port'], docker_config['user'], docker_config['host']))
+    if docker_config['runLocally']:
+      cmd = "ssh -L%s:%s:%s:%s -p %s %s@%s" % (public_ip, publicPort, ip, port, config['port'], config['user'], config['host'])
+    else:
+      cmd = "ssh -L%s:%s:%s:%s -p %s %s@%s" % (public_ip, publicPort, ip, port, docker_config['port'], docker_config['user'], docker_config['host'])
+
+    local(cmd)
+
     exit(0)
 
   def about(self, config, **kwargs):
