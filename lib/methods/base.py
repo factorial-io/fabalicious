@@ -94,10 +94,10 @@ class BaseMethod(object):
   def expandCommands(self, commands, replacements):
     parsed_commands = []
     pattern = re.compile('|'.join(re.escape(key) for key in replacements.keys()))
-    for line in commands:
-      result = pattern.sub(lambda x: replacements[x.group()], line)
-      parsed_commands.append(result)
-
+    if commands:
+      for line in commands:
+        result = pattern.sub(lambda x: replacements[x.group()], line)
+        parsed_commands.append(result)
     return parsed_commands
   def addPasswordToFabricCache(self, user, host, port, password, **kwargs):
     host_string = join_host_strings(user, host, port)
