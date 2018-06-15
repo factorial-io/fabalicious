@@ -179,7 +179,7 @@ def getSQLDump():
 
   log.info('Get SQL dump from %s' % configuration.current('config_name'))
 
-  file_name = '/tmp/' + file_name
+  file_name = configuration.current('tmpFolder') + '/' + file_name
   methods.runTask(configuration.current(), 'backupSql', backup_file_name = file_name)
   if configuration.current('supportsZippedBackups'):
     file_name += '.gz'
@@ -196,7 +196,7 @@ def getFilesDump():
 
   log.info('Get files dump from %s' % configuration.current('config_name'))
 
-  file_name = '/tmp/' + file_name
+  file_name = configuration.current('tmpFolder') + '/' + file_name
   methods.runTask(configuration.current(), 'backupFiles', backup_file_name = file_name)
   getFile(file_name)
   if configuration.current()['runLocally']:
