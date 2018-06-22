@@ -74,11 +74,14 @@ class DockerMethod(BaseMethod):
     try:
       if runLocally:
         with hide('running', 'output', 'warnings'):
-          output = local('docker inspect --format "{{ .NetworkSettings.IPAddress }}" %s ' % (docker_name), capture = True)
-          print output
+          output = local('docker inspect --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}\n{{end}}" %s ' % (docker_name), capture = True)
+          ips = output.splitlines()
+          return ips[0]
       else:
         with hide('running', 'output', 'warnings'), _settings( host_string=host_string, warn_only=True ):
-          output = run('docker inspect --format "{{ .NetworkSettings.IPAddress }}" %s ' % (docker_name))
+          output = run('docker inspect --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}\n{{end}}" %s ' % (docker_name))
+          ips = output.splitlines()
+          return ips[0]
 
     except SystemExit:
       log.error('Docker not running, can\'t get ip')
