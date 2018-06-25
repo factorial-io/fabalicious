@@ -63,7 +63,7 @@ def load_configuration(input_file):
     check_fabalicious_version(data['requires'], 'file ' + input_file)
 
   override_filename = find_configfiles(['fabfile.local.yaml'], 3)
-  if override_filename:
+  if override_filename and ('disableLocalOverrides' not in data or data['disableLocalOverrides'] == 0):
     print yellow('Using overrides from %s' % override_filename)
     override_data = yaml.load(open(override_filename, 'r'))
     data = data_merge(data, override_data)
