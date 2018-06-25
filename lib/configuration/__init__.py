@@ -261,7 +261,7 @@ def get_configuration(name):
       'tmpFolder': '/tmp',
       'scripts': {},
       'executables': config['executables'],
-      'runsLocally': False
+      'runLocally': False
     }
 
     defaults = get_default_config_from_methods(host_config, config, defaults)
