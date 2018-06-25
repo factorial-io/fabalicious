@@ -1,0 +1,26 @@
+version: 1
+disable_existing_loggers: False
+formatters:
+    simple:
+        format: "%(message)s"
+handlers:
+    console:
+        class: lib.colorize.ColorizingStreamHandler
+        level: DEBUG
+        formatter: simple
+        stream: ext://sys.stdout
+loggers:
+    fabric:
+        handlers: [console]
+        propagate: no
+    paramiko:
+        level: ERROR
+        handlers: [console]
+        propagate: no
+    yapsy:
+        level: ERROR
+        handlers: [console]
+        propagate: no
+root:
+    level: INFO
+    handlers: [console]

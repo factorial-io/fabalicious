@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.composer')
+
 from base import BaseMethod
 from fabric.api import *
 
@@ -48,4 +51,3 @@ class ComposerMethod(BaseMethod):
       targetPath = config['gitRootFolder']
       with self.cd(targetPath):
         self.run('#!composer install %s' % self.getArgs(config))
-

@@ -1,15 +1,18 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.configuration')
+
 from fabric.api import *
 from fabric.state import output, env
-from fabric.colors import green, red, yellow
 import os.path
 import urllib2
 import yaml
 import copy
+import glob
 import hashlib
 import sys
 from lib.utils import validate_dict
 
-fabalicious_version = '2.2.5'
+fabalicious_version = '2.3.0'
 
 root_data = 0
 verbose_output = False
@@ -22,6 +25,7 @@ fabfile_basedir = False
 offline = False
 cache = {}
 
+globalMethodSettings = {}
 
 def load_all_yamls_from_dir(path):
   result = {}
@@ -36,14 +40,14 @@ def load_all_yamls_from_dir(path):
       result[key] = data
 
     except IOError as e:
-      print red('Could not read from %s' % file)
-      print red(e)
+      log.error('Could not read from %s' % file)
+      log.error(e)
   return result
 
 
 
 def load_configuration(input_file):
-  # print "Reading configuration from %s" % input_file
+  log.debug("Reading configuration from %s" % input_file)
 
   stream = open(input_file, 'r')
   data = yaml.load(stream)
@@ -55,8 +59,12 @@ def load_configuration(input_file):
 
   if (os.path.basename(input_file) == 'index.yaml'):
     path = os.path.dirname(input_file)
-    data['hosts'] = load_all_yamls_from_dir(path + "/hosts")
-    data['dockerHosts'] = load_all_yamls_from_dir(path + "/dockerHosts")
+    hosts = load_all_yamls_from_dir(path + "/hosts")
+    dockerHosts = load_all_yamls_from_dir(path + "/dockerHosts")
+    if hosts:
+      data['hosts'] = hosts
+    if dockerHosts:
+      data['dockerHosts'] = dockerHosts
 
   data = resolve_inheritance(data, {})
   if 'requires' in data:
@@ -64,7 +72,7 @@ def load_configuration(input_file):
 
   override_filename = find_configfiles(['fabfile.local.yaml'], 3)
   if override_filename and ('disableLocalOverrides' not in data or data['disableLocalOverrides'] == 0):
-    print yellow('Using overrides from %s' % override_filename)
+    log.warning('Using overrides from %s' % override_filename)
     override_data = yaml.load(open(override_filename, 'r'))
     data = data_merge(data, override_data)
 
@@ -74,7 +82,7 @@ def load_configuration(input_file):
 def get_all_configurations():
   global fabfile_basedir
   # Find our configuration-file:
-  candidates = ['fabfile.yaml', '.fabfile.yaml', 'fabalicious/index.yaml', 'fabfile.yaml.inc']
+  candidates = ['fabfile.yaml', '.fabfile.yaml', 'fabalicious/index.yaml', '.fabalicious/index.yaml', 'fabfile.yaml.inc']
 
   config_file_name = find_configfiles(candidates, 3)
   if (config_file_name):
@@ -84,7 +92,7 @@ def get_all_configurations():
     except IOError:
       print "could not read from %s " % (config_file_name)
   else:
-    print red('could not find suitable configuration file!')
+    log.error('could not find suitable configuration file!')
 
   exit(1)
 
@@ -172,8 +180,8 @@ def check_fabalicious_version(required_version, msg):
   current_version = fabalicious_version
 
   if (versiontuple(current_version) < versiontuple(required_version)):
-    print red('The %s needs %s as minimum app-version.' % (msg, required_version))
-    print red('You are currently using %s. Please update your fabalicious installation.' % current_version)
+    log.error('The %s needs %s as minimum app-version.' % (msg, required_version))
+    log.error('You are currently using %s. Please update your fabalicious installation.' % current_version)
     exit(1)
 
 def validate_config_against_methods(config):
@@ -188,7 +196,7 @@ def validate_config_against_methods(config):
 
   if len(errors) > 0:
     for key, msg in errors.iteritems():
-      print red('Key \'%s\' in %s: %s' % (key, config['config_name'], msg))
+      log.error('Key \'%s\' in %s: %s' % (key, config['config_name'], msg))
 
     exit(1)
 
@@ -271,16 +279,14 @@ def get_configuration(name):
     if not 'backupBeforeDeploy' in host_config:
       host_config['backupBeforeDeploy'] = host_config['type'] != 'dev' and host_config['type'] != 'test'
 
-
-
-
     for key in unsupported:
       if key in host_config:
-        print red(unsupported[key] % key)
+        log.error(unsupported[key] % key)
+
 
     return host_config
 
-  print(red('Configuraton '+name+' not found \n'))
+  log.error('Configuraton '+name+' not found \n')
   list()
   exit(1)
 
@@ -297,9 +303,9 @@ def get_configuration_via_file(config_file_name):
       break;
 
   if not found:
-    print red("could not find configuration %s" % config_file_name)
+    log.error("could not find configuration %s" % config_file_name)
     for candidate in candidates:
-      print red("- tried: %s" % candidate)
+      log.error("- tried: %s" % candidate)
 
     return False
 
@@ -309,7 +315,7 @@ def get_configuration_via_file(config_file_name):
     stream = open(found, 'r')
     data = yaml.load(stream)
   except IOError:
-    print red("could not read configuration from %s" % found)
+    log.error("could not read configuration from %s" % found)
 
   return data
 
@@ -366,13 +372,13 @@ def get_configuration_via_http_impl(config_file_name, as_yaml = True):
     data = remote_config_cache_load(config_file_name, as_yaml)
     if data:
       if offline:
-        print yellow('Using cached configuration for %s' % config_file_name)
+        log.info('Using cached configuration for %s' % config_file_name)
       else:
-        print yellow('Could not read configuration from %s, using cached data.' % config_file_name)
+        log.warning('Could not read configuration from %s, using cached data.' % config_file_name)
 
       return data
 
-    print red('Could not read/find configuration from %s' % config_file_name)
+    log.error('Could not read/find configuration from %s' % config_file_name)
 
   return False
 
@@ -412,13 +418,13 @@ def check(methods= False):
         if method in env.config['needs']:
           found = True
       if not found:
-          print red('Config "%s" does not support method "%s"' % (env.config['config_name'], ', '.join(methods)))
+          log.error('Config "%s" does not support method "%s"' % (env.config['config_name'], ', '.join(methods)))
           exit(1)
       return True
     else:
       return True
 
-  print(red('no config set! Please use fab config:<your-config> <task>'))
+  log.error('no config set! Please use fab config:<your-config> <task>')
   exit(1)
 
 
@@ -436,74 +442,58 @@ def current(key = False):
 
 def getAll():
   global root_data
+  global globalMethodSettings
 
   if not root_data:
+
     root_data = get_all_configurations()
+    root_data = data_merge(globalMethodSettings, root_data)
 
     if not 'common' in root_data:
       root_data['common'] = { }
 
-    if not "usePty" in root_data:
-      root_data['usePty'] = True
-
-    if not "useShell" in root_data:
-      root_data['useShell'] = True
-
-    if not "disableKnownHosts" in root_data:
-      root_data['disableKnownHosts'] = False
-
-    if not "gitOptions" in root_data:
-      root_data['gitOptions'] = { 'pull' : [ '--no-edit', '--rebase'] }
-
-    if not 'sqlSkipTables' in root_data:
-      root_data['sqlSkipTables'] = [
-        'cache',
-        'cache_block',
-        'cache_bootstrap',
-        'cache_field',
-        'cache_filter',
-        'cache_form',
-        'cache_menu',
-        'cache_page',
-        'cache_path',
-        'cache_update',
-        'cache_views',
-        'cache_views_data',
-      ]
-
-    if not 'slack' in root_data:
-      root_data['slack'] = {}
-    root_data['slack'] = data_merge( { 'notifyOn': [], 'username': 'Fabalicious', 'icon_emoji': ':tada:'}, root_data['slack'])
-
     if 'needs' not in root_data:
       root_data['needs'] = ['ssh', 'git', 'drush7', 'files']
 
-    if 'scripts' not in root_data:
-      root_data['scripts'] = {}
-
-    if 'executables' not in root_data:
-      root_data['executables'] = {}
-
-    if 'revertFeatures' not in root_data:
-      root_data['revertFeatures'] = True
-
-    # TODO: find a way to move method-specific settings into the method-implementation
-    if 'configurationManagement' not in root_data:
-      root_data['configurationManagement'] = {
-        'staging': [
-          '#!drush config-import -y staging'
-        ]
-      }
-    if 'installOptions' not in root_data:
-      root_data['installOptions'] = {
-        'distribution': 'minimal',
-        'locale': 'en',
-        'options': ''
-      }
-
-
+    if 'blueprints' in root_data:
+      expandBlueprints(root_data)
 
   return root_data
+
+def getSetting(key, defaultValue = False):
+  """Helper function to read configuration from fabfiles.
+  Allow use of dot operator (".") to get nested value.
+  """
+  settings = defaultValue
+  keys = key.split('.')
+  firstRunFlag = True
+  for key in keys:
+    if firstRunFlag:
+      firstRunFlag = False
+      settings = getSettings(key, defaultValue)
+    else:
+      settings = settings[key] if key in settings else defaultValue
+  return settings
+
+def expandBlueprints(data):
+  """
+  Expand a list of blueprint configurations with a list of variants.
+  Helps documenting the available hosts better
+  """
+  from lib import blueprints
+  for blueprint in data['blueprints']:
+    errors = validate_dict(['configName', 'variants'], blueprint)
+    if len(errors) > 0:
+      for key, error in errors.iteritems():
+        log.error('can not expand blueprints, %s: %s!' % (error, key))
+      exit(1)
+    template = blueprints.getTemplate(blueprint['configName'])
+    if not template:
+      log.error('Missing blueprint config %s' % blueprint['configName'])
+
+    for variant in blueprint['variants']:
+      c = blueprints.apply(variant, template)
+      data['hosts'][c['configName']] = c
 
 
 def getSettings(key = False, defaultValue = False):
@@ -544,7 +534,7 @@ def getDockerConfig(docker_config_name, runLocally = False, printErrors=True):
   if len(errors) > 0:
     if printErrors:
       for key in errors:
-        print red('Missing key \'%s\' in docker-configuration %s' % (key, docker_config_name))
+        log.error('Missing key \'%s\' in docker-configuration %s' % (key, docker_config_name))
 
     return False
 
@@ -554,3 +544,13 @@ def getDockerConfig(docker_config_name, runLocally = False, printErrors=True):
 def add(config_name, config):
   settings = getAll()
   settings['hosts'][config_name] = config
+
+
+def addGlobalSettings(data):
+  global globalMethodSettings
+  global root_data
+
+  if root_data:
+    root_data = data_merge(data, root_data)
+  else:
+    globalMethodSettings = data_merge(globalMethodSettings, data)

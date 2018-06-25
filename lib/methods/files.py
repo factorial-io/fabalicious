@@ -1,6 +1,8 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.files')
+
 from base import BaseMethod
 from fabric.api import *
-from fabric.colors import green, red
 import datetime
 import os.path
 import re
@@ -65,7 +67,7 @@ class FilesMethod(BaseMethod):
 
     if len(source_folders) > 0:
       self.tarFiles(config, filename, source_folders, 'backup')
-      print green('Files dumped into "%s"' % filename)
+      log.info('Files dumped into "%s"' % filename)
 
 
   def listBackups(self, config, results, **kwargs):
@@ -98,14 +100,14 @@ class FilesMethod(BaseMethod):
     with cd(config['filesFolder']):
       self.run_quietly('#!tar -xzPf ' + tar_file, 'Unpacking files')
 
-    print(green('files restored from ' + file['file']))
+    log.info('files restored from ' + file['file'])
 
   def rsync(self, source_config, target_config, folder = 'filesFolder'):
     if not target_config['supportsCopyFrom']:
-      print red('The configuration "{c} does not support copyFrom'.format(c=source_config['config_name']))
+      log.error('The configuration "{c} does not support copyFrom'.format(c=source_config['config_name']))
       return
 
-    print green('Copying files from {f} to {t}'.format(f=source_config['config_name'], t=target_config['config_name']))
+    log.info('Copying files from {f} to {t}'.format(f=source_config['config_name'], t=target_config['config_name']))
 
 
     with cd(env.config['rootFolder']):
@@ -138,7 +140,7 @@ class FilesMethod(BaseMethod):
     if (exists(remotePath)):
       get(remotePath, localPath)
     else:
-      print red("Could not find file '%s' on remote!" % remotePath)
+      log.error("Could not find file '%s' on remote!" % remotePath)
 
   def copyFilesFrom(self, config, source_config=False, **kwargs):
     self.setRunLocally(config)
