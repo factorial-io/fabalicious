@@ -64,6 +64,7 @@ class DrushMethod(BaseMethod):
 
   @staticmethod
   def getDefaultConfig(config, settings, defaults):
+    defaults['adminUser'] = settings['adminUser'] if 'adminUser' in settings else 'admin'
     defaults['revertFeatures'] = settings['revertFeatures']
     defaults['configurationManagement'] = settings['configurationManagement']
     defaults['database'] = { "skipCreateDatabase": False }
@@ -141,7 +142,7 @@ class DrushMethod(BaseMethod):
 
     with self.cd(config['siteFolder']):
       if config['type'] == 'dev':
-        admin_user = configuration.getSettings('adminUser', 'admin')
+        admin_user = config['adminUser']
 
         if 'withPasswordReset' in kwargs and kwargs['withPasswordReset'] in [True, 'True', '1']:
           self.run_drush('user-password %s --password="admin"' % admin_user)
