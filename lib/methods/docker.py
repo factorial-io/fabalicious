@@ -217,7 +217,7 @@ class DockerMethod(BaseMethod):
     if 'password' in config:
       self.addPasswordToFabricCache(**config)
 
-    max_tries = 20
+    max_tries = 10
     try_n = 0
 
     while(True):
@@ -238,10 +238,7 @@ class DockerMethod(BaseMethod):
             log.info('Services up and running!')
             break;
 
-      except:
-        # TODO:
-        # handle only relevant exceptions like
-        # fabric.exceptions.NetworkError
+      except Exception as ex:
 
         if (try_n < max_tries):
           # Let's wait and try again...
@@ -249,6 +246,7 @@ class DockerMethod(BaseMethod):
           time.sleep(5)
         else:
           log.error("Supervisord not coming up at all")
+          log.error(ex)
           break
 
   def listAvailableCommands(self, config):
