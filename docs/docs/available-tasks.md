@@ -89,6 +89,22 @@ hosts:
     inheritsFrom: http://some.host/data.yaml
 ```
 
+**Note**
+
+You can create new configurations via the global `blueprints`-settings:
+
+```
+blueprints:
+  - configName: mbb
+    variants:
+      - de
+      - en
+      - it
+      - fr
+```
+
+will create 4 new configurations using the blueprint-config `mbb`.
+
 
 ## doctor
 
@@ -475,3 +491,18 @@ This docker-task will run a ssh-command to forward a local port to a port inside
 ### waitForServices
 
 This task will try to establish a ssh-connection into the docker-container and if the connection succeeds, waits for `supervisorctl status` to return success. This is useful in scripts to wait for any services that need some time to start up. Obviously this task depends on `supervisorctl`.
+
+### logLevel
+
+Can be used to override default logging level used by fabalicious.
+Available values :
+
+- DEBUG
+- INFO
+- WARNING
+- ERROR
+- CRITICAL
+
+**Examples**
+
+* `fab logLevel:DEBUG config:mbb ssh` will start outputting DEBUG level messages.

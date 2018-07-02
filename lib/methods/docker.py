@@ -1,9 +1,11 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.docker')
+
 from base import BaseMethod
 from fabric.api import *
 from fabric.network import *
 from fabric.context_managers import settings as _settings
 from fabric.context_managers import env
-from fabric.colors import green, red
 from lib import configuration
 import copy
 from lib.utils import validate_dict
@@ -67,14 +69,22 @@ class DockerMethod(BaseMethod):
     for key in ['host', 'port', 'user']:
       hostConfig[key] = dockerConfig[key]
 
-  def getIp(self, docker_name, docker_host, docker_user, docker_port):
+  def getIp(self, docker_name, docker_host, docker_user, docker_port, runLocally = False):
     host_string = join_host_strings(docker_user, docker_host, docker_port)
     try:
-      with hide('running', 'output', 'warnings'), _settings( host_string=host_string, warn_only=True ):
-        output = run('docker inspect --format "{{ .NetworkSettings.IPAddress }}" %s ' % (docker_name))
+      if runLocally:
+        with hide('running', 'output', 'warnings'):
+          output = local('docker inspect --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}\n{{end}}" %s ' % (docker_name), capture = True)
+          ips = output.splitlines()
+          return ips[0]
+      else:
+        with hide('running', 'output', 'warnings'), _settings( host_string=host_string, warn_only=True ):
+          output = run('docker inspect --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}\n{{end}}" %s ' % (docker_name))
+          ips = output.splitlines()
+          return ips[0]
 
     except SystemExit:
-      print red('Docker not running, can\'t get ip')
+      log.error('Docker not running, can\'t get ip')
       return False
 
     ip_address = output.stdout.strip()
@@ -87,7 +97,7 @@ class DockerMethod(BaseMethod):
   def getIpAddress(self, config, **kwargs):
     docker_config = self.getDockerConfig(config)
     if docker_config:
-      ip = self.getIp(config['docker']['name'], docker_config['host'], docker_config['user'], docker_config['port'])
+      ip = self.getIp(config['docker']['name'], docker_config['host'], docker_config['user'], docker_config['port'], docker_config['runLocally'])
       if 'result' in kwargs:
         kwargs['result']['ip'] = ip
       return ip if ip else False
@@ -98,20 +108,26 @@ class DockerMethod(BaseMethod):
   def startRemoteAccess(self, config, port="80", publicPort="8888", **kwargs):
     docker_config = self.getDockerConfig(config)
     if not docker_config:
-      print red('No docker configuration found!')
+      log.error('No docker configuration found!')
       exit(1)
 
     ip = self.getIpAddress(config)
 
     if not ip:
-      print red('Could not get docker-ip-address of docker-container %s.' % config['docker']['name'])
+      log.error('Could not get docker-ip-address of docker-container %s.' % config['docker']['name'])
       exit(1)
 
     public_ip = '0.0.0.0'
     if 'ip' in kwargs:
       public_ip = kwargs['ip']
-    print green("I am about to start the port forwarding via SSH. If you are finished, just type exit after the prompt.")
-    local("ssh -L%s:%s:%s:%s -p %s %s@%s" % (public_ip, publicPort, ip, port, docker_config['port'], docker_config['user'], docker_config['host']))
+    log.info("I am about to start the port forwarding via SSH. If you are finished, just type exit after the prompt.")
+    if docker_config['runLocally']:
+      cmd = "ssh -L%s:%s:%s:%s -p %s %s@%s" % (public_ip, publicPort, ip, port, config['port'], config['user'], config['host'])
+    else:
+      cmd = "ssh -L%s:%s:%s:%s -p %s %s@%s" % (public_ip, publicPort, ip, port, docker_config['port'], docker_config['user'], docker_config['host'])
+
+    local(cmd)
+
     exit(0)
 
   def about(self, config, **kwargs):
@@ -157,7 +173,7 @@ class DockerMethod(BaseMethod):
           full_file_name = configuration.getBaseDir() + '/' + value
 
         if not os.path.exists(full_file_name):
-          print red('Could not copy file to container, missing file: %s' % full_file_name)
+          log.error('Could not copy file to container, missing file: %s' % full_file_name)
           preflight_succeeded = False
         else:
           files[key] = full_file_name
@@ -178,15 +194,15 @@ class DockerMethod(BaseMethod):
         put(files['public_key'], '/tmp')
         run('cat /tmp/'+os.path.basename(files['public_key'])+' >> /root/.ssh/authorized_keys')
         run('rm /tmp/'+os.path.basename(files['public_key']))
-        print green('Copied keyfile to docker.')
+        log.info('Copied keyfile to docker.')
 
       if files['authorized_keys']:
         put(files['authorized_keys'], '/root/.ssh/authorized_keys')
-        print green('Copied authorized keys to docker.')
+        log.info('Copied authorized keys to docker.')
 
       if files['known_hosts']:
         put(files['known_hosts'], '/root/.ssh/known_hosts')
-        print green('Copied known hosts to docker.')
+        log.info('Copied known hosts to docker.')
 
       run('chmod 700 /root/.ssh')
 
@@ -201,7 +217,7 @@ class DockerMethod(BaseMethod):
     if 'password' in config:
       self.addPasswordToFabricCache(**config)
 
-    max_tries = 20
+    max_tries = 10
     try_n = 0
 
     while(True):
@@ -219,20 +235,18 @@ class DockerMethod(BaseMethod):
               if line.find('RUNNING'):
                 count_running += 1
           if count_services == count_running:
-            print green('Services up and running!')
+            log.info('Services up and running!')
             break;
 
-      except:
-        # TODO:
-        # handle only relevant exceptions like
-        # fabric.exceptions.NetworkError
+      except Exception as ex:
 
         if (try_n < max_tries):
           # Let's wait and try again...
           print "Wait for 5 secs and try again."
           time.sleep(5)
         else:
-          print red("Supervisord not coming up at all")
+          log.error("Supervisord not coming up at all")
+          log.error(ex)
           break
 
   def listAvailableCommands(self, config):
@@ -253,7 +267,7 @@ class DockerMethod(BaseMethod):
   def runCommand(self, config, **kwargs):
     command = kwargs['command']
     if not command:
-      print red('Missing command for docker-task.')
+      log.error('Missing command for docker-task.')
       self.listAvailableCommands(config)
       exit(1)
 
@@ -265,11 +279,11 @@ class DockerMethod(BaseMethod):
 
     docker_config = self.getDockerConfig(config)
     if not docker_config:
-      print red('Missing or incorrect docker-configuration in "%s"' % config['config_name'])
+      log.error('Missing or incorrect docker-configuration in "%s"' % config['config_name'])
       exit(1)
 
     if command not in docker_config['tasks']:
-      print red('Can\'t find  docker-command "%s"'  % ( command ))
+      log.error('Can\'t find  docker-command "%s"'  % ( command ))
       self.listAvailableCommands(config)
       exit(1)
 

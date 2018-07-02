@@ -1,7 +1,9 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.drush')
+
 from base import BaseMethod
 from fabric.api import *
 from fabric.state import output, env
-from fabric.colors import green, red, yellow
 from fabric.network import *
 from fabric.context_managers import settings as _settings
 from lib import configuration
@@ -19,6 +21,37 @@ class DrushMethod(BaseMethod):
     return methodName == 'drush7' or methodName == 'drush8' or methodName == 'drush'
 
   @staticmethod
+  def getGlobalSettings():
+    return {
+      'sqlSkipTables': [
+        'cache',
+        'cache_block',
+        'cache_bootstrap',
+        'cache_field',
+        'cache_filter',
+        'cache_form',
+        'cache_menu',
+        'cache_page',
+        'cache_path',
+        'cache_update',
+        'cache_views',
+        'cache_views_data',
+      ],
+      'revertFeatures': True,
+      'configurationManagement': {
+        'staging': [
+          '#!drush config-import -y staging'
+        ]
+      },
+      'installOptions': {
+        'distribution': 'minimal',
+        'locale': 'en',
+        'options': ''
+      }
+    }
+
+
+  @staticmethod
   def validateConfig(config):
     result = validate_dict(['siteFolder', 'filesFolder'], config)
     if result:
@@ -31,6 +64,7 @@ class DrushMethod(BaseMethod):
 
   @staticmethod
   def getDefaultConfig(config, settings, defaults):
+    defaults['adminUser'] = settings['adminUser'] if 'adminUser' in settings else 'admin'
     defaults['revertFeatures'] = settings['revertFeatures']
     defaults['configurationManagement'] = settings['configurationManagement']
     defaults['database'] = { "skipCreateDatabase": False }
@@ -79,9 +113,10 @@ class DrushMethod(BaseMethod):
       ignores = config[ignore_key] if ignore_key in config else configuration.getSettings(ignore_key, [])
       if ignores:
         for ignore in ignores:
-          content.remove(ignore)
+          if ignore in content:
+            content.remove(ignore)
 
-        print yellow('Ignoring %s while %s modules from %s' % (' '.join(ignores), 'enabling' if enable else 'disabling', file))
+        log.warning('Ignoring %s while %s modules from %s' % (' '.join(ignores), 'enabling' if enable else 'disabling', file))
 
       modules = ' '.join(content)
 
@@ -103,11 +138,11 @@ class DrushMethod(BaseMethod):
         uuid = configuration.getSettings('uuid')
 
       if not uuid:
-        print red('No uuid found in fabfile.yaml. config-import may fail!')
+        log.error('No uuid found in fabfile.yaml. config-import may fail!')
 
     with self.cd(config['siteFolder']):
       if config['type'] == 'dev':
-        admin_user = configuration.getSettings('adminUser', 'admin')
+        admin_user = config['adminUser']
 
         if 'withPasswordReset' in kwargs and kwargs['withPasswordReset'] in [True, 'True', '1']:
           self.run_drush('user-password %s --password="admin"' % admin_user)
@@ -120,6 +155,7 @@ class DrushMethod(BaseMethod):
         self.handle_modules(config, 'modules_disabled.txt', False)
 
       if self.methodName == 'drush8':
+        self.run_drush('cr -y')
         self.run_drush('updb --entity-updates -y')
       else:
         self.run_drush('updb -y')
@@ -195,7 +231,7 @@ class DrushMethod(BaseMethod):
     self.backupSql(config, filename)
     if config['supportsZippedBackups']:
       filename += '.gz'
-    print green('Database dump at "%s"' % filename)
+    log.info('Database dump at "%s"' % filename)
 
   def listBackups(self, config, results, **kwargs):
     files = self.list_remote_files(config['backupFolder'], ['*.sql', '*.sql.gz'])
@@ -226,7 +262,7 @@ class DrushMethod(BaseMethod):
       else:
         self.run_drush('sql-cli < ' + sql_name_target)
 
-      print(green('SQL restored from "%s"' % sql_name_target))
+      log.info('SQL restored from "%s"' % sql_name_target)
 
 
   def copyDBFrom(self, config, source_config=False, **kwargs):
@@ -297,17 +333,19 @@ class DrushMethod(BaseMethod):
 
 
     if 'database' not in config:
-      print red('Missing database configuration!')
+      log.error('Missing database configuration!')
       exit(1)
 
     configuration.validate_dict(['user', 'pass', 'name', 'host'], config['database'], 'Missing database configuration: ')
 
-    print green('Installing fresh database for "%s"' % config['config_name'])
+    log.info('Installing fresh database for "%s"' % config['config_name'])
 
     o = config['database']
 
-    with self.cd(config['siteFolder']):
+    with self.cd(config['rootFolder']):
       self.run_quietly('mkdir -p %s' % config['siteFolder'])
+
+    with self.cd(config['siteFolder']):
       if not o["skipCreateDatabase"]:
         mysql_cmd  = 'CREATE DATABASE IF NOT EXISTS {name}; GRANT ALL PRIVILEGES ON {name}.* TO \'{user}\'@\'%\' IDENTIFIED BY \'{pass}\'; FLUSH PRIVILEGES;'.format(**o)
 
@@ -381,7 +419,7 @@ class DrushMethod(BaseMethod):
     with self.cd(config['rootFolder']):
       self.run_quietly('rm -rf /tmp/drupal-update')
 
-    print green("Updated drupal successfully to '%s'." % (drupal_folder))
+    log.info("Updated drupal successfully to '%s'." % (drupal_folder))
 
   def waitForDatabase(self, config):
     self.setRunLocally(config)
@@ -400,7 +438,7 @@ class DrushMethod(BaseMethod):
       time.sleep(5)
       print "Wait another 5 secs for the database ({user}@{host}) ...".format(**config['database'])
 
-    print red('Database not available!')
+    log.error('Database not available!')
     return False
 
 
@@ -415,4 +453,3 @@ class DrushMethod(BaseMethod):
   def preflight(self, task, config, **kwargs):
     if task == 'install':
       self.waitForDatabase(config)
-

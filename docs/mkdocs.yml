@@ -18,5 +18,6 @@ pages:
 - configuration.md
 - docker-integration.md
 - local-overrides.md
+- extending-fabalicious.md
 - contribute.md
 - changelog.md

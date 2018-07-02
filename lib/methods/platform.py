@@ -1,6 +1,8 @@
+import logging
+log = logging.getLogger('fabric.fabalicious.platform')
+
 from base import BaseMethod
 from fabric.api import *
-from fabric.colors import green, red
 from lib import configuration
 from drush import DrushMethod
 
@@ -25,7 +27,7 @@ class PlatformMethod(BaseMethod):
 
   def run_install(self, config, **kwargs):
     local('curl -sS https://platform.sh/cli/installer | php');
-    print green('platform.sh client installed successfully.')
+    log.info('platform.sh client installed successfully.')
 
   def run_platform(self, config, command):
       local('platform %s' % command)
@@ -44,5 +46,3 @@ class PlatformMethod(BaseMethod):
 
   def drush(self, config, **kwargs):
     self.shadowed_drush.drush(config, **kwargs)
-
-
