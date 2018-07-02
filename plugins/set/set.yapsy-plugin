@@ -1,0 +1,9 @@
+[Core]
+Name = set
+Module = set
+
+[Documentation]
+Author = Stephan Huber
+Version = 0.1
+Website = http://www.factorial.io
+Description = Set Plugin
