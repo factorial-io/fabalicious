@@ -46,8 +46,8 @@ def runFabalicious(args):
   log.info('')
   log.info('')
 
-
   globallock.release()
+
 
 class Set(ITaskPlugin):
   def run(self, *args, **kwargs):
