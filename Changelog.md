@@ -1,10 +1,30 @@
 # Changelog
 
+## 2.x.x
+
+### new
+
+* new task `set`. This task requires a list of blueprint-variants or the keyword `all`. It will spawn multiple fabalicious commands which will run in parallel if `processes` is set to a value greater than 1.
+  
+    Some examples:
+  
+    ```  
+    fab config:mbb set:all drush:"cc all"
+    ```
+  
+    Will run the drush command for all variants of the blueprint-configuration mbb.
+    
+    ```
+    fab config:mbb set:de,fr,it,processes=3 drush:"cc all"
+    ``` 
+    
+    This command will run the drush command on a subsets of variants, namely de, fr and it. It will spawn 3 concurrent processes.
+
 ## 2.4.0
 
 ### new
 
-* new section in fabfile.yaml called `blueprints`. THis section allows the usage of a given sets of blueprints as normal config. That means, they will get listed and work wirh autocomplete
+* new section in fabfile.yaml called `blueprints`. This section allows the usage of a given sets of blueprints as normal config. That means, they will get listed and work with autocomplete
 
       ```
       blueprints:
