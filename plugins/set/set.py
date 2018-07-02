@@ -54,9 +54,13 @@ def runFabalicious(args):
 
   # Log the result for humans
   globallock.acquire()
+  log.info('')
   log.info(config + ": Results of " + " ".join(args))
   for line in captured.splitlines():
     log.info(config + ": " + line)
+  log.info('')
+  log.info('')
+
 
   globallock.release()
 
