@@ -12,21 +12,6 @@ from contextlib import contextmanager
 
 globallock = Lock()
 
-class LoggerWriter:
-  def __init__(self, level):
-    # self.level is really like using log.debug(message)
-    # at least in my case
-    self.level = level
-
-  def write(self, message):
-    # if statement reduces the amount of newlines that are
-    # printed to the logger
-    if message != '\n':
-      self.level(message)
-
-  def flush(self):
-    pass
-
 @contextmanager
 def poolcontext(*args, **kwargs):
     pool = Pool(*args, **kwargs)
