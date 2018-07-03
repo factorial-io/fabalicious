@@ -28,6 +28,8 @@ def runFabalicious(args):
       output = process.stdout.readline().decode()
       if output:
         captured += output
+
+        # Log every line as debug, so the user can check, if everything is running well.
         log.debug(config + ": " + output.replace("\n", ""))
       else:
         break
@@ -49,7 +51,7 @@ def runFabalicious(args):
   globallock.release()
 
 
-class Set(ITaskPlugin):
+class VariantsTask(ITaskPlugin):
   def run(self, *args, **kwargs):
     num_processes = int(kwargs['processes']) if 'processes' in kwargs else 1
 
@@ -60,7 +62,7 @@ class Set(ITaskPlugin):
     blueprints = configuration.getSettings('blueprints')
     config = configuration.current()
     if not config:
-      log.error('set needs a valid configuration!')
+      log.error('variants needs a valid configuration!')
       exit(1)
 
     config_name = configuration.current('config_name')
@@ -97,6 +99,7 @@ class Set(ITaskPlugin):
       commands.append(command)
 
       log.info(" ".join(command))
+
     log.info("Using %s parallel processes" % num_processes)
     result = raw_input('Do you want to execute above listed commands? (Y/N) ')
 
@@ -106,5 +109,6 @@ class Set(ITaskPlugin):
     with poolcontext(processes=num_processes) as pool:
       pool.map(runFabalicious, commands)
 
+    # stop processing dangling tasks.
     exit(0)
 

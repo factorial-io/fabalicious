@@ -1,9 +1,9 @@
 [Core]
-Name = set
-Module = set
+Name = variants
+Module = variants
 
 [Documentation]
 Author = Stephan Huber
 Version = 0.1
 Website = http://www.factorial.io
-Description = Set Plugin
+Description = Variants Plugin

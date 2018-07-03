@@ -4,18 +4,18 @@
 
 ### new
 
-* new task `set`. This task requires a list of blueprint-variants or the keyword `all`. It will spawn multiple fabalicious commands which will run in parallel if `processes` is set to a value greater than 1.
+* new task `variants`. This task requires a list of blueprint-variants or the keyword `all`. It will spawn multiple fabalicious commands which will run in parallel if `processes` is set to a value greater than 1.
   
     Some examples:
   
     ```  
-    fab config:mbb set:all drush:"cc all"
+    fab config:mbb variants:all drush:"cc all"
     ```
   
     Will run the drush command for all variants of the blueprint-configuration mbb.
     
     ```
-    fab config:mbb set:de,fr,it,processes=3 drush:"cc all"
+    fab config:mbb variants:de,fr,it,processes=3 drush:"cc all"
     ``` 
     
     This command will run the drush command on a subsets of variants, namely de, fr and it. It will spawn 3 concurrent processes.
