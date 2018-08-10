@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Factorial GmbH, Hamburg">
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Structure of the configuration file - Fabalicious</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  <link href="../css/version-select.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Structure of the configuration file";
+    var mkdocs_page_input_path = "configuration.md";
+    var mkdocs_page_url = "/configuration/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Fabalicious</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">How does fabalicious work in two sentences</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../installation/">Installation of needed dependencies</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../usage/">Running fabalicious</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../available-tasks/">Available tasks</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Structure of the configuration file</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#structure-of-the-configuration-file">Structure of the configuration file</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#overview">Overview</a></li>
+        
+            <li><a class="toctree-l3" href="#inheritance">Inheritance</a></li>
+        
+        </ul>
+    
+
+    <li class="toctree-l2"><a href="#scripts_1">Scripts</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#replacement-patterns">Replacement-patterns</a></li>
+        
+            <li><a class="toctree-l3" href="#internal-commands">Internal commands</a></li>
+        
+            <li><a class="toctree-l3" href="#task-related-scripts">Task-related scripts</a></li>
+        
+            <li><a class="toctree-l3" href="#examples">Examples</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../docker-integration/">Docker integration</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../local-overrides/">Local overrides</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../extending-fabalicious/">Extending fabalicious</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../contribute/">Contribute</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../changelog/">Changelog</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Fabalicious</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Structure of the configuration file</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/factorial-io/fabalicious/edit/develop/docs/docs/configuration.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="structure-of-the-configuration-file">Structure of the configuration file</h1>
+<h2 id="overview">Overview</h2>
+<p>The configuration is fetched from the file <code>fabfile.yaml</code> and should have the followin structure:</p>
+<pre><code class="yaml">name: &lt;the project name&gt;
+
+needs:
+  - list of methods
+
+requires: 2.0
+
+dockerHosts:
+  docker1:
+    ...
+
+hosts:
+  host1:
+    ...
+</code></pre>
+
+<p>Here's the documentation of the supported and used keys:</p>
+<h3 id="name">name</h3>
+<p>The name of the project, it's only used for output.</p>
+<h3 id="needs">needs</h3>
+<p>List here all needed methods for that type of project. Available methods are:</p>
+<ul>
+<li><code>git</code> for deployments via git</li>
+<li><code>ssh</code></li>
+<li><code>drush7</code> for support of drupal-7 installations</li>
+<li><code>drush8</code> for support fo drupal 8 installations</li>
+<li><code>files</code></li>
+<li><code>slack</code> for slack-notifications</li>
+<li><code>docker</code> for docker-support</li>
+<li><code>composer</code> for composer support</li>
+<li><code>drupalconsole</code> for drupal-concole support</li>
+</ul>
+<p><strong>Example for drupal 7</strong></p>
+<pre><code class="yaml">needs:
+  - ssh
+  - git
+  - drush7
+  - files
+</code></pre>
+
+<p><strong>Example for drupal 8 composer based and dockerized</strong></p>
+<pre><code class="yaml">needs:
+  - ssh
+  - git
+  - drush8
+  - composer
+  - docker
+  - files
+</code></pre>
+
+<h3 id="requires">requires</h3>
+<p>The file-format of fabalicious changed over time. Set this to the lowest version of fabalicious which can handle the file. Should bei <code>2.0</code></p>
+<h3 id="hosts">hosts</h3>
+<p>Hosts is a list of host-definitions which contain all needed data to connect to a remote host. Here's an example</p>
+<pre><code class="yaml">hosts:
+  exampleHost:
+    host: example.host.tld
+    user: example_user
+    port: 2233
+    password: optionalPassword
+    type: dev
+    rootFolder: /var/www/public
+    gitRootFolder: /var/www
+    siteFolder: /sites/default
+    filesFolder: /sites/default/files
+    backupFolder: /var/www/backups
+    supportsInstalls: true|false
+    supportsCopyFrom: true|false
+    type: dev
+    branch: develop
+    docker:
+      ...
+    database:
+      ...
+    scripts:
+      ...
+    sshTunnel:
+      ..
+
+</code></pre>
+
+<p>You can get all host-information including the default values using the fabalicious command <code>about</code>:</p>
+<pre><code class="shell">fab config:staging about
+</code></pre>
+
+<p>This will print all host configuration for the host <code>staging</code>.</p>
+<p>Here are all possible keys documented:</p>
+<ul>
+<li><code>host</code>, <code>user</code>, <code>port</code> and optionally <code>password</code> is used to connect via SSH to the remote machine. Please make sure SSH key forwarding is enabled on your installation. <code>password</code> should only used as an exception.</li>
+<li><code>type</code> defines the type of installation. Currently there are four types available:<ul>
+<li><code>dev</code> for dev-installations, they won't backup the databases on deployment</li>
+<li><code>test</code> for test-installations, similar than <code>dev</code>, no backups on deployments</li>
+<li><code>stage</code> for staging-installations.</li>
+<li><code>live</code> for live-installations. Some tasks can not be run on live-installations as <code>install</code> or as a target for <code>copyFrom</code>
+The main use-case is to run different scripts per type, see the <code>common</code>-section.</li>
+</ul>
+</li>
+<li><code>branch</code> the name of the branch to use for deployments, they get ususally checked out and pulled from origin. <code>gitRootFolder</code> should be the base-folder, where the local git-repository is. (If not explicitely set, fabalicious uses the <code>rootFolder</code>)</li>
+<li><code>rootFolder</code>  the web-root-folder of the installation, typically exposed to the public.</li>
+<li><code>gitRootFolder</code>  the folder, where the git-repository lies. Defaults to <code>rootFolder</code></li>
+<li><code>composerRootFolder</code> the folder where the composer.json for the project is stored, defaults to <code>gitRootFolder</code>.</li>
+<li><code>backupFolder</code> the folder, where fabalicious should store its backups into</li>
+<li><code>runLocally</code> if set to true, all commands are run on the local host, not on a remote host. Good for local development on linux or tools like MAMP.</li>
+<li><code>siteFolder</code> is a drupal-specific folder, where the settings.php resides for the given installation. This allows to interact with multisites etc.</li>
+<li><code>filesFolder</code> the path to the files-folder, where user-assets get stored and which should be backed up by the <code>files</code>-method</li>
+<li><code>tmpFolder</code> name of tmp-folder, defaults to <code>/tmp</code></li>
+<li><code>supportsBackups</code> defaults to true, set to false, if backups are not supported</li>
+<li><code>supportsZippedBackups</code> defaults to true. Set to false, if database-dumps shouldn't be zipped.</li>
+<li><code>supportsInstalls</code> defaults to false, if set to true, the <code>install</code>-task will run on that host.</li>
+<li><code>supportsCopyFrom</code> defaults to false, if set to true, the host can be used as target for <code>copyFrom</code></li>
+<li><code>ignoreSubmodules</code> defaults to true, set to false, if you don't want to update a projects' submodule on deploy.</li>
+<li><code>revertFeatures</code>, defaults to <code>True</code>, when set all features will be reverted when running a reset (drush only)</li>
+<li><code>configurationManagement</code>, an array of configuration-labels to import on <code>reset</code>, defaults to <code>['staging']</code>. You can add command arguments for drush, e.g. <code>['staging', 'dev --partial']</code></li>
+<li><code>disableKnownHosts</code>, <code>useShell</code> and <code>usePty</code> see section <code>other</code></li>
+<li><code>database</code> the database-credentials the <code>install</code>-tasks uses when installing a new installation.<ul>
+<li><code>name</code> the database name</li>
+<li><code>host</code> the database host</li>
+<li><code>user</code> the database user</li>
+<li><code>pass</code> the password for the database user</li>
+<li><code>prefix</code> the optional table-prefix to use</li>
+</ul>
+</li>
+<li><code>sshTunnel</code> Fabalicious supports SSH-Tunnels, that means it can log in into another machine and forward the access to the real host. This is handy for dockerized installations, where the ssh-port of the docker-instance is not public. <code>sshTunnel</code> needs the following informations<ul>
+<li><code>bridgeHost</code>: the host acting as a bridge.</li>
+<li><code>bridgeUser</code>: the ssh-user on the bridge-host</li>
+<li><code>bridgePort</code>: the port to connect to on the bridge-host</li>
+<li><code>localPort</code>: the local port which gets forwarded to the <code>destPort</code>. If <code>localPort</code> is omitted, the ssh-port of the host-configuration is used. If the host-configuration does not have a port-property a random port is used.</li>
+<li><code>destHost</code>: the destination host to forward to</li>
+<li><code>destHostFromDockerContainer</code>: if set, the docker's Ip address is used for destHost. This is automatically set when using a <code>docker</code>-configuration, see there.</li>
+<li><code>destPort</code>: the destination port to forward to</li>
+</ul>
+</li>
+<li><code>docker</code> for all docker-relevant configuration. <code>configuration</code> and <code>name</code> are the only required keys, all other are optional and used by the docker-tasks.<ul>
+<li><code>configuration</code> should contain the key of the dockerHost-configuration in <code>dockerHosts</code></li>
+<li><code>name</code> contains the name of the docker-container. This is needed to get the IP-address of the particular docker-container when using ssh-tunnels (see above).</li>
+</ul>
+</li>
+</ul>
+<h3 id="dockerhosts">dockerHosts</h3>
+<p><code>dockerHosts</code> is similar structured as the <code>hosts</code>-entry. It's a keyed lists of hosts containing all necessary information to create a ssh-connection to the host, controlling the docker-instances, and a list of tasks, the user might call via the <code>docker</code>-command. See the <code>docker</code>-entry for a more birds-eye-view of the concepts.</p>
+<p>Here's an example <code>dockerHosts</code>-entry:</p>
+<pre><code class="yaml">dockerHosts:
+  mbb:
+    runLocally: false
+    host: multibasebox.dev
+    user: vagrant
+    password: vagrant
+    port: 22
+    rootFolder: /vagrant
+    environment:
+      VHOST: %host.host%
+      WEBROOT: %host.rootFolder%
+    tasks:
+      logs:
+        - docker logs %host.docker.name%
+</code></pre>
+
+<p>Here's a list of all possible entries of a dockerHosts-entry:</p>
+<ul>
+<li><code>runLocally</code>: if this is set to <code>true</code>, all docker-scripts are run locally, and not on a remote host.</li>
+<li><code>host</code>, <code>user</code>, <code>port</code> and <code>password</code>: all needed information to start a ssh-connection to that host. These settings are only respected, if <code>runLocally</code> is set to <code>false</code>. <code>port</code> and <code>password</code> are optional.</li>
+<li><code>environment</code> a keyed list of environment-variables to set, when running one of the tasks. The replacement-patterns of <code>scripts</code> are supported, see there for more information.</li>
+<li><code>tasks</code> a keyed list of commands to run for a given docker-subtask (similar to <code>scripts</code>). Note: these commands are running on the docker-host, not on the host. All replacement-patterns do work, and you can call even other tasks via <code>execute(&lt;task&gt;, &lt;subtask&gt;)</code> e.g. <code>execute(docker, stop)</code> See the <code>scripts</code>-section for more info.</li>
+</ul>
+<p>You can use <code>inheritsFrom</code> to base your configuration on an existing one. You can add any configuration you may need and reference to that information from within your tasks via the replacement-pattern <code>%dockerHost.keyName%</code> e.g. <code>%dockerHost.host%</code>.</p>
+<p>You can reference a specific docker-host-configuration from your host-configuration via</p>
+<pre><code class="yaml">hosts:
+  test:
+    docker:
+      configuration: mbb
+</code></pre>
+
+<h3 id="common">common</h3>
+<p>common contains a list of commands, keyed by task and type which gets executed when the task is executed.</p>
+<p>Example:</p>
+<pre><code class="yaml">common:
+  reset:
+    dev:
+      - echo &quot;running reset on a dev-instance&quot;
+    stage:
+      - echo &quot;running reset on a stage-instance&quot;
+    prod:
+      - echo &quot;running reset on a prod-instance&quot;
+  deployPrepare:
+    dev:
+      - echo &quot;preparing deploy on a dev instance&quot;
+  deploy:
+    dev:
+      - echo &quot;deploying on a dev instance&quot;
+  deployFinished:
+    dev:
+      - echo &quot;finished deployment on a dev instance&quot;
+</code></pre>
+
+<p>The first key is the task-name (<code>reset</code>, <code>deploy</code>, ...), the second key is the type of the installation (<code>dev</code>, <code>stage</code>, <code>prod</code>, <code>test</code>). Every task is prepended by a prepare-stage and appended by a finished-stage, so you can call scripts before and after an actual task. You can even run other scripts via the <code>execute</code>-command, see the <code>scripts</code>-section.</p>
+<h3 id="scripts">scripts</h3>
+<p>A keyed list of available scripts. This scripts may be defined globally (on the root level) or on a per host-level. The key is the name of the script and can be executed via</p>
+<pre><code class="shell">fab config:&lt;configuration&gt; script:&lt;key&gt;
+</code></pre>
+
+<p>A script consists of an array of commands which gets executed sequentially.</p>
+<p>An example:</p>
+<pre><code class="yaml">scripts:
+  test:
+    - echo &quot;Running script test&quot;
+  test2:
+    - echo &quot;Running script test2 on %host.config_name%
+    - execute(script, test)
+</code></pre>
+
+<p>Scripts can be defined on a global level, but also on a per host-level.</p>
+<p>You can declare default-values for arguments via a slightly modified syntax:</p>
+<pre><code class="yaml">scripts:
+  defaultArgumentTest:
+    defaults:
+      name: Bob
+    script:
+      - echo &quot;Hello %arguments.name%&quot;
+</code></pre>
+
+<p>Running the script via <code>fab config:mbb script:defaultArgumentTest,name="Julia"</code> will show <code>Hello Julia</code>. Running <code>fab config:mbb script:defaultArgumentTest</code> will show <code>Hello Bob</code>.</p>
+<p>For more information see the main scripts section below.</p>
+<h3 id="other">other</h3>
+<ul>
+<li><code>deploymentModule</code> name of the deployment-module the drush-method enables when doing a deploy</li>
+<li><code>usePty</code> defaults to true, set it to false when you can't connect to specific hosts.</li>
+<li><code>useShell</code> defaults to true, set it to false, when you can't connect to specific hosts.</li>
+<li><code>disableKnownHosts</code> defaults to false, set it too true, if you trust every host</li>
+<li><code>gitOptions</code> a keyed list of options to apply to a git command. Currently only pull is supported. If your git-version does not support <code>--rebase</code> you can disable it via an empty array: <code>pull: []</code></li>
+<li><code>sqlSkipTables</code> a list of table-names drush should omit when doing a backup.</li>
+<li><code>configurationManagement</code> a list of configuration-labels to import on <code>reset</code>. This defaults to <code>['staging']</code> and may be overridden on a per-host basis. You can add command arguments to the the configuration label.</li>
+</ul>
+<p>Example:</p>
+<pre><code class="yaml">deploymentModule: my_deployment_module
+usePty: false
+useShell: false
+gitOptions:
+  pull:
+    - --rebase
+    - --quiet
+sqlSkipTables:
+  - cache
+  - watchdog
+  - session
+configurationManagement:
+   - staging
+   - dev -- partial
+</code></pre>
+
+<h2 id="inheritance">Inheritance</h2>
+<p>Sometimes it make sense to extend an existing configuration or to include configuration from other places from the file-system or from remote locations. There's a special key <code>inheritsFrom</code> which will include the yaml found at the location and merge it with the data. This is supported for entries in <code>hosts</code> and <code>dockerHosts</code> and for the fabfile itself.</p>
+<p>If a <code>host</code>, a <code>dockerHost</code> or the fabfile itself has the key <code>inheritsFrom</code>, then the given key is used as a base-configuration. Here's a simple example:</p>
+<pre><code class="yaml">hosts:
+  default:
+    port: 22
+    host: localhost
+    user: default
+  example1:
+    inheritsFrom: default
+    port: 23
+  example2:
+    inheritsFrom: example1
+    user: example2
+</code></pre>
+
+<p><code>example1</code> will store the merged configuration from <code>default</code> with the configuration of <code>example1</code>. <code>example2</code> is a merge of all three configurations: <code>example2</code> with <code>example1</code> with <code>default</code>.</p>
+<pre><code class="yaml">hosts:
+  example1:
+    port: 23
+    host: localhost
+    user: default
+  example2:
+    port: 23
+    host: localhost
+    user: example2
+</code></pre>
+
+<p>You can even reference external files to inherit from:</p>
+<pre><code class="yaml">hosts:
+  fileExample:
+    inheritsFrom: ./path/to/config/file.yaml
+  httpExapme:
+    inheritsFrom: http://my.tld/path/to/config_file.yaml
+</code></pre>
+
+<p>This mechanism works also for the fabfile.yaml / index.yaml itself, and is not limited to one entry:</p>
+<pre><code class="yaml">name: test fabfile
+
+inheritsFrom:
+  - ./mbb.yaml
+  - ./drupal.yaml
+</code></pre>
+
+<h1 id="scripts_1">Scripts</h1>
+<p>Scripts are a powerful concept of fabalicious. There are a lot of places where scripts can be called. The <code>common</code>-section defines common scripts to be run for specific task/installation-type-configurations, docker-tasks are also scripts which you can execute via the docker-command. And you can even script fabalicious tasks and create meta-tasks.</p>
+<p>A script is basically a list of commands which get executed via shell on a remote machine. To stay independent of the host where the script is executed, fabalicious parsed the script before executing it and replaces given variables with their counterpart in the yams file.</p>
+<h2 id="replacement-patterns">Replacement-patterns</h2>
+<p>Replacement-Patterns are specific strings enclosed in <code>%</code>s, e.g. <code>%host.port%</code>, <code>%dockerHost.rootFolder%</code> or <code>%arguments.name%</code>.</p>
+<p>Here's a simple example;</p>
+<pre><code class="yaml">script:
+  test:
+    - echo &quot;I am running on %host.config_name%&quot;
+</code></pre>
+
+<p>Calling this script via</p>
+<pre><code class="shell">fab config:mbb script:test
+</code></pre>
+
+<p>will show <code>I am running on mbb</code>.</p>
+<ul>
+<li>The host-configuration gets exposes via the <code>host.</code>-prefix, so <code>port</code> maps to <code>%host.port%</code>, etc.</li>
+<li>The dockerHost-configuration gets exposed via the <code>dockerHost</code>-prefix, so <code>rootFolder</code> maps to <code>%dockerHost.rootFolder%</code></li>
+<li>The global configuration of the yams-file gets exposed to the <code>settings</code>-prefix, so <code>uuid</code> gets mapped to `%settings.uuid%</li>
+<li>Optional arguments to the <code>script</code>-taks get the <code>argument</code>-prefix, e.g. <code>%arguments.name%</code>. You can get all arguments via <code>%arguments.combined%</code>.</li>
+<li>You can access hierarchical information via the dot-operator, e.g. <code>%host.database.name%</code></li>
+</ul>
+<p>If fabalicious detects a pattern it can't replace it will abort the execution of the script and displays a list of available replacement-patterns.</p>
+<h2 id="internal-commands">Internal commands</h2>
+<p>There are currently 3 internal commands. These commands control the flow inside fabalicious:</p>
+<ul>
+<li><code>fail_on_error(1|0)</code> If fail_on_error is set to one, fabalicious will exit if one of the script commands returns a non-zero return-code. When using <code>fail_on_error(0)</code> only a warning is displayed, the script will continue.</li>
+<li><code>execute(task, subtask, arguments)</code> execute a fabalicious task. For example you can run a deployment from a script via <code>execute(deploy)</code> or stop a docker-container from a script via <code>execute(docker, stop)</code></li>
+<li><code>fail_on_missing_directory(directory, message)</code> will print message <code>message</code> if the directory <code>directory</code> does not exist.</li>
+</ul>
+<h2 id="task-related-scripts">Task-related scripts</h2>
+<p>You can add scripts to the <code>common</code>-section, which will called for any host. You can differentiate by task-name and host-type, e.g. create a script which gets called for the task <code>deploy</code> and type <code>dev</code>.</p>
+<p>You can even run scripts before or after a task is executed. Append the task with <code>Prepare</code> or <code>Finished</code>.</p>
+<p>You can even run scripts for specific tasks and hosts. Just add your script with the task-name as its key.</p>
+<pre><code class="yaml">host:
+  test:
+    deployPrepare:
+      - echo &quot;Preparing deploy for test&quot;
+    deploy:
+      - echo &quot;Deploying on test&quot;
+    deployFinished:
+      - echo &quot;Deployment finished for test&quot;
+</code></pre>
+
+<p>These scripts in the above examples gets executed only for the host <code>test</code> and task <code>deploy</code>.</p>
+<h2 id="examples">Examples</h2>
+<p>A rather complex example scripting fabalicious.</p>
+<pre><code class="yaml">scripts:
+  runTests:
+    defaults:
+      branch: develop
+    script:
+      - execute(docker, start)
+      - execute(docker, waitForServices)
+      - execute(deploy, %arguments.branch%)
+      - execute(script, behatInstall)
+      - execute(script, behat, --profile=ci --format=junit --format=progress)
+      - execute(getFile, /var/www/_tools/behat/build/behat/default.xml, ./_tools/behat)
+      - execute(docker, stop)
+</code></pre>
+
+<p>This script will</p>
+<ul>
+<li>start the docker-container,</li>
+<li>wait for it,</li>
+<li>deploys the given branch,</li>
+<li>run a script which will install behat,</li>
+<li>run behat with some custom arguments,</li>
+<li>gets the result-file and copy it to a location,</li>
+<li>and finally stops the container.</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../docker-integration/" class="btn btn-neutral float-right" title="Docker integration">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../available-tasks/" class="btn btn-neutral" title="Available tasks"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>© 2017 Factorial GmbH, Hamburg</p>
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/factorial-io/fabalicious/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../available-tasks/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../docker-integration/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js"></script>
+      <script src="../js/version-select.js"></script>
+      <script src="../search/require.js"></script>
+      <script src="../search/search.js"></script>
+
+</body>
+</html>
