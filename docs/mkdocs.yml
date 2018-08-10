@@ -6,18 +6,22 @@ markdown_extensions:
 repo_url: https://github.com/factorial-io/fabalicious/
 repo_name: GitHub
 edit_uri: edit/develop/docs/docs/
-site_description: "Fabalicious Documentation"
-site_author: "Factorial GmbH, Hamburg"
-copyright: "© 2017 Factorial GmbH, Hamburg"
+site_description: Fabalicious Documentation
+site_author: Factorial GmbH, Hamburg
+copyright: © 2017 Factorial GmbH, Hamburg
 
 pages:
-- index.md
-- installation.md
-- usage.md
-- available-tasks.md
-- configuration.md
-- docker-integration.md
-- local-overrides.md
-- extending-fabalicious.md
-- contribute.md
-- changelog.md
+  - index.md
+  - installation.md
+  - usage.md
+  - available-tasks.md
+  - configuration.md
+  - docker-integration.md
+  - local-overrides.md
+  - extending-fabalicious.md
+  - contribute.md
+  - changelog.md
+extra_css:
+  - css/version-select.css
+extra_javascript:
+  - js/version-select.js
