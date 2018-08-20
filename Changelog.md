@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.x.x
+
+### new
+
+* new option `replaceSettingsFile` which defaults to true. If set to false the `install`-task will not create a new settings.php-file.
+
 ## 2.4.0
 
 ### new
