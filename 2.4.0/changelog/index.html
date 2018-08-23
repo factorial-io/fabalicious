@@ -102,6 +102,8 @@
     
         <ul>
         
+            <li><a class="toctree-l3" href="#241">2.4.1</a></li>
+        
             <li><a class="toctree-l3" href="#240">2.4.0</a></li>
         
             <li><a class="toctree-l3" href="#231">2.3.1</a></li>
@@ -158,11 +160,24 @@
             <div class="section">
               
                 <h1 id="changelog">Changelog</h1>
-<h2 id="240">2.4.0</h2>
+<h2 id="241">2.4.1</h2>
 <h3 id="new">new</h3>
 <ul>
+<li>new option <code>replaceSettingsFile</code> which defaults to true. If set to false the <code>install</code>-task will not create a new settings.php-file.</li>
 <li>
-<p>new section in fabfile.yaml called <code>blueprints</code>. THis section allows the usage of a given sets of blueprints as normal config. That means, they will get listed and work wirh autocomplete</p>
+<p>For docker tasks support <code>Prepare</code> and <code>Finished</code>-tasks. If you want to run something before the <code>run</code>-task, just add a <code>runPrepare</code>-task.</p>
+<p><code>tasks:
+    runPrepare:
+      - echo "Called before the run task"
+    runFinished:
+      - echo "Run task is finished"</code></p>
+</li>
+</ul>
+<h2 id="240">2.4.0</h2>
+<h3 id="new_1">new</h3>
+<ul>
+<li>
+<p>new section in fabfile.yaml called <code>blueprints</code>. This section allows the usage of a given sets of blueprints as normal config. That means, they will get listed and work with autocomplete</p>
 <p><code>blueprints:
     - configName: &lt;name of blueprint-config&gt;
       variants:
@@ -184,7 +199,7 @@
 <li>methods are now responsible to provide their default global settings via the static <code>getGlobalSettings</code>-method.</li>
 </ul>
 <h2 id="231">2.3.1</h2>
-<h3 id="new_1">new</h3>
+<h3 id="new_2">new</h3>
 <ul>
 <li>new task <code>logLevel</code>: used to change the default logging level of the program.</li>
 </ul>
@@ -193,7 +208,7 @@
 <li>Refactored output logging to use python logging library.</li>
 </ul>
 <h2 id="230">2.3.0</h2>
-<h3 id="new_2">new</h3>
+<h3 id="new_3">new</h3>
 <ul>
 <li>new task <code>sshCommand</code>: it will print out a ssh command to log into a remote instance. With some shell-magic you can streamline it into a single shell-command. This command will not have the downsides of the <code>ssh</code>-command e.g. the lagging shell.</li>
 <li>new task <code>installFrom</code> which will do a install-task and a copyFrom afterwards. It will run the reset-task only after the copyFrom, so performance is better</li>
@@ -207,7 +222,7 @@
 <li><code>createApp</code> will skip the <code>reset</code>-task if it was called with a <code>copyFrom</code>-argument.</li>
 </ul>
 <h2 id="225">2.2.5</h2>
-<h3 id="new_3">new</h3>
+<h3 id="new_4">new</h3>
 <ul>
 <li>
 <p>new task <code>offline</code>, this task will disable remote configuration files and try using already cached versions. Use as the first task</p>
@@ -235,7 +250,7 @@ modulesDisabledIgnore:
 </li>
 </ul>
 <h2 id="220">2.2.0</h2>
-<h3 id="new_4">new</h3>
+<h3 id="new_5">new</h3>
 <ul>
 <li>when running <code>composer install</code> fabalicious will create automatically a symlink to <code>fabfile.py</code>.</li>
 <li>new option <code>skipCreateDatabase</code> in <code>database</code>, if set to <code>True</code> no database will be created.</li>
@@ -263,7 +278,7 @@ modulesDisabledIgnore:
 </li>
 </ul>
 <h2 id="210">2.1.0</h2>
-<h3 id="new_5">new</h3>
+<h3 id="new_6">new</h3>
 <ul>
 <li>
 <p>new task <code>completions</code> which will help to get completions in the shell working. Currently only for the <code>fish</code>-shell.</p>
@@ -291,7 +306,7 @@ complete -c fab -f -a "(fab completions:type=fish)"
 </li>
 </ul>
 <h2 id="200">2.0.0</h2>
-<h3 id="new_6">new</h3>
+<h3 id="new_7">new</h3>
 <ul>
 <li>
 <p>you can now specify what features you need. The following features are available: <code>composer</code>, <code>docker</code>, <code>drush7</code>, <code>drush8</code>, <code>git</code>, <code>ssh</code>, <code>files</code>, <code>slack</code>, <code>drupalconsole</code>. You specify your needs in the fabfile with the <code>needs</code>-key. You can declare this globally and/or per host.</p>

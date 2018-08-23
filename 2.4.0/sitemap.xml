@@ -1,84 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-    
     <url>
      <loc>/</loc>
-     <lastmod>2018-08-10</lastmod>
+     <lastmod>2018-08-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
-    
-
-    
     <url>
      <loc>/installation/</loc>
-     <lastmod>2018-08-10</lastmod>
+     <lastmod>2018-08-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
-    
-
-    
     <url>
      <loc>/usage/</loc>
-     <lastmod>2018-08-10</lastmod>
+     <lastmod>2018-08-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
-    
-
-    
     <url>
      <loc>/available-tasks/</loc>
-     <lastmod>2018-08-10</lastmod>
+     <lastmod>2018-08-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
-    
-
-    
     <url>
      <loc>/configuration/</loc>
-     <lastmod>2018-08-10</lastmod>
+     <lastmod>2018-08-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
-    
-
-    
     <url>
      <loc>/docker-integration/</loc>
-     <lastmod>2018-08-10</lastmod>
+     <lastmod>2018-08-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
-    
-
-    
     <url>
      <loc>/local-overrides/</loc>
-     <lastmod>2018-08-10</lastmod>
+     <lastmod>2018-08-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
-    
-
-    
     <url>
      <loc>/extending-fabalicious/</loc>
-     <lastmod>2018-08-10</lastmod>
+     <lastmod>2018-08-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
-    
-
-    
     <url>
      <loc>/contribute/</loc>
-     <lastmod>2018-08-10</lastmod>
+     <lastmod>2018-08-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
-    
-
-    
     <url>
      <loc>/changelog/</loc>
-     <lastmod>2018-08-10</lastmod>
+     <lastmod>2018-08-23</lastmod>
      <changefreq>daily</changefreq>
     </url>
-    
-
 </urlset>
