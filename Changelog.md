@@ -1,10 +1,25 @@
 # Changelog
 
+## 2.4.1
+
+### new
+
+* new option `replaceSettingsFile` which defaults to true. If set to false the `install`-task will not create a new settings.php-file.
+* For docker tasks support `Prepare` and `Finished`-tasks. If you want to run something before the `run`-task, just add a `runPrepare`-task.
+
+      ```
+      tasks:
+        runPrepare:
+          - echo "Called before the run task"
+        runFinished:
+          - echo "Run task is finished"
+      ```
+
 ## 2.4.0
 
 ### new
 
-* new section in fabfile.yaml called `blueprints`. THis section allows the usage of a given sets of blueprints as normal config. That means, they will get listed and work wirh autocomplete
+* new section in fabfile.yaml called `blueprints`. This section allows the usage of a given sets of blueprints as normal config. That means, they will get listed and work with autocomplete
 
       ```
       blueprints:

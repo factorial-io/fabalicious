@@ -22,7 +22,7 @@ _@TODO_
     - [Install MkDocs](http://www.mkdocs.org/#installation).
     - Clone [the repo](https://github.com/factorial-io/fabalicious) locally and switch to `develop` branch.
     - Using Terminal, navigate to `/docs` folder.
-    - Run `mkdocs gh-deploy`
+    - Run `mike deploy <version-number>`
 
 ### Resources
 * [Writing your docs in MKdocs](http://www.mkdocs.org/user-guide/writing-your-docs/)

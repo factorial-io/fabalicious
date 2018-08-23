@@ -71,27 +71,26 @@ class DockerMethod(BaseMethod):
 
   def getIp(self, docker_name, docker_host, docker_user, docker_port, runLocally = False):
     host_string = join_host_strings(docker_user, docker_host, docker_port)
+    output = False
     try:
       if runLocally:
         with hide('running', 'output', 'warnings'):
           output = local('docker inspect --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}\n{{end}}" %s ' % (docker_name), capture = True)
           ips = output.splitlines()
-          return ips[0]
+
       else:
         with hide('running', 'output', 'warnings'), _settings( host_string=host_string, warn_only=True ):
           output = run('docker inspect --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}\n{{end}}" %s ' % (docker_name))
           ips = output.splitlines()
-          return ips[0]
 
     except SystemExit:
       log.error('Docker not running, can\'t get ip')
       return False
 
-    ip_address = output.stdout.strip()
     if output.return_code != 0:
       return False
 
-    return ip_address
+    return ips[0]
 
 
   def getIpAddress(self, config, **kwargs):
@@ -271,6 +270,23 @@ class DockerMethod(BaseMethod):
       self.listAvailableCommands(config)
       exit(1)
 
+    kwargs['command'] = command + "Prepare"
+    kwargs['silent'] = True
+    self.runCommandImpl(config, **kwargs)
+
+    kwargs['silent'] = False
+    kwargs['command'] = command
+    self.runCommandImpl(config, **kwargs)
+
+    kwargs['silent'] = True
+    kwargs['command'] = command + "Finished"
+    self.runCommandImpl(config, **kwargs)
+
+
+  def runCommandImpl(self, config, **kwargs):
+    command = kwargs['command']
+    silent = kwargs['silent']
+
 
     if  command not in ['exists', 'run', 'cd'] and hasattr(self, command):
       fn = getattr(self, command)
@@ -283,6 +299,8 @@ class DockerMethod(BaseMethod):
       exit(1)
 
     if command not in docker_config['tasks']:
+      if silent:
+        return
       log.error('Can\'t find  docker-command "%s"'  % ( command ))
       self.listAvailableCommands(config)
       exit(1)
