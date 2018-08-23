@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Factorial GmbH, Hamburg">
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Extending fabalicious - Fabalicious</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  <link href="../css/version-select.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Extending fabalicious";
+    var mkdocs_page_input_path = "extending-fabalicious.md";
+    var mkdocs_page_url = "/extending-fabalicious/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Fabalicious</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">How does fabalicious work in two sentences</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../installation/">Installation of needed dependencies</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../usage/">Running fabalicious</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../available-tasks/">Available tasks</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../configuration/">Structure of the configuration file</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../docker-integration/">Docker integration</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../local-overrides/">Local overrides</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Extending fabalicious</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#extending-fabalicious">Extending fabalicious</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#requirements">Requirements</a></li>
+        
+            <li><a class="toctree-l3" href="#discovery-of-plugins">Discovery of plugins</a></li>
+        
+            <li><a class="toctree-l3" href="#structure-of-a-plugin">Structure of a plugin</a></li>
+        
+            <li><a class="toctree-l3" href="#a-custom-task">A custom task</a></li>
+        
+            <li><a class="toctree-l3" href="#a-custom-method">A custom method</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../contribute/">Contribute</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../changelog/">Changelog</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Fabalicious</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Extending fabalicious</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/factorial-io/fabalicious/edit/develop/docs/docs/extending-fabalicious.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="extending-fabalicious">Extending fabalicious</h1>
+<p>You can write custom tasks and methods in python and use it from inside fabalicious.</p>
+<h2 id="requirements">Requirements</h2>
+<p>You need the python library <code>yapsy</code>, install it via</p>
+<pre><code>pip install yapsy
+</code></pre>
+
+<h2 id="discovery-of-plugins">Discovery of plugins</h2>
+<p>The plugin-resolver will look into the following folders to find tasks and methods:</p>
+<pre><code>&lt;project_folder&gt;/.fabalicious/plugins
+&lt;user-folder&gt;/.fabalicious/plugins
+&lt;fabalicious-folder&gt;/plugins
+</code></pre>
+
+<h2 id="structure-of-a-plugin">Structure of a plugin</h2>
+<p>A plugin consists of 2 files, an info-file <code>&lt;plugin&gt;.yapsy-plugin</code> and the implementation at <code>&lt;plugin&gt;.py</code></p>
+<h2 id="a-custom-task">A custom task</h2>
+<p>Here's an example for a custom task:</p>
+<h4 id="fooyapsy-plugin">foo.yapsy-plugin:</h4>
+<pre><code>[Core]
+Name = Foo
+Module = foo
+
+[Documentation]
+Author = Shibin Das
+Version = 0.1
+Website = http://www.factorial.io
+Description = Foo Plugin
+</code></pre>
+
+<h4 id="foopy">foo.py:</h4>
+<pre><code class="python">import logging
+log = logging.getLogger('fabric.fabalicious.foo')
+from lib.plugins.task import ITaskPlugin
+
+class Foo(ITaskPlugin):
+  aliases = ['foo','foobar']
+  def run(self):
+    log.info('Foobar runs...')
+</code></pre>
+
+<p>Custom tasks need to inherit from <code>ITaskPlugin</code> and implement the <code>run</code>-method.</p>
+<h2 id="a-custom-method">A custom method</h2>
+<p>Here's an example of a custom method:</p>
+<h4 id="baryapsy-plugin">bar.yapsy-plugin:</h4>
+<pre><code>[Core]
+Name = bar
+Module = bar
+
+[Documentation]
+Author = Stephan Huber
+Version = 0.1
+Website = http://www.factorial.io
+Description = Bar method
+</code></pre>
+
+<h4 id="barpy">bar.py</h4>
+<pre><code class="python">import logging
+log = logging.getLogger('fabric.fabalicious.bar')
+from lib.plugins.method import IMethodPlugin
+
+from fabric.api import *
+from lib import configuration
+from lib.utils import validate_dict
+from lib.configuration import data_merge
+
+class BarMethod(IMethodPlugin):
+  @staticmethod
+  def supports(methodName):
+    return methodName == 'bar'
+
+  def preflight(self, task, config, **kwargs):
+    log.info('bar is preflighting task %s' % task)
+</code></pre>
+
+<p>The custom method needs to inherit from <code>IMethodPlugin</code> and must implement the static method <code>supports</code>. Have a look into the <code>BaseMethod</code>-class or any other method to get an idea how to implement your custom method.</p>
+<p>To use your custom method, just add its name as a <code>needs</code> in fabfile.yaml, e.g.</p>
+<pre><code>needs:
+  - git
+  - ssh
+  - bar
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../contribute/" class="btn btn-neutral float-right" title="Contribute">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../local-overrides/" class="btn btn-neutral" title="Local overrides"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>© 2017 Factorial GmbH, Hamburg</p>
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/factorial-io/fabalicious/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../local-overrides/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../contribute/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js"></script>
+      <script src="../js/version-select.js"></script>
+      <script src="../search/require.js"></script>
+      <script src="../search/search.js"></script>
+
+</body>
+</html>
