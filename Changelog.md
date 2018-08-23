@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.x.x
+
+### new
+
+* new option `replaceSettingsFile` which defaults to true. If set to false the `install`-task will not create a new settings.php-file.
+* For docker tasks support `Prepare` and `Finished`-tasks. If you want to run something before the `run`-task, just add a `runPrepare`-task.
+
+      ```
+      tasks:
+        runPrepare:
+          - echo "Called before the run task"
+        runFinished:
+          - echo "Run task is finished"
+      ```
+
 ## 2.4.0
 
 ### new
