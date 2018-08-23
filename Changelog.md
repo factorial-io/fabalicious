@@ -19,7 +19,7 @@
 
 ### new
 
-* new section in fabfile.yaml called `blueprints`. THis section allows the usage of a given sets of blueprints as normal config. That means, they will get listed and work wirh autocomplete
+* new section in fabfile.yaml called `blueprints`. This section allows the usage of a given sets of blueprints as normal config. That means, they will get listed and work with autocomplete
 
       ```
       blueprints:
