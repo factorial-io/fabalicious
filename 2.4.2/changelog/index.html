@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Factorial GmbH, Hamburg">
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Changelog - Fabalicious</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  <link href="../css/version-select.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Changelog";
+    var mkdocs_page_input_path = "changelog.md";
+    var mkdocs_page_url = "/changelog/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Fabalicious</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">How does fabalicious work in two sentences</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../installation/">Installation of needed dependencies</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../usage/">Running fabalicious</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../available-tasks/">Available tasks</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../configuration/">Structure of the configuration file</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../docker-integration/">Docker integration</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../local-overrides/">Local overrides</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../extending-fabalicious/">Extending fabalicious</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../contribute/">Contributing to Fabalicious</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Changelog</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#changelog">Changelog</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#241">2.4.1</a></li>
+        
+            <li><a class="toctree-l3" href="#240">2.4.0</a></li>
+        
+            <li><a class="toctree-l3" href="#231">2.3.1</a></li>
+        
+            <li><a class="toctree-l3" href="#230">2.3.0</a></li>
+        
+            <li><a class="toctree-l3" href="#225">2.2.5</a></li>
+        
+            <li><a class="toctree-l3" href="#220">2.2.0</a></li>
+        
+            <li><a class="toctree-l3" href="#210">2.1.0</a></li>
+        
+            <li><a class="toctree-l3" href="#200">2.0.0</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Fabalicious</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Changelog</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/factorial-io/fabalicious/edit/develop/docs/docs/changelog.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="changelog">Changelog</h1>
+<h2 id="241">2.4.1</h2>
+<h3 id="new">new</h3>
+<ul>
+<li>new option <code>replaceSettingsFile</code> which defaults to true. If set to false the <code>install</code>-task will not create a new settings.php-file.</li>
+<li>For docker tasks support <code>Prepare</code> and <code>Finished</code>-tasks. If you want to run something before the <code>run</code>-task, just add a <code>runPrepare</code>-task.<pre><code>tasks:
+  runPrepare:
+    - echo "Called before the run task"
+  runFinished:
+    - echo "Run task is finished"
+</code></pre>
+</li>
+</ul>
+<h2 id="240">2.4.0</h2>
+<h3 id="new_1">new</h3>
+<ul>
+<li>
+<p>new section in fabfile.yaml called <code>blueprints</code>. This section allows the usage of a given sets of blueprints as normal config. That means, they will get listed and work with autocomplete</p>
+<pre><code>blueprints:
+  - configName: &lt;name of blueprint-config&gt;
+    variants:
+      - variantA
+      - variantB
+      - variantC
+</code></pre>
+<p>The list of configs will include the three variants applied with the blueprint <code>&lt;name of blueprint-config&gt;</code> This will allow a config inherited from a blueprint with a given variant.</p>
+</li>
+<li>
+<p>new plugin-discovery via <code>yapsy</code>, it allows you to add custom tasks and methods to your project, or to your user-folder.</p>
+<p>The plugin-resolver will look into the following folders to find tasks and methods:</p>
+<pre><code>&lt;project_folder&gt;/.fabalicious/plugins
+&lt;user-folder&gt;/.fabalicious/plugins
+&lt;fabalicious-folder&gt;/tasks
+</code></pre>
+</li>
+</ul>
+<h3 id="changed">changed</h3>
+<ul>
+<li>methods are now responsible to provide their default global settings via the static <code>getGlobalSettings</code>-method.</li>
+</ul>
+<h2 id="231">2.3.1</h2>
+<h3 id="new_2">new</h3>
+<ul>
+<li>new task <code>logLevel</code>: used to change the default logging level of the program.</li>
+</ul>
+<h3 id="changed_1">changed</h3>
+<ul>
+<li>Refactored output logging to use python logging library.</li>
+</ul>
+<h2 id="230">2.3.0</h2>
+<h3 id="new_3">new</h3>
+<ul>
+<li>new task <code>sshCommand</code>: it will print out a ssh command to log into a remote instance. With some shell-magic you can streamline it into a single shell-command. This command will not have the downsides of the <code>ssh</code>-command e.g. the lagging shell.</li>
+<li>new task <code>installFrom</code> which will do a install-task and a copyFrom afterwards. It will run the reset-task only after the copyFrom, so performance is better</li>
+<li>new task <code>getFilesDump</code> which will tar all files in the <code>filesFolder</code> into a tar and download it to the local computer.</li>
+<li><code>dockerKeyFile</code>, <code>dockerAuthorizedKeyFile</code> and <code>dockerKnownHostsFile</code> can now be loaded from http(s)</li>
+<li>new settings <code>revertFeatures</code>, which defaults to <code>True</code> -- if set to False, features will not be reverted.</li>
+</ul>
+<h3 id="changed_2">changed</h3>
+<ul>
+<li><code>createApp</code> will run the composer-task inside the docker-container and after spinning up the containers. This will prevent some versions-mismatches of php between the host and the container.</li>
+<li><code>createApp</code> will skip the <code>reset</code>-task if it was called with a <code>copyFrom</code>-argument.</li>
+</ul>
+<h2 id="225">2.2.5</h2>
+<h3 id="new_4">new</h3>
+<ul>
+<li>
+<p>new task <code>offline</code>, this task will disable remote configuration files and try using already cached versions. Use as the first task</p>
+<pre><code>$ fab offline config:my_config about
+</code></pre>
+</li>
+<li>
+<p>Support for <code>modules_enabled.txt</code> and <code>modules_disabled.txt</code>. Listed modules in these files get enabled or disabled when doing a reset (drush7 and drush8) You can add configuration to ignore some of the modules:</p>
+<pre><code>modulesEnabledIgnore:
+  - coffee
+  - some_other_module
+modulesDisabledIgnore:
+  - devel
+</code></pre>
+<p>These settings can be part of the global configuration or of the host configuration.</p>
+</li>
+<li>
+<p>Add a new optional per-host-setting to set the composer root folder called <code>compserRootFolder</code>, if not present the <code>gitRootFolder</code> gets used</p>
+</li>
+<li>You can specify now the locale, distribution and other options for the drush install-task. These settings may be global or a per host-setting.<pre><code>installOptions:
+  distribution: thunder
+  locale: de
+  options: "thunder_module_configure_form.install_modules_thunder_demo=NULL"
+</code></pre>
+</li>
+</ul>
+<h2 id="220">2.2.0</h2>
+<h3 id="new_5">new</h3>
+<ul>
+<li>when running <code>composer install</code> fabalicious will create automatically a symlink to <code>fabfile.py</code>.</li>
+<li>new option <code>skipCreateDatabase</code> in <code>database</code>, if set to <code>True</code> no database will be created.</li>
+<li>executables can now have variables, they will get expanded beforehand (for an example see next line)</li>
+<li>
+<p>executables have a new special variables called <code>%arguments%</code> which contains the arguments for an executable, here's an example:</p>
+<pre><code>executables:
+  drush: docker exec -itu drupal %host.docker.name% bash -c 'cd %host.docker.siteFolder% &amp;&amp; drush %arguments%'
+</code></pre>
+</li>
+<li>
+<p>support for custom executable paths has been added. This will help getting specific hosting-environments to corporate nicely with fabalicious.</p>
+<p>To change the standard executable-name and path, add an <code>executables</code>-section to your host or your global settings:</p>
+<pre><code>executables:
+  drush: /opt/bin/local/drush
+  git: /usr/local/bin/git
+</code></pre>
+<p>It will also work for your custom scripts, but only if you use the newly introduced "shebang"-syntax for executables. Instead of writing <code>drush</code> prefix the command with <code>#!</code>, e.g. <code>!#drush</code>:</p>
+<pre><code>script:
+  example:
+    - cd %host.siteFolder%; #!drush cc all
+    - cd %host.gitRootFolder%; #!npm install
+</code></pre>
+<p>This will also work for custom executables (in the example <code>npm</code>), but do not forget to add the executable to the <code>executables</code>-section.</p>
+</li>
+</ul>
+<h2 id="210">2.1.0</h2>
+<h3 id="new_6">new</h3>
+<ul>
+<li>
+<p>new task <code>completions</code> which will help to get completions in the shell working. Currently only for the <code>fish</code>-shell.</p>
+<pre><code>complete -c fab -e -f
+complete -c fab -f -a "(fab completions:type=fish)"
+</code></pre>
+</li>
+<li>
+<p>new tasks <code>createApp</code> and <code>destroyApp</code>. Needs docker and is not available on local. <code>createApp</code> will clone the repository, start the docker-container and install the app. <code>destroyApp</code> will destroy the app and remove any containers.</p>
+</li>
+<li>new task <code>blueprint</code>. This task will load a template from the fabfile.yaml, do some pattern replacement and use the resulting data as the current configuration. With this task it is easy to create dynamic configurations e.g. for CI-integration or similar scenarios.</li>
+<li><code>runLocally</code> for dockerHosts: if set to true for a given dockerHost-configuration, the commands get executed locally.</li>
+<li><code>runLocally</code> for hosts: if set to true for a given host-configuration, all commands are run locally.</li>
+<li>new task <code>doctor</code>. This will try to do all necessary connections and will inform of any problems. Good for troubleshooting.</li>
+<li>fabfile.local.yaml will override existing fabfile.yaml-configuration. the file may reside up to three folders above the projects fabfile. See the readme for more info</li>
+<li>support for platform.sh</li>
+</ul>
+<h3 id="changed_3">changed</h3>
+<ul>
+<li>fabfile.yaml.lock is not used anymore. To support offline-mode, fabalicious will store all remote files in the <code>~/.fabalicious</code> folder. If loading a remote resource fails, fabalicious will use the local cached version of that file.</li>
+<li>drush8: configurationManagement is completely configurable, e.g. to run a script, add this to your fabfile.yaml<pre><code>configurationManagement:
+  staging:
+    - execute(script, config-import)
+</code></pre>
+</li>
+</ul>
+<h2 id="200">2.0.0</h2>
+<h3 id="new_7">new</h3>
+<ul>
+<li>
+<p>you can now specify what features you need. The following features are available: <code>composer</code>, <code>docker</code>, <code>drush7</code>, <code>drush8</code>, <code>git</code>, <code>ssh</code>, <code>files</code>, <code>slack</code>, <code>drupalconsole</code>. You specify your needs in the fabfile with the <code>needs</code>-key. You can declare this globally and/or per host.</p>
+<p><code>needs:
+  - git
+  - drush8
+  - composer
+  - slack
+  - ssh
+  - files</code></p>
+<p><code>needs</code> defaults to <code>git</code>, <code>ssh</code>, <code>drush7</code> and <code>files</code> if not set explicitly.</p>
+</li>
+<li>
+<p>new key <code>environment</code>, you can declare a list of environment-variables in <code>hosts</code> and <code>dockerHosts</code> which get exposed to the running scripts. You can even use the known replacement-patterns available to scripts</p>
+<p><code>environment:
+  - ROOT_FOLDER: "%dockerHost.rootFolder%/%host.docker.projectFolder%"
+  - TYPE: "%host.type%</code></p>
+</li>
+<li>
+<p>the replacement-patterns already available for docker-scripts are now available for all scripts.</p>
+</li>
+<li>
+<p>every task may have a script, which gets called, when the task gets executed. There are three stages for every task available: <code>&lt;task&gt;Prepare</code>, <code>&lt;task&gt;</code> and <code>&lt;task&gt;Finished</code>. Here's an example for the deploy-task:</p>
+<p><code>deployPrepare:
+  - echo "Preparing deployment …"
+deploy:
+  - echo "Deploying …"
+deployFinished:
+  - echo "Finished with deployment."</code></p>
+</li>
+<li>
+<p>You can now add custom scripts to your fabfile and run it via the <code>script</code>-task. Declare your scripts on the root level. Here's an example:</p>
+<p><code>scripts:
+ testScript:
+   - echo "This is a test-script…"</code></p>
+<p>Now you can run the script via</p>
+<p><code>fab config:&lt;config&gt; script:testScript</code></p>
+<p>If you need default arguments, you can split your script-declaration as follows:</p>
+<p><code>scripts:
+  hello:
+    defaults:
+      name: world
+    script:
+      - echo "hello %arguments.name%"</code></p>
+<p>Running <code>fab config:&lt;config&gt; script:hello</code> will print "hello world". Running <code>fab config:&lt;config&gt; script:hello,name="universum"</code> will print "hello universum".</p>
+</li>
+<li>
+<p>you can specify a branch when running the deploy-task: <code>deploy:&lt;branchname&gt;</code>. This will override the branch temporary.</p>
+</li>
+<li>
+<p>You can now specify port and the public port for the startRemoteAccess subtask: To create a tunnel to the mysql-server you can use</p>
+<p><code>fab config:&lt;your-config&gt; docker:startRemoteAccess,port=3306,publicPort=33060</code>
+* You can run other tasks from  within your scripts, use the reserved keyword <code>execute</code></p>
+<p><code>testScript:
+  - execute(deploy)
+  - execute(docker, start)</code></p>
+</li>
+<li>
+<p>It should be easier to extend fabalicious to support other hosting environments or applications. You can now add custom scripts to your fabalicious file and call them when running a specific task. Or you can add a new custom method to the source, which gets called when running a specific task. You can even extend existing methods and register them under a different name. (Needs more documentation.)</p>
+</li>
+<li>
+<p>New task <code>drupalconsole:&lt;command&gt;</code>. Runs the Drupal Console inside your container, on your host. If <code>command</code> is <code>install</code> drupal-console gets installed on that environment. The Drupal Console does similar things like drush, but there's currently no support to "deploy" via the drupal console.</p>
+</li>
+</ul>
+<h3 id="changed_4">changed</h3>
+<ul>
+<li>script-replacements are now prefixed by <code>host</code> and <code>dockerHost</code>. You’ll get a list of available replacements if fabalicious can’t resolve all replacements successfully.</li>
+<li>All declared yaml-variables are exposed to the script. You can access sub-dictionaries via the dot-syntax, e.g. <code>host.docker.name</code>.</li>
+<li>The task <code>waitForServices</code> is now part of the docker-method. Invoke it via <code>docker:waitForServices</code></li>
+<li>The task <code>startRemoteAccess</code> is now part of the docker-method. Invoke it via <code>docker:startRemoteAccess</code></li>
+<li>The task <code>copySSHKeyToDocker</code> is renamed to <code>copySSHKeys</code>and is now part of the docker-method. Invoke it via <code>docker:copySSHKeys</code></li>
+<li>
+<p>the common-section of the fabfile.yaml has changed, you can specify a common script per <code>type</code>, e.g.:</p>
+<p><code>common:
+  dev:
+    - echo "dev"
+  stage:
+    - echo "stage"
+  prod:
+    - echo "prod"</code></p>
+<p>You can even use custom types, but <code>prod</code> is reserved for production-installations.</p>
+</li>
+</ul>
+<h3 id="unsupported">unsupported</h3>
+<ul>
+<li><code>useForDevelopment</code> is unsupported, use <code>type</code> with value <code>dev</code> or <code>stage</code></li>
+<li><code>hasDrush</code> is unsupported, set your <code>needs</code> accordingly.</li>
+<li><code>needsComposer</code> is unsupported, set your <code>needs</code> accordingly.</li>
+<li>the custom script-command <code>run_task</code> is not supported anymore. Use <code>execute(&lt;task-name&gt;)</code> instead.</li>
+<li>the task <code>updateDrupalCore</code> is not ported over, not sure if it comes back.</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../contribute/" class="btn btn-neutral" title="Contributing to Fabalicious"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>© 2017 Factorial GmbH, Hamburg</p>
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/factorial-io/fabalicious/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../contribute/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js"></script>
+      <script src="../js/version-select.js"></script>
+      <script src="../search/require.js"></script>
+      <script src="../search/search.js"></script>
+
+</body>
+</html>
