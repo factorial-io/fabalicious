@@ -270,6 +270,23 @@ class DockerMethod(BaseMethod):
       self.listAvailableCommands(config)
       exit(1)
 
+    kwargs['command'] = command + "Prepare"
+    kwargs['silent'] = True
+    self.runCommandImpl(config, **kwargs)
+
+    kwargs['silent'] = False
+    kwargs['command'] = command
+    self.runCommandImpl(config, **kwargs)
+
+    kwargs['silent'] = True
+    kwargs['command'] = command + "Finished"
+    self.runCommandImpl(config, **kwargs)
+
+
+  def runCommandImpl(self, config, **kwargs):
+    command = kwargs['command']
+    silent = kwargs['silent']
+
 
     if  command not in ['exists', 'run', 'cd'] and hasattr(self, command):
       fn = getattr(self, command)
@@ -282,6 +299,8 @@ class DockerMethod(BaseMethod):
       exit(1)
 
     if command not in docker_config['tasks']:
+      if silent:
+        return
       log.error('Can\'t find  docker-command "%s"'  % ( command ))
       self.listAvailableCommands(config)
       exit(1)
