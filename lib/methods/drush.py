@@ -18,7 +18,7 @@ class DrushMethod(BaseMethod):
 
   @staticmethod
   def supports(methodName):
-    return methodName == 'drush7' or methodName == 'drush8' or methodName == 'drush'
+    return methodName == 'drush7' or methodName == 'drush8' or methodName == 'drush9' or methodName == 'drush'
 
   @staticmethod
   def getGlobalSettings():
@@ -89,6 +89,12 @@ class DrushMethod(BaseMethod):
     BaseMethod.addExecutables(config, ['drush', 'mysql', 'mysqladmin', 'gunzip', 'rsync', 'scp', 'grep'])
 
 
+  def is_drupal8(self):
+    return self.methodName == 'drush8' or self.methodName == 'drush9'
+
+  def is_drupal7(self):
+    return self.methodName == 'drush7'
+
   def handle_modules(self, config, file, enable):
     file = config['rootFolder'] + '/' + file
 
@@ -132,7 +138,7 @@ class DrushMethod(BaseMethod):
     if 'withPasswordReset' not in kwargs:
       kwargs['withPasswordReset'] = True
 
-    if self.methodName == 'drush8':
+    if self.is_drupal8():
       uuid = config['uuid'] if 'uuid' in config else False
       if not uuid:
         uuid = configuration.getSettings('uuid')
@@ -145,7 +151,10 @@ class DrushMethod(BaseMethod):
         admin_user = config['adminUser']
 
         if 'withPasswordReset' in kwargs and kwargs['withPasswordReset'] in [True, 'True', '1']:
-          self.run_drush('user-password %s --password="admin"' % admin_user)
+          if self.methodName == 'drush9':
+            self.run_drush('user:password %s "admin"' % admin_user)
+          else:
+            self.run_drush('user-password %s --password="admin"' % admin_user)
         with warn_only():
           self.run_quietly('chmod -R 777 ' + config['filesFolder'])
       with warn_only():
@@ -154,7 +163,7 @@ class DrushMethod(BaseMethod):
         self.handle_modules(config, 'modules_enabled.txt', True)
         self.handle_modules(config, 'modules_disabled.txt', False)
 
-      if self.methodName == 'drush8':
+      if self.is_drupal8():
         self.run_drush('cr -y')
         self.run_drush('updb --entity-updates -y')
       else:
@@ -163,7 +172,7 @@ class DrushMethod(BaseMethod):
       script_fn = self.factory.get('script', 'runScript')
 
       with warn_only():
-        if self.methodName == 'drush8':
+        if self.is_drupal8():
           if uuid:
             self.run_drush('cset system.site uuid %s -y' % uuid)
 
@@ -180,7 +189,7 @@ class DrushMethod(BaseMethod):
         fn = self.factory.get('script', 'runTaskSpecificScript')
         fn('reset', config, **kwargs)
 
-        if self.methodName == 'drush8':
+        if self.is_drupal8():
           self.run_drush('cr')
         else:
           self.run_drush(' cc all')
@@ -374,14 +383,14 @@ class DrushMethod(BaseMethod):
 
         self.run_drush('site-install ' + distribution + ' ' + cmd_options)
 
-        if config['revertFeatures'] and self.methodName == 'drush7':
+        if config['revertFeatures'] and self.is_drupal7():
           self.run_drush('en features -y')
 
         deploymentModule = configuration.getSettings('deploymentModule')
         if deploymentModule:
           self.run_drush('en -y %s' % deploymentModule)
 
-    if self.methodName == 'drush8':
+    if self.is_drupal8():
       self.setupConfigurationManagement(config)
 
   def setupConfigurationManagement(self, config):

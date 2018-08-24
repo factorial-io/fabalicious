@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.x.x
+
+### new
+
+* New method `drush9` to work around incompatibilities between drush 8 and drush 9. This is currently mixed up, as the methodname for drush includes the drupal version. This should be refactor.
+
 ## 2.4.1
 
 ### new
