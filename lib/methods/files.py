@@ -130,7 +130,7 @@ class FilesMethod(BaseMethod):
         self.run(rsync)
 
   def put(self, config, filename):
-    self.putFile(filename, config['tmpFolder'], config, run_locally = True)
+    self.putFile(filename, config, config['tmpFolder'], run_locally = True)
 
   def get(self, config, remotePath, localPath):
     if config['runLocally']:
