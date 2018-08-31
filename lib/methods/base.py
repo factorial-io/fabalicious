@@ -6,6 +6,10 @@ from fabric.state import output, env
 from fabric.context_managers import env
 from fabric.network import *
 from fabric.contrib.files import exists
+
+from lib import configuration
+from lib import utils
+
 import re
 
 
@@ -43,6 +47,27 @@ class BaseMethod(object):
   @staticmethod
   def applyConfig(config, settings):
     pass
+
+  def expandConfig(self, config, settings):
+    replacements = {
+      'host': config,
+      'settings': settings,
+      'fabfile': {
+        'baseDir': configuration.getBaseDir()
+      }
+    }
+    replacements = self.expandVariables(replacements)
+    self.expandConfigImpl(config, replacements)
+
+  def expandConfigImpl(self, data, replacements):
+    for key in data:
+      if isinstance(data[key], dict):
+        self.expandConfigImpl(data[key], replacements)
+      elif isinstance(data[key], list):
+        pass # lists are not supported.
+      elif isinstance(data[key], basestring):
+        data[key] = self.expandCommands([data[key]], replacements)[0]
+
 
   @staticmethod
   def getGlobalSettings():
@@ -91,6 +116,7 @@ class BaseMethod(object):
 
     return results
 
+
   def expandCommands(self, commands, replacements):
     parsed_commands = []
     pattern = re.compile('|'.join(re.escape(key) for key in replacements.keys()))
@@ -99,6 +125,7 @@ class BaseMethod(object):
         result = pattern.sub(lambda x: replacements[x.group()], line)
         parsed_commands.append(result)
     return parsed_commands
+
   def addPasswordToFabricCache(self, user, host, port, password, **kwargs):
     host_string = join_host_strings(user, host, port)
     env.passwords[host_string] = password
@@ -173,6 +200,8 @@ class BaseMethod(object):
     if len(self.executables) > 0:
       pattern = re.compile('|'.join(re.escape("#!" + key)+"\s" for key in self.executables.keys()))
       cmd = pattern.sub(lambda x: self.executables[x.group()[2:-1]] + ' ', cmd)
+      pattern = re.compile('|'.join(re.escape("$$" + key)+"\s" for key in self.executables.keys()))
+      cmd = pattern.sub(lambda x: self.executables[x.group()[2:-1]] + ' ', cmd)
       if cmd.find('%arguments%') >= 0:
         arr = in_cmd.split(' ')
         command = arr.pop(0)
@@ -183,7 +212,7 @@ class BaseMethod(object):
     return cmd
 
   def run(self, cmd, **kwargs):
-    # log.error("run: %d %s" % ( self.run_locally, cmd))
+    log.debug("run: %d %s" % ( self.run_locally, cmd))
     cmd = self.expandCommand(cmd)
 
     if self.run_locally:
@@ -225,3 +254,38 @@ class BaseMethod(object):
 
         if output['aborts']:
           raise SystemExit('%s failed' % cmd);
+
+
+  def getFile(self, source_config, source_file, dest_file, run_locally):
+
+    self.setExecutables(source_config)
+
+    args = utils.ssh_no_strict_key_host_checking_params
+
+    cmd = '#!scp -P {port} {args} {user}@{host}:{source_file} {dest_file} '.format(  args=args,
+      source_file=source_file,
+      dest_file=dest_file,
+      **source_config
+      )
+
+    run_locally_saved = self.run_locally
+    self.run_locally = run_locally or self.run_locally
+    self.run(cmd)
+    self.run_locally = run_locally_saved
+
+  def putFile(self, source_file, config, dest_file, run_locally):
+
+    self.setExecutables(config)
+
+    args = utils.ssh_no_strict_key_host_checking_params
+
+    cmd = '#!scp -P {port} {args} {source_file} {user}@{host}:{dest_file} '.format(  args=args,
+      source_file=source_file,
+      dest_file=dest_file,
+      **config
+      )
+
+    run_locally_saved = self.run_locally
+    self.run_locally = run_locally or self.run_locally
+    self.run(cmd)
+    self.run_locally = run_locally_saved

@@ -220,6 +220,7 @@ def apply_config_by_methods(config, settings):
   for methodName in methodNames:
     m = methods.getMethod(methodName)
     m.applyConfig(config, settings)
+    m.expandConfig(config, settings)
 
 
 def get_configuration(name):

@@ -31,7 +31,7 @@ class FilesMethod(BaseMethod):
       if key in config and config[key].find(config['rootFolder']) < 0:
         config[key] = config['rootFolder'] + config[key]
 
-    BaseMethod.addExecutables(config, ['tar', 'rsync'])
+    BaseMethod.addExecutables(config, ['scp', 'tar', 'rsync'])
 
 
   def tarFiles(self, config, filename, source_folders, type):
@@ -118,7 +118,7 @@ class FilesMethod(BaseMethod):
         rsync_args = ' --exclude "' + '" --exclude "'.join(exclude_files_setting) + '"'
 
 
-      rsync = '#!rsync -rav --no-o --no-g  -e "ssh -T -o Compression=no {ssh_args} -p {port}" {rsync_args} {user}@{host}:{source_dir}/* {target_dir}'.format(
+      rsync = '#!rsync -rav --no-o --no-g  -e "ssh -T -o Compression=no {ssh_args} -p {port}" {rsync_args} {user}@{host}:{source_dir} {target_dir}'.format(
         ssh_args=utils.ssh_no_strict_key_host_checking_params,
         source_dir=source_config[folder],
         target_dir=target_config[folder],
@@ -130,7 +130,7 @@ class FilesMethod(BaseMethod):
         self.run(rsync)
 
   def put(self, config, filename):
-    put(filename, config['tmpFolder'])
+    self.putFile(filename, config['tmpFolder'], config, run_locally = True)
 
   def get(self, config, remotePath, localPath):
     if config['runLocally']:
@@ -138,7 +138,7 @@ class FilesMethod(BaseMethod):
       return
 
     if (exists(remotePath)):
-      get(remotePath, localPath)
+      self.getFile(config, source_file = remotePath, dest_file = localPath, run_locally = True)
     else:
       log.error("Could not find file '%s' on remote!" % remotePath)
 

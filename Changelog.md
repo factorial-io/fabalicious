@@ -6,11 +6,15 @@
 
 * New method `drush9` to work around incompatibilities between drush 8 and drush 9. This is currently mixed up, as the methodname for drush includes the drupal version. This should be refactor.
 
+### changed
+
+* `getFile` and `putFile` is now using `scp` as not every ssh-implementation provides sftp.
+
 ## 2.4.1
 
 ### new
 
-* new option `replaceSettingsFile` which defaults to true. If set to false the `install`-task will not create a new settings.php-file.
+* new settings `replaceSettingsFile` for method `drush`, defaults to `True`. If set to `false` the settings.php file will not be deleted when running an install-task.
 * For docker tasks support `Prepare` and `Finished`-tasks. If you want to run something before the `run`-task, just add a `runPrepare`-task.
 
       ```
@@ -20,7 +24,7 @@
         runFinished:
           - echo "Run task is finished"
       ```
-
+      
 ## 2.4.0
 
 ### new

@@ -38,6 +38,7 @@ class DrushMethod(BaseMethod):
         'cache_views_data',
       ],
       'revertFeatures': True,
+      'replaceSettingsFile': True,
       'configurationManagement': {
         'staging': [
           '#!drush config-import -y staging'
@@ -69,6 +70,7 @@ class DrushMethod(BaseMethod):
     defaults['configurationManagement'] = settings['configurationManagement']
     defaults['database'] = { "skipCreateDatabase": False }
     defaults['installOptions'] = settings['installOptions']
+    defaults['replaceSettingsFile'] = settings['replaceSettingsFile']
 
     if 'locale' not in defaults['installOptions']:
       defaults['installOptions']['locale'] = 'en'
@@ -294,14 +296,7 @@ class DrushMethod(BaseMethod):
     if source_config['supportsZippedBackups']:
       sql_name_source += '.gz'
 
-    args = utils.ssh_no_strict_key_host_checking_params
-
-    cmd = '#!scp -P {port} {args} {user}@{host}:{sql_name_source} {sql_name_target} '.format(  args=args,
-      sql_name_source=sql_name_source,
-      sql_name_target=sql_name_target,
-      **source_config
-      )
-    self.run(cmd)
+    self.getFile(source_config, source_file = sql_name_source, dest_file = sql_name_target, run_locally = False)
 
     with _settings(host_string=source_host_string), self.runLocally(source_config):
       self.run_quietly('rm -f %s' % sql_name_source)
@@ -322,7 +317,7 @@ class DrushMethod(BaseMethod):
     if config['runLocally']:
       local('cp %s %s' % (sourceFile, targetSQLFileName))
     else:
-      put(sourceFile, targetSQLFileName)
+      self.putFile(sourceFile, config, targetSQLFileName, True)
 
     self.importSQLFromFile(config, targetSQLFileName)
 
@@ -363,8 +358,9 @@ class DrushMethod(BaseMethod):
       with warn_only():
         self.run_quietly('chmod u+w {siteFolder}'.format(**config))
         self.run_quietly('chmod u+w {siteFolder}/settings.php'.format(**config))
-        self.run_quietly('rm -f {siteFolder}/settings.php.old'.format(**config))
-        self.run_quietly('mv {siteFolder}/settings.php {siteFolder}/settings.php.old 2>/dev/null'.format(**config))
+        if config['replaceSettingsFile']:
+          self.run_quietly('rm -f {siteFolder}/settings.php.old'.format(**config))
+          self.run_quietly('mv {siteFolder}/settings.php {siteFolder}/settings.php.old 2>/dev/null'.format(**config))
 
         sites_folder = os.path.basename(config['siteFolder'])
         cmd_options = ''
