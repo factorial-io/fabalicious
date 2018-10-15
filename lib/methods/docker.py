@@ -72,6 +72,7 @@ class DockerMethod(BaseMethod):
   def getIp(self, docker_name, docker_host, docker_user, docker_port, runLocally = False):
     host_string = join_host_strings(docker_user, docker_host, docker_port)
     output = False
+    ips = []
     try:
       if runLocally:
         with hide('running', 'output', 'warnings'):
@@ -87,7 +88,7 @@ class DockerMethod(BaseMethod):
       log.error('Docker not running, can\'t get ip')
       return False
 
-    if output.return_code != 0:
+    if output.return_code != 0 or len(ips) == 0:
       return False
 
     return ips[0]
