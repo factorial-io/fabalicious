@@ -113,7 +113,7 @@ def version():
 
 @task
 def drush(drush_command):
-  configuration.check(['drush7', 'drush8'])
+  configuration.check(['drush9', 'drush7', 'drush8'])
   methods.call('drush', 'drush', configuration.current(), command=drush_command)
 
 @task
