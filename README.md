@@ -1,3 +1,7 @@
+# Note
+
+Fabalicious will be deprecated soon in favor of [phabalicious](https://github.com/factorial-io/phabalicious), This version will only receive bug-fixes but no new features, until the new phabalicious is stable and available in a beta version.
+
 # How does fabalicious work in two sentences
 
 Fabalicious uses a configuration file with a list of hosts and `ssh` and optionally tools like `composer`, `drush`, `git`, `docker` or custom scripts to run common tasks on remote machines. It is slightly biased to drupal-projects but it works for a lot of other types of projects.
