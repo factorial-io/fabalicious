@@ -1,6 +1,6 @@
 # Note
 
-Fabalicious will be deprecated soon in favor of [phabalicious](https://github.com/factorial-io/phabalicious), This version will only receive bug-fixes but no new features, until the new phabalicious is stable and available in a beta version.
+Fabalicious is deprecated in favor of [phabalicious](https://github.com/factorial-io/phabalicious) which is available in a stable version now. Fabalicious will only receive important bugfixes.
 
 # How does fabalicious work in two sentences
 
